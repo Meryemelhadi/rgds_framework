@@ -1,0 +1,1046 @@
+<?php
+/*
+COPYRIGHT NxFrontier Ltd
+www.nxfrontier.com
+This code may not be copied, modified or redistributed without the written consent of NxFrontier Limited, UK company number 04462961. 
+*/
+
+/* 
+ * Datasource: manage MySQL database "DataSource".
+ * Author: Franck Yvetot
+ * Copyright NxFrontier
+ * 
+ * Description: this database handler manages only queries to MySQL.
+  it should be rewritten so that it can work with other databases and
+  also the record API should not be at same level as the DB handler...
+ */
+
+/*
+usage:
+
+// get field container
+var $params = array(
+	"db.vendor" => "MySQL",
+	"db.user" => "john",
+	"db.password" => "axcv",
+	"db.host" => "localhost",
+	"db.database" => "database1",
+	"query" => "select * from users"
+	);
+var $db = new NxData_Database($params);
+
+// loop on records 
+for (var $recIt = $db->getRecordIterator();
+	recIt->isValid();
+	recIt->next())
+	{
+		// loop on fields
+		for (var $fieldIt = $recIt->getFieldIterator();
+			$fieldIt->isValid();
+			$fieldIt->next())
+			{
+				// use field value
+				print $fieldIt->getValue();				
+			}
+		
+	}
+
+*/
+require_once(NX_LIB . "NxDB_Record.inc");
+
+//================= DATABASE OPERATIONS ================
+
+// database Wrapper
+class NxDB_Database
+{
+	var $db_linkid = NULL; 
+	var $db_qresult = NULL; 
+	var $errorCB = NULL;
+	var $_db;
+	var $props;
+	var $lastInsertId=NULL;
+	
+	function __construct(&$propDesc, &$errorCB,$connexion='') 
+	{
+		$this->setErrorCB($errorCB);
+		$this->props=&$propDesc;
+        
+        // get connexion descriptor
+//        $cnxName=$propDesc->getProperty('db.'.$connexion,'MySQL.'.$connexion);
+
+		if($connexion && $connexion!='default')
+        	$cnxName='.'.$connexion;
+        else
+        	$cnxName='';
+
+		if (
+			is_file($f=NX_CONF.'ds/db'.$cnxName.NX_HOST_SWITCH.'.inc') || 
+			is_file($f=NX_CONF.'ds/db'.NX_HOST_SWITCH.'.inc') ||
+			is_file($f=NX_CONF.'ds/MySQL'.$cnxName.NX_HOST_SWITCH.'.inc') ||
+			is_file($f=NX_CONF.'ds/MySQL'.NX_HOST_SWITCH.'.inc') ||
+			is_file($f=NX_CONF.'ds/MySQL.inc') ||
+			is_file($f=NX_CONF.'ds/db.inc')
+			)
+		{
+			// load connexion parameters
+			include($f);
+		}
+		else
+		{
+			$errorCB->addError("cant find DB driver for ".$cnxName.' HOST SWITCH '.NX_HOST_SWITCH);
+			return;
+		}
+
+		if (isset($properties['driver']))
+			$driver = 'NxDB_'.$properties['driver'].'_driver';
+		else
+			$driver = 'NxDB_MySQLi_driver';
+		
+		if($driver=='NxDB_MySQL_driver' && PHP_VERSION > '5.7')
+			$driver = 'NxDB_MySQLi_driver';
+
+		include_once($driver.'.inc');
+		$this->_db = new $driver();	
+		$this->db_linkid=$this->_db->init($properties);
+
+		if($this->db_linkid==false)
+		{
+			$errorCB->addError("can't connect to DB ".$cnxName);
+		}
+	}   
+	
+	/* DATABASE HANDLER API
+		TODO: put these function in pecific DB handler?
+	 */
+
+	function isConnected()
+	{
+		return $this->_db->is_connected($this->db_linkid);
+	}
+
+	function real_escape_string($s) {
+		return $this->_db->real_escape_string($s,$this->db_linkid);
+	}
+	
+	function close() 
+	{ 
+		$this->_db->free_result($this->db_qresult);
+		return $this->_db->close ($this->db_linkid); 
+	}   
+
+	function createDB($dbname)
+	{
+		$querystr = "CREATE DATABASE ".$dbname;
+		if (!$this->_db->query ($querystr, $this->db_linkid))
+		  return $this->error("failed DB creation :["+$querystr+"]"); // failed
+		else
+			return true;
+	}
+
+	function deleteDB($dbname)
+	{
+		$querystr = "DROP DATABASE ".$dbname;
+		if (!$this->_db->query ($querystr, $this->db_linkid) )
+		  return $this->error("failed DB deletion :["+$querystr+"]"); // failed
+		else
+			return true;
+	}
+
+	function selectDB($dbname) 
+	{ 
+		return @$this->_db->select_db($dbname, $this->db_linkid);
+	}    
+
+	// executes a query and returns DB result as resource
+	// if table doesnt exists, try to create it by looking in database views
+	function query($querystr,$recover=true,$handler=null,$package='') 
+	{ 
+ 		$this->db_qresult = $this->_db->query($querystr, $this->db_linkid); 
+		if (!$this->db_qresult)
+		{
+			// try to recover from error: fix and try again
+			if ($recover && $this->onErrorRecover($querystr,null,$handler,$package))
+			{
+				nxLog("Recovered from DB error, try again..",'MYSQL');
+				return $this->query($querystr,false);
+			}
+			else
+				return $this->error("failed query:[".$querystr."]"); // failed
+		}
+
+		if ($this->db_qresult!==true &&
+				$this->_db->num_rows ($this->db_qresult) == 0)
+			return false;
+			
+		return $this->db_qresult;
+	}
+
+	// executes a query and returns results asociative array
+	function queryWithData($querystr,$recover=true,$handler=null,$package='') {
+		if($this->query($querystr,$recover,$handler,$package))
+		{
+			$res=array();			
+			while ($row = $this->_db->fetch_array($this->db_qresult)) {
+				$res[] = $row;
+			}			
+			return $res;
+		}
+		return null;
+	}
+	
+	// returns last autoincrement ID
+	function getLastInsertID(&$id,$cache=true) {
+		if ($this->db_linkid)
+		{
+			if ($cache && isset($this->lastInsertId))
+			{
+				$id = $this->lastInsertId;
+				return $id;
+			}
+			return $this->_db->getLastInsertID($this->db_linkid,$id); 
+		}
+			
+		return false;
+	}
+
+	function numRows($results = NULL)
+	{
+		if (!isset($results))
+			$results = $this->db_qresult;
+
+		if ($results!==null)
+			return $this->_db->num_rows ($results);
+		else
+			return 0;
+	}
+
+	function resetRecords(&$results)
+	{
+		$this->_db->reset_results($results, 0);
+	}
+	
+	function queryFields(&$results)
+	{
+		if (!isset($results))
+			$results = $this->db_qresult;
+
+		if ($results!==null)
+			return $this->_db->fetch_array($results);
+		else
+			return null;
+	}   
+	
+	// Meta data
+/*
+	function listDBs()
+	{
+	}
+*/
+
+	/* ========== transaction API ============ */
+	function startTransaction()
+	{
+		$this->_db->start_trans($this->db_linkid);
+	}
+	function commit()
+	{
+		$this->_db->commit($this->db_linkid);
+	}
+	function rollBack()
+	{
+		$this->_db->rollback($this->db_linkid);
+	}
+
+	// manage eror and try to recover from eror if possible
+	function onErrorRecover($query,$view=null,$handler=null,$package=null)
+	{
+		$err=$this->_db->errno($this->db_linkid);
+		if ($handler==null) 
+			$handler=&$this;
+
+		switch ($err)
+		{
+			case 1146: // MYSQL
+			case 1051: // MYSQL
+            case 1932: // mariaDB
+				// table doesnt exist
+				$res=$handler->createTableRecover($query,$view,$package);
+				break;
+			case 1054:
+				// table structure issue
+				$res=$handler->recoverTableStructure($query,$view,$package);
+				break;
+			default:
+				// dunno how to recover from other errors...
+				return false;	
+		}
+		
+		return $res;
+	}
+		
+	// try to create missing table(s) by calling  views related to these tables.
+	// table names are extracted directy from queries.
+	function createTableRecover($query,$view=null,$package='') 
+	{
+		// extract tables from the query
+		$tables=array();      
+        $errString = $this->_db->error();
+        
+        $table = preg_replace("%Table '([^.]+).([^']+)' doesn't exist.*$%",'$2',$errString);
+        if(!$table)
+        {
+		    if (!preg_match('/(FROM|INTO|UPDATE) +([^,( ]+([ ]*,[ ]*[^, (]+)*)[ ]*(WHERE|GROUP|SET|[(])*/i',$query,$matches))
+		    {
+			    return false;
+            }
+            $tables=explode(',',$matches[2]);
+        }
+        else
+            $tables[]=$table;
+		
+		$res=true;
+		foreach ($tables as $table)
+		{
+            $desc=explode('.',$table);
+            if (isset($desc[1]))
+                $table=$desc[1];
+			@$errorCB=new NxErrorCB();
+            $this->props->setProperty('nx.package',$package);
+			$res &= $this->executeDBQuery(trim($table,' _'), 'createSQLTable', $errorCB, true,null,false);
+		}
+		return $res;
+	}
+	
+	/**
+	 * there is an issue with the table structure (missing field). Regenerate the table structure + data.
+	 *
+	 * @param unknown_type $query
+	 * @param unknown_type $view
+	 * @return unknown
+	 */
+	function recoverTableStructure($query,$view=null,$package='')
+	{
+		// extract tables from the query
+		$tables=array();	
+		if (!preg_match('/(\sFROM|\sINTO|^UPDATE) +([^,( ]+([ ]*,[ ]*[^, (]+)*)[ ]*(WHERE|GROUP|SET|[(])*/i',$query,$matches))
+		{
+			return false;
+		}
+		
+		// manage package
+		$_name = explode('@',$view);
+		if(count($_name)>1)
+		{
+			$package=$_name[1];
+		}
+		elseif($package)
+		{
+            $package=$package;
+		}
+		
+		$tables=explode(',',$matches[2]);
+		$res=true;
+		foreach ($tables as $table)
+		{
+			$table = trim(trim($table,' -'));
+			@$errorCB=new NxErrorCB();
+			$res &= $this->updateTableStructure($table,$package);
+		}
+		return $res;
+	}
+	
+	
+	/**
+	 * regenerate table from its new descriptor and existing data.
+	 *
+	 * @param unknown_type $table
+	 * @return unknown
+	 */
+	function updateTableStructure($tableFull,$package) {		
+		$props=&$this->props->parent;
+		$er = $this->_db->error();
+
+		if ($props==null)
+			$props=&$this->props;
+
+        $desc=explode('.',$tableFull);
+        if (isset($desc[1]))
+            $table=$desc[1];
+        else
+            $table=$tableFull;
+	
+		// 1) get target table structure from db desc
+		$desc = ltrim("{$table}_createSQLTable.inc",'_');
+		if (!($f=$this->props->getConfFile('db',$desc,$package)))
+		{		
+			return false;
+		}
+		nxLog("GOT Descriptor from : $desc @ $package","DS_DB");
+		include($f);
+		$queries = $properties["query"];
+		if (is_array($queries))
+		{
+			// not supported yet
+			return false;
+		}
+		else
+		{				
+			$query=$queries;
+		}
+
+		// we have the create query: extract each field definition
+		$tfields=$this->getFieldsFromCreateQuery($queries);
+		
+		// 2) get existing table structure
+		$res=$this->queryWithData("SHOW CREATE TABLE `{$tableFull}`",false);
+		if($res)
+		{
+			$sfields=$this->getFieldsFromCreateQuery($res[0]['Create Table']);
+			$missingField='';
+		}
+		else
+		{
+			$checkR = "%Unknown column '([^']+)' in 'field list'%";
+			if(!preg_match($checkR,$er))
+				return false;
+			$missingField = preg_replace($checkR,'$1',$er);
+			$sfields=$tfields;
+		}
+		
+		// 3) update structure
+		$alterQ="ALTER TABLE $tableFull ";
+		foreach ($tfields as $fn=>$fd)
+		{
+			if (strtoupper($fn)=='PRIMARY')
+			{
+				continue;
+			}
+			if (strtoupper($fn)=='FOREIGN')
+			{
+				// recovers only one FK...
+				if (($missingField==$fn) || !isset($sfields[$fn]))
+				{
+					$alterQ .= "ADD $fn $fd,";				
+				}
+				continue;
+			}
+				
+			if (($missingField==$fn)||!isset($sfields[$fn]))
+			{
+				$alterQ .= "ADD `$fn` $fd,";				
+			}
+			else
+			{
+				// $alterQ .= "CHANGE `$fn` `$fn` $fd,";				
+			}
+		}
+		
+		$alterQ=rtrim($alterQ,',');
+		$res=$this->query($alterQ,false);
+		if(!$res)
+		{
+			return false;
+		}
+
+		return true;
+		
+	}
+	
+	function getFieldsFromCreateQuery($query) {
+		// we have the create qury: extract each field definition
+		/* CREATE TABLE IF NOT EXISTS _worldpay_account(_oid INT AUTO_INCREMENT NOT NULL,_account_type TEXT,_testMode TEXT,
+		   _instId VARCHAR(7),_currency TEXT,_lang TEXT,_serverURL VARCHAR(255),_desc TEXT,PRIMARY KEY(_oid))]
+		*/
+		$str=substr($query,strpos($query,'(')+1);
+		$str=substr($str,0,strrpos($str,')'));
+		$fields=array();
+		if ($count=preg_match_all('/[,]?\s*[`]?([^ \t`]+)[`]?\s+([^,\(]+(?:\s*[(][^)]+[)])?(?:\s+NULL\s+DEFAULT\s+[^,]+)?)/i',$str,$matches)) // FY 24/08/2016
+		//if ($count=preg_match_all('/[,]?\s*[`]?([^ \t`]+)[`]?\s+([^,]+)/',$str,$matches)) 
+		{
+			for($i=0;$i<$count;$i++)
+			{
+				$fn = $matches[1][$i];
+				$fn = strtolower($fn);
+				$fields[$fn]=$matches[2][$i];
+			}
+		}
+				
+		return $fields;
+	}
+	
+	// setting error CB
+	function setErrorCB(& $err)
+	{
+		$this->errorCB = & $err;
+	}
+
+	// logging error
+	function error($msg)
+	{
+		$this->errorCB->addError("database error: try later or contact the site web master",$msg.":".$this->_db->error());
+		return false;
+	}
+
+	function isOk()
+    {
+		return $this->isConnected();
+    }
+
+
+	/* ============      RECORD and VIEW API     ========================
+		Description : 
+			+ loads queries from conf/db directory
+			+ works with Nx records (descriptor, iterator ec.)
+			
+		NB. should be in a different architecture layer?
+	*/
+	
+	function getRecords(&$recDesc) 
+    {
+    	$this->recDesc = & $recDesc;
+        return new NxDB_Records($this,$recDesc,$this->db_qresult);
+    }
+
+	function &getRecordIterator() 
+    {
+        return new NxDB_RecordIterator($this,$this->db_qresult);
+    }
+    
+    // ============ DATABASE ============
+   	// returns the db object 
+	function &getDB(&$errorCB)
+	{
+		return $this;
+	}
+	
+	function executeDBQuery($view, $queryType, &$errorCB, $tryAll=false,$props=null,$recover=true,$record=null)
+	{
+		// mapping view name to db view: check if property view.db or db.view exists
+		$dbview = $this->getProperty("$view.db",null);
+		if ($dbview==null)
+			$dbview = $this->getProperty("db.".$view,$view);
+			
+		// manage package
+		$_name = explode('@',$dbview);
+		if(count($_name)>1)
+		{
+			$package=$_name[1];
+			$dbview=$_name[0];
+		}
+		else
+			$package=$this->getProperty('nx.package','');
+
+		if(!$package && isset($GLOBALS['current_page']))
+			$package=$GLOBALS['current_page']->getProperty('nx.package','');
+
+		if ($props==null)
+		{
+			$props=&$this->props->parent;
+
+			if ($props==null)
+				$props=&$this->props;
+		}
+			
+		// get the query
+		$properties=array();
+		$f=$props->getConfFile('db',"{$dbview}_{$queryType}.inc",$package);
+		if(!$f && isset($GLOBALS['current_page']))
+		{
+			$package=$GLOBALS['current_page']->getProperty('nx.package','');
+			$f=$props->getConfFile('db',"{$dbview}_{$queryType}.inc",$package);
+		}
+
+		if ($f)
+		{	
+//DebugBreak();			
+			nxLogStart("DB view :$f",'DS_DB');
+
+			include($f);
+			
+			$queries = $properties["query"];
+	
+			// execute the query
+			$db = & $this->getDB($errorCB);
+			if ($errorCB->isError())
+				return false;
+	
+			if (is_array($queries))
+			{
+				foreach ($queries as $query)
+				{
+					$query = preg_replace(array('/ AND 0=0/','/LIMIT 0,-1/'),'',$query);
+					$db->query($query,true);
+					if ($errorCB->isError() && $tryAll == false)
+						return false;
+				}
+				if ($errorCB->isError())
+					return false;
+			}
+			else
+			{				
+				
+				$db->query(preg_replace(array('/ AND 0=0/','/LIMIT 0,-1/'),'',$queries),true);
+				if ($errorCB->isError())
+					return false;
+			}
+	
+			nxLogStop("DB view END:$f",'DS_DB');
+			return true;
+		}
+		
+		return false;
+	}
+	
+	function & getDBRecords(&$recDesc, &$errorCB, $pageOffset=null, $maxNbRecords=null,$record=null,$query=null)
+	{	
+		$dbview = $recDesc->getViewNameFull();
+
+		// manage package
+		$_name = explode('@',$dbview);
+		if(count($_name)>1)
+		{
+			$package=$_name[1];
+			$dbview=$_name[0];
+		}
+		else
+        {
+			$package=$this->getProperty('nx.package','');
+        }
+		
+		$props=&$recDesc->parent;
+
+		// get the query
+		$queryType = "select";
+		
+		if ($pageOffset!= null && $maxNbRecords!=null)
+			$recordOffset = $pageOffset*$maxNbRecords;
+		else
+			$recordOffset = 0;
+			
+		$properties=array("recordOffset"=>$recordOffset, "nbRecordsPerPage"=>$maxNbRecords);
+
+		if ($query != null)
+		{
+			nxLogStart("DB view with query:","DS_DB");
+		}
+		elseif ($f=$recDesc->getConfFile('db',"{$dbview}_selectRecord.inc",$package))
+		{		
+			nxLogStart("DB view:$f","DS_DB");
+			include($f);
+			$query = preg_replace(array('/ AND 0=0/','/LIMIT 0,-1/'),'',$properties["query"]);
+
+			if(isset($_REQUEST['pages_activated']) && $_REQUEST['pages_activated']='false')
+			{
+				$query = preg_replace(array('/LIMIT\s+[0-9]+,-?[0-9]+/'),'',$properties["query"]);
+				$properties["pageOffset"]=$recordOffset = null;
+				$properties['nbRecords']=null;
+			}
+	
+		}
+		else
+			return null;
+
+		if ($errorCB->isError())
+		{
+			return null;
+		}
+				
+		// get the db
+		$db = & $this->getDB($errorCB);
+		if ($errorCB->isError())
+			return false;
+
+		$db->query($query,true,null,$package);
+
+		nxLogStop("DB view END:","DS_DB");
+
+		$records = $db->getRecords($recDesc);
+		
+		// when nb of records is limited, get total number of records in DB (ie query w/o limit)
+		if (isset($properties["pageOffset"]))
+		{
+			// optimisation for first and last page when nb results less than limit
+			$count = $this->numRows();
+			if ($count<$properties['nbRecords'])
+			{
+				if ($properties["pageOffset"]!=0)
+					$count += $properties["pageOffset"]*$properties['nbRecords'];
+			}
+			else
+				// we have more records than limit => count the whole thing
+				$count = $this->countRecords($recDesc, $errorCB,$record);
+				
+			if ($errorCB->isError())
+				nxError('DB Query failed: cant count nb of records for view '.$recDesc->getViewName(),"PLUG_DB");
+			else
+				// set page counters in the record collection
+				$records->setPageCounters($count,$properties["pageOffset"],$properties["nbRecords"],$properties["pageAlias"]);
+		}
+		
+		return $records;
+	}
+	
+	/** manage queries defined by a DML view */
+	function _queryView(&$recDesc,$dbOp,&$errorCB,&$props,$record=null)
+	{
+		$dbview = $recDesc->getViewNameFull();
+
+		// manage package
+		$_name = explode('@',$dbview);
+		if(count($_name)>1)
+		{
+			$package=$_name[1];
+			$dbview=$_name[0];
+		}
+		else
+			$package=$this->getProperty('nx.package','');
+		
+		// get db object
+		$db = & $this->getDB($errorCB);
+		if ($errorCB->isError())
+			return false;
+					
+		$fname=$dbview."_".$dbOp."Record.inc";
+		$f=$recDesc->getConfFile('db',$fname,$package);
+	
+		if ($f)
+		{
+			// get the query
+			$properties=array();
+
+			nxLogStart("DB view:$f","DS_DB");
+			include($f);
+			
+			// execute it
+			$query = preg_replace(array('/ AND 0=0/','/LIMIT 0,-1/'),'',$properties["query"]);
+			$res=$db->query($query,true,null,$package);
+			nxLogStop("DB view:$f","DS_DB");
+
+			if ($dbOp=='insert')
+			{
+				$this->getLastInsertID($oid,false);
+
+				if (isset($record))
+				{
+					$record->onNew($oid,$errorCB);
+				}
+				
+				$this->lastInsertId = $oid;
+			}
+			return $res;
+		}
+
+		nxError("Cant find DB view:$dbview","DS_DB");
+		return false;
+	}
+	
+	/** manage insert, update and insert_update queries */
+	function _queryView_insert_update(&$recDesc,$dbOp,&$errorCB,&$props,$record=null) {
+					
+		$dbOp=strtolower($dbOp);
+		if ($dbOp=='update_if_exists')
+		{
+			if ($this->countRecords($recDesc, $errorCB,$record)==0)
+			{
+				// record doesn't exist
+				return false;
+			}
+			else
+			{
+				// record exists: update
+				return $this->_queryView($recDesc,'update',$errorCB,$recDesc->parent,$record);
+			}
+		}
+		elseif ($dbOp=='insert_if_not_exists')
+		{
+			if ($this->countRecords($recDesc, $errorCB,$record)==0)
+			{
+				// record doesn't exist: insert
+				return $this->_queryView($recDesc,'insert',$errorCB,$recDesc->parent,$record);
+			}
+			else
+			{
+				// record exists
+				return true;
+			}
+		}
+		elseif (strtolower($dbOp)=='update_insert')
+		{
+			if ($this->countRecords($recDesc, $errorCB,$record)==0)
+			{
+				// record doesn't exist: insert
+				return $this->_queryView($recDesc,'insert',$errorCB,$recDesc->parent,$record);
+			}
+			else
+			{
+				// record exists: update
+				return $this->_queryView($recDesc,'update',$errorCB,$recDesc->parent,$record);
+			}
+		}
+		
+		// other queries
+		return $this->_queryView($recDesc,$dbOp,$errorCB,$recDesc->parent,$record);
+	}
+
+	function & countRecords(&$recDesc, &$errorCB,$record=null)
+	{	
+		$props=&$recDesc->parent;
+
+		$resultSet=$this->_queryView($recDesc,'count',$errorCB,$props,$record);
+		
+		// exec the query
+		if ($resultSet && !$errorCB->isError())
+		{
+			// fix for left joins that return wrong count
+			$count = $this->numRows();
+			if ($count>1)
+				return $count;
+				
+			// get count of all records in special field "nbrecords"
+			$fields=$this->queryFields($resultSet);
+			if ($fields)
+				return $fields["nbrecords"];
+		}
+		
+		return null;
+	}
+	
+	// add/modify records with recDesc
+	function addDBRecords(&$recDesc, &$errorCB, &$records,$dbOp="insert")
+	{
+		$props=&$recDesc->parent;
+		$dbview = $recDesc->getViewName();
+
+		// get db object
+		if ($errorCB->isError())
+			return false;
+
+		// store records in the record set
+		for ($recIt = $records->getRecordIterator(); $recIt->isValid(); $recIt->next())
+		{
+			$record = & $recIt->getCurrent();
+			$record->initAspect($recDesc);
+			if ($record->onBeforeSave($dbOp=="insert",$errorCB))
+			{
+				$this->_queryView($recDesc,$dbOp,$errorCB,$props,$record);
+				$record->onSave($dbOp=="insert",$errorCB);
+			}
+		}
+		return true;
+	}
+	
+	// add/modify records with view name
+	function addDBRecord(&$recDesc, &$errorCB, &$record,$dbOp="insert")
+	{
+		if (isset($record))
+		{
+			$record->initAspect($recDesc);	
+			if (!$record->onBeforeSave($dbOp=="insert",$errorCB))
+				return false;
+		}
+		else
+		{
+			$aspect=$recDesc->initAspect();
+			if (isset($aspect))
+				$aspect->onBeforeSave($dbOp=="insert",$errorCB);
+		}
+		
+		if($this->_queryView_insert_update($recDesc,$dbOp,$errorCB,$recDesc->parent,$record))
+		{
+			if (isset($record))
+				$record->onSave($dbOp=="insert",$errorCB);
+			elseif (isset($aspect))
+				$aspect->onSave($dbOp=="insert",$errorCB);
+				
+			return true;
+		}
+
+		return false;
+	}
+
+	function replaceAccents($str) 
+	{
+        global $NX_CHARSET;
+        if ($NX_CHARSET!='ISO-8859-1') {
+			$str = utf8_decode($str);
+		}
+
+		$tofind = utf8_decode("ÀÁÂÃÄÅàáâãäåÒÓÔÕÖØòóôõöøÈÉÊËèéêëÇçÌÍÎÏìíîïÙÚÛÜùúûüÿÑñ");
+		$replac = "AAAAAAaaaaaaOOOOOOooooooEEEEeeeeCcIIIIiiiiUUUUuuuuyNn";
+		return(strtr($str,$tofind,$replac));	
+	}
+
+	// private functions
+	function getWhereClause($qfname,$values,$relation="LIKE",$sep="OR",$prefixVal="%",$suffixVal="%",$selEmptyKey=true,$selEmptyField=false,$csv_sep='|',$replaceAccents=false,$prefixValue='')
+	{
+		// remove prefix from values (used for multi table search field, ex. 'company:17|client:22')
+		if($prefixValue) 
+		{
+			// values with a prefix 'selector:XX'
+			if(strpos($values,$prefixValue)!==false)
+				$values = str_replace($prefixValue,'',$values);
+			else
+				// values with no prefix => not for this field
+				$values = null;
+		}
+		// ignore empty values or text-choice prefix (?)
+		if ($values==null || strtolower($values)=='null' || ($values=trim($values,'\''))===''||($values=='?')||$relation=='')
+			if ($selEmptyKey)
+				return '0=0';	 
+			else
+				return '0=1';	 
+			
+		if($relation=='ft')
+		{
+			$clause = "(MATCH({$qfname}) AGAINST(\"$values\"))";
+		}
+		elseif($relation=='ftb')
+		{
+			$clause = "(MATCH({$qfname}) AGAINST(\"$values\" IN BOOLEAN MODE))";
+		}
+		else
+		{
+			if (!is_array($values))
+				$values=explode($csv_sep,trim($values,$csv_sep));
+				
+			$relation=preg_replace(
+				array('/gte/','/gt/','/lte/','/lt/','/eq/'),
+				array('>=','>','<=','<','='),$relation);
+
+			$clause = "(";
+			$_sep="";
+			foreach ($values as $v)
+			{
+				//$v=str_replace(array("\\'","'"),array("'","\\'"),trim($v,"' "));
+				$v=trim($v,"' ");
+				$clause.= $_sep."$qfname $relation '$prefixVal".$v."$suffixVal'";
+				$_sep=" $sep ";
+			}
+
+			if ($selEmptyField)
+				$clause.= $_sep."$qfname=''";
+			
+			$clause.= ")";
+		}
+
+       
+		if($replaceAccents && $replaceAccents!='false')
+			$clause=$this->replaceAccents($clause);
+			
+		return $clause;
+	}
+	
+	// for compatibility... to be removed when SQL regenrated
+	function & getProperty($name,$deft=null,$cascade=true)
+	{
+		return $this->props->getProperty($name,$deft,$cascade);
+	}
+
+	// get field from record if any, or default value
+	function & getParamFieldValue($record,$fname,$format='DB',$dft=null)
+	{
+		if ($record) 
+			return 	$record->getFieldValue($fname,$format,$dft);
+
+		if ($dft)
+			return $this->props->getQValue($dft);
+			
+		return null;
+	}
+	
+	// get parameter from request or session
+	function & getParam($name,$dft=null,$sep=',',$record=null)
+	{
+		$n=preg_replace('/[-. ]/','_',trim($name,'[]'));
+		
+		if (isset($_REQUEST[$n]))
+			$res=$_REQUEST[$n];
+		elseif(isset($_SESSION[$n]))
+			$res=$_SESSION[$n];
+		elseif ($dft==null || $dft=='null')
+			$res=null;
+		else
+			$res=$this->props->getQValue($dft);
+
+		// if provided as an array, returns values as a list
+		if (is_array($res))
+			$res=implode($sep,$res);
+		
+		return $res;
+	}
+	
+	// get parameter from request or session
+	function & getFieldParam($name,$dft=null,$sep=',',$record=null,$opts=null)
+	{
+		$n=preg_replace('/[-. ]/','_',trim($name,'[]'));
+		
+		if (isset($record))	{
+			$res=$record->getFieldValue($n,"DB",$dft,$opts);
+		}elseif (isset($_GET[$n]))
+			$res=$_GET[$n];
+		elseif (isset($_REQUEST[$n]))
+			$res=$_REQUEST[$n];
+		elseif(isset($_SESSION[$n]))
+			$res=$_SESSION[$n];
+		elseif ($dft==null || $dft=='null')
+			$res=null;
+		else
+			$res=$this->props->getQValue($dft);
+
+		// if provided as an array, returns values as a list
+		if (is_array($res))
+			$res=implode($sep,$res);
+		
+		return $res;
+	}
+	
+	// get parameter from specified http source
+	function & getParamValue($name,$dft=null,$type='request',$sep=',')
+	{
+		$n=preg_replace('/[-. ]/','_',trim($name,'[]'));
+		switch($type) 
+		{
+			case 'post':
+				@$var=&$_POST;
+				break;
+			case 'get':
+				@$var=&$_GET;
+				break;
+			case 'cookie':
+				@$var=&$_COOKIE;
+				break;
+			case 'session':
+				@$var=&$_SESSION;
+				break;
+			// case 'request':
+			default:
+				@$var=&$_REQUEST;
+				break;
+		}
+		if (isset($var[$n]))
+			$res=$var[$n];
+		else
+			$res=$dft;
+
+		// if provided as an array, returns values as a list
+		// NB. assumes it is already wrapped with simple quotes
+		if (is_array($res))
+			$res=implode("'$sep'",$res);
+			
+		// XSS security patch
+		 if (!get_magic_quotes_gpc()) {
+		 	$res = $this->real_escape_string($res);
+		 }
+		
+		return $res;
+	}
+	
+	function & getQValue($qv)
+	{
+		return $this->props->getQValue($qv);
+	}
+
+
+}
+
+?>

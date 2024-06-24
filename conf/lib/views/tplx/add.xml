@@ -1,0 +1,28 @@
+<p:page 	
+	xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:p="http://www.presencemedia.ma/views/page"
+	xmlns:form="http://www.presencemedia.ma/views/form"
+	xmlns:record="http://www.presencemedia.ma/views/record"
+>
+	<p:header>
+		<p:title>{string:"page_title_add"}</p:title>
+		<p:description>{string:"page_message_add"}</p:description>
+		<p:help>
+			{string:"page_message_add_details"}
+		</p:help>
+
+		<p:toolbar>
+			<form:cancel for="form1" behaviour="ajax" url="{=back.url}" iconCls="pm-button-cancel">{string:"back"}</form:cancel>
+			<form:submit for="form1" behaviour="ajax" url="{=submit.url}" iconCls="pm-button-submit">{string:"submit"}</form:submit>
+		</p:toolbar>
+
+	</p:header>
+
+	<p:body>
+
+		<form:record id="form1" record="page.record">
+			<form:fields />	
+		</form:record>
+
+	</p:body>
+</p:page>

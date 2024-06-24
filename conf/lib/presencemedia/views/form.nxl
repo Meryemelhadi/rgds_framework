@@ -1,0 +1,133 @@
+<?xml version="1.0"?> 
+<!-- 
+	
+	NXL Taglib 
+
+	description: tag lib for generating ExtJS tree
+
+-->
+<xo:taglib uri="http://www.presencemedia.ma/views/form#skin" 
+	xmlns:xo="http://www.nxfrontier.com/xo/core"
+	xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+	xmlns:this="http://www.nxfrontier.com/xo/this"
+	xmlns="http://www.w3.org/1999/xhtml"
+	>
+
+<xo:tag name="record">
+	<xo:param name="record" value="page.record"/>
+	<xo:param name="id" value="form1"/>
+
+	{form:<xsl:value-of select="$record" />}
+		<xsl:value-of select="$_content_" />
+		<div id="credit_demand_markup"></div>
+	{/form}
+
+<script>
+	/* get form object */
+	window.<xsl:value-of select="$id" />=$('credit_demand_markup').ancestors().find(
+			function(e) { return (e.tagName=='FORM') || (e.tagName=='form'); });
+
+	/* set form onchange */
+	window.formHasChanged=false;
+	window.FormOnChange=function()
+	{
+		window.formHasChanged=true;
+	}
+	var elements = Form.getElements(window.<xsl:value-of select="$id" />);
+	for (var i = 0; i < elements.length; i++)
+		Event.observe(elements[i],'change',window.FormOnChange.bind(elements[i]));
+
+</script>
+
+</xo:tag>
+
+<xo:tag name="fields">
+	<div class="record_wrapper">
+		<div class="record">
+			{fields}
+			<div class="control-main-wrapper">
+				<div class="control-label-wrapper">
+					<div class="control-label">{field.label} :</div>
+				</div>
+				<div class="control-wrapper" id="{field.name}-control-wrapper">
+					<div class="control" id="{field.name}-control">{field}</div>
+						{if:field.is_help}
+							<div class="tooltip">{field.help}</div>
+						{/if}
+				</div>
+			</div>
+			{/fields}
+		</div>
+	</div>
+</xo:tag>
+
+<xo:tag name="submit">
+	<xo:param name="href">javascript:void(0);</xo:param>
+	<xo:param name="url" select="$href"/>
+	<xo:param name="behaviour">navigate</xo:param>
+	<xo:param name="target">content</xo:param>
+	<xo:param name="iconCls"></xo:param>
+	<xo:param name="label" select="$_content_"/>
+	<xo:param name="for">form1</xo:param>
+
+	<xsl:choose>
+		<xsl:when test="$behaviour='ajax'">
+			<script>
+				window.dlg_waitConfig = { title : "{string:'dlg_wait_title'}", message : "{string:'dlg_wait_content'}", viewMode : "wait" };
+
+				window.dlg_successConfig = { title : "{string:'dlg_success_title'}", message : "{string:'dlg_success_content'}", viewMode : "ok", url : "<xsl:value-of select="$url" />", target : "content", labels : { ok : "{string:'dlg_success'}" } };
+
+				window.dlg_failureConfig = { title : "{string:'dlg_failure_title'}", message : "{string:'dlg_failure_content'}", viewMode : "cancel", target : "content", labels : { cancel : "{string:'dlg_cancel'}" } };
+
+				window.formId=null;
+			</script>
+
+			<a class="pm-button" href="#" onclick="PMFormSubmit.submit(window.#{$for}#, dlg_waitConfig, dlg_successConfig, dlg_failureConfig); this.blur(); return false;">
+				<span class="pm-button-background">
+					<span class="pm-button-content pm-button-icon pm-button-submit"><xsl:value-of select="$label" /></span>
+				</span>
+			</a>
+		</xsl:when>
+		<xsl:otherwise>
+		</xsl:otherwise>
+	</xsl:choose>
+</xo:tag>
+
+<xo:tag name="cancel">
+	<xo:param name="href">javascript:void(0);</xo:param>
+	<xo:param name="url" select="$href"/>
+	<xo:param name="behaviour">ajax</xo:param>
+	<xo:param name="target">content</xo:param>
+	<xo:param name="iconCls"></xo:param>
+	<xo:param name="label" select="$_content_"/>
+	<xo:param name="for">form1</xo:param>
+
+	<xsl:choose>
+		<xsl:when test="$behaviour='ajax'">
+			<script>
+				window.dlg_backConfig = { title : "{string:'dlg_back_title'}", message : "{string:'dlg_back_content'}", viewMode : "okCancel", url : "{=list.url}", target : "content", labels : { ok : "{string:'dlg_ok'}", cancel : "{string:'dlg_cancel'}" } };
+
+				window.doCancelForm = function(dlg_backConfig, event) {
+					if (window.formHasChanged)
+						PMModalbox.display(dlg_backConfig, event);
+					else
+						ajax_navigate(event,dlg_backConfig.url,dlg_backConfig.target);
+				}
+			</script>
+			<a class="pm-button" href="#" onclick="window.doCancelForm(dlg_backConfig, event); this.blur(); return false;">
+				<span class="pm-button-background">
+					<span class="pm-button-content pm-button-icon #{$iconCls}#"><xsl:value-of select="$label" /></span>
+				</span>
+			</a>
+		</xsl:when>
+		<xsl:otherwise>
+			<a class="pm-button" href="#{$url}#">
+				<span class="pm-button-background">
+					<span class="pm-button-content pm-button-icon #{$iconCls}#"><xsl:value-of select="$label" /></span>
+				</span>
+			</a>
+		</xsl:otherwise>
+	</xsl:choose>
+</xo:tag>
+
+</xo:taglib>

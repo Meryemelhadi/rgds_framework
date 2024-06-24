@@ -1,0 +1,167 @@
+<!-- PAGE : CARE INDEX  -->
+<script type="text/javascript" id="/app_crm_hp.js">
+MyAppLoader.addComponent(
+{
+id:'app_hp',
+
+states:	
+{
+	'main.crm.hp': 
+	{
+		url: "/hp",
+		title:'Accueil',
+		scope: {
+			title : 'CRM Recrutement',
+			pageId : 'crm_hp'
+		},
+		views: 
+		{
+			'content@main.crm':
+			{
+				templateUrl:'/crm/hp.htm',
+			},		
+				'header@main.crm.hp':
+				{
+					templateUrl:'/crm/hp_header.htm',
+				},
+				'body@main.crm.hp':
+				{
+					templateUrl:'/crm/widgets.htm',
+				}
+		}
+	}
+},
+
+init:function(MyAppLoader) 
+{
+	var app = MyAppLoader.app;
+
+	app.controller('hpCrmCtrl',['$state','$stateParams','$scope','$rootScope','WidgetSce','Config','AppTools','CrudSce',
+		function($state,$stateParams,$scope,$rootScope,WidgetSce,Config,AppTools,CrudSce)
+	{		
+		var self=this;
+
+		// load scope variables from state
+		AppTools.loadStateScope($scope,null,true);
+
+		// pagination 
+		$scope.currentPage = 1;
+		$scope.pageChanged = function(currentPage) {
+			$scope.currentPage = currentPage;
+			$scope._loadItems();
+		};
+
+		// page ID : widget desc name (in conf/widgets), or state name
+		var pageId = $scope.pageId || $state.current.name.split('.').pop(); 
+		
+		// url for server widget app
+		var url = Config.widgetUrl(pageId);
+		$scope.instance = 'widgets_'+pageId;
+		var crudSce = $scope.crudSce = CrudSce.getInstance($scope.instance,url);
+
+		// $rootScope.crudSce = crudSce;
+		crudSce.initSearch($scope,'search','currentPage');
+
+		// filter list (calls server)
+		$scope.filter = function() {
+
+			// crudSce.resetLocation($scope.search);
+			$scope._loadItems();
+		}
+
+		// check if form search is set
+		$scope.isFiltered = function() {
+			var n=crudSce.isFiltered($scope.search);
+			$scope.formClass="nbfilters_"+n;
+			return n;
+		}
+		$scope.isFiltered();
+
+		// cancel filter (reset form and URL)
+		$scope.cancel_search = function() {
+			crudSce.resetLocation();
+			crudSce.resetSearchForm();
+
+			$scope._loadItems();
+		}
+
+		// load items from server
+		$scope._loadItems = function() 
+		{
+			$scope.loading = true;
+			$scope.activeSearch = ($scope.isFiltered()>0);
+
+			// set Search for widget Actions
+			WidgetSce.setSearch($scope.search);
+
+			var page = $scope.currentPage-1;		
+			crudSce.loadItems($scope.search,page,function(descPage,meta)
+			{
+				$scope.layout = descPage;
+				$scope.rows = WidgetSce.parseLayout(descPage);
+
+				if(angular.isDefined(descPage.widgets))
+					$scope.widgets = descPage.widgets;
+				else
+					$scope.widgets = descPage;
+
+				if(angular.isDefined(meta.search))
+					$scope.search = meta.search.item;
+
+				// loader image
+				$scope.loading = false;
+				$scope.ready = true;
+			});
+		}
+
+		$scope.resetSearch = function() {
+		};
+
+		$scope.urlParams = function() {
+			return AppTools.objectToUrl($scope.search);
+		}
+
+		$scope.filter();
+	}]);
+
+}
+});
+</script>
+
+<script type="text/ng-template" id="/crm/hp.htm">
+	<div ng-controller="hpCrmCtrl as hp" id="main_content" class="homepage">
+		<div class="row" ui-view="header">
+		</div>
+
+		<section id="links" class="container-fluid" ui-view="body">
+		</section>
+	</div>
+</script>
+
+<script type="text/ng-template" id="/crm/hp_header.htm">
+	<div class="navbar page-header">
+		<nav class="navbar navbar-default">
+			<div class="row">
+				<h2 class="col-md-10">{{title}} <span class="sub_title"><field name="sector" ng-model="search.sector" layout="inline" form-class="inline" ds="search" label="placeholder"></field></span></h2>
+				<div class="col-md-2" menu-actions="menu"></div>
+			</div>
+		</nav>
+
+		<div ui-view="top_menu"></div>
+	</div>
+</script>
+
+<script type="text/ng-template" id="/crm/widgets.htm">
+	<div class="row" ng-repeat="row in rows" ng-if="rows">
+		<div class="{{col.class}}" ng-repeat="col in row.columns">
+			<div ng-repeat="widget in widgets | widgetFilter:col.filter | orderBy:'index'" class="homepage-widget" ng-style="{borderLeftColor:widget.color}">
+				<homepage-widget type="{{widget.widget}}"></homepage-widget>
+			</div>
+		</div>
+	</div>
+</script>
+
+<style>
+
+
+</style>

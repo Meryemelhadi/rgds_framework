@@ -1,0 +1,44 @@
+<?xml version="1.0"?> 
+<nxl version="1.0"
+	xmlns="http://www.nxfrontier.com/nxl/nxl" 
+	xmlns:tpl="http://www.nxfrontier.com/tpl/tpml"
+	xmlns:html="http://www.w3.org/TR/REC-html40"
+	>
+
+<pages xmlns="http://www.nxfrontier.com/nxl/page">
+	<page	name="NXL2" protected="no" path="/nx/admin/" cache="no" 
+			logic="handler.nxl" 
+			strings="nxl" lang="get,prop:lang"
+			skin="default">
+
+		<exec logic="handler.nxl" strings="nxl">
+			<view name="page.view" value="sys.nxl.compil" />
+		</exec>
+	</page>
+</pages>
+
+<views xmlns="http://www.nxfrontier.com/tpl/tpml"  xmlns:tpl="http://www.nxfrontier.com/tpl/tpml" 
+	  path="/sys" 
+	  skin="default">
+	<tpl:view name="nxl.compil" trace="yes" xmlns="http://www.w3.org/TR/REC-html40">
+		<html>
+		<head>
+		<title> NXL Compilation : <tpl:out value="#get:url#" /></title>
+
+		<style>
+		body,p,div,li { font-family:arial; }
+		.error { color:red; }
+		.listing {color:#222222; font-family:courier;font-size:smaller; background-color:#eeeeee;border:solid 1px black; }
+		</style>
+		</head>
+
+		<body>
+
+		<tpl:property name="page.content" default="empty content"/>
+
+		</body>
+		</html>
+	</tpl:view>	
+</views>
+
+</nxl>

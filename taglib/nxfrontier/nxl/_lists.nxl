@@ -1,0 +1,96 @@
+<?xml version="1.0"?> 
+<nxl version="1.0"
+	xmlns="http://www.nxfrontier.com/nxl/nxl" 
+	xmlns:nxl="http://www.nxfrontier.com/nxl/nxl" 
+	xmlns:compil="http://www.nxfrontier.com/nxl/compil" 
+	xmlns:xo="http://www.nxfrontier.com/xo/core"
+	xmlns:html="http://www.w3.org/TR/REC-html40"
+	xmlns:format="http://www.nxfrontier.com/nxl/format"
+	xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+	>
+
+<xo:taglib uri="http://www.nxfrontier.com/nxl/lists">
+	<xo:tag name="lists">
+	</xo:tag>
+
+	<xo:tag name="list" trace="yes">
+		<xsl:variable name="type">  
+			<xsl:choose>
+				<xsl:when test="@type"><xsl:value-of select="@type" /></xsl:when>
+				<xsl:when test="@dir"><xsl:value-of select="@dir" /></xsl:when>
+				<xsl:otherwise>lists</xsl:otherwise>
+			</xsl:choose>
+		</xsl:variable>  
+
+		<xo:param name="lang" value="en"/>  
+
+		<xsl:variable name="dir">  
+			<xsl:choose>
+				<xsl:when test="$type='format'">formats</xsl:when>
+				<xsl:when test="$type='list'">lists</xsl:when>
+				<xsl:otherwise><xsl:value-of select="$type" /></xsl:otherwise>
+			</xsl:choose>
+		</xsl:variable>  
+
+		<compil:output file="#const:NX_CONF#content/#xo:xpath($dir)#/#xo:xpath(@name)#_#xo:xpath($lang)#.inc" method="php" indent="no">
+			<xo:text>// file generated automatically, do not edit.
+$list = array(</xo:text>
+	<xsl:value-of select="$_content_" />
+<xo:text>
+);
+</xo:text>		
+	</compil:output>
+
+	<compil:output file="#const:NX_CONF#content/#xo:xpath($dir)#/#xo:xpath(@name)#.inc" method="php" indent="no">
+			<xo:text>// file generated automatically, do not edit.
+$list = array(</xo:text>
+	<xsl:value-of select="$_content_" />
+<xo:text>
+);
+</xo:text>		
+	</compil:output>
+
+	</xo:tag>
+
+	<xo:tag name="values" trace="yes">
+		<compil:output file="#const:NX_CONF#content/list/#xo:xpath(@name)#.values" method="text" indent="no">
+			<xo:for-each select="value">
+				<xo:value select="@id"/><xsl:text>=</xsl:text><format:quotes2HTML><xo:value select="text()"/></format:quotes2HTML><xsl:text>
+</xsl:text>
+			</xo:for-each>
+		</compil:output>
+	</xo:tag>
+
+	<xo:tag name="value">
+	<block>
+	 <xsl:text>
+'</xsl:text><xo:value select="@id"/>'<xsl:text>=>'</xsl:text>
+	<format:simpleQuotes2HTML><xo:value select="$_content_"/></format:simpleQuotes2HTML><xsl:text>',
+</xsl:text>
+	</block>
+	</xo:tag>
+
+	<xo:tag name="option">
+		<xsl:variable name="label">  
+			<xsl:choose>
+				<xsl:when test="./*"><format:parseHTML><format:simpleQuotes2HTML><xo:value select="$_content_"/></format:simpleQuotes2HTML></format:parseHTML></xsl:when>
+				<xsl:when test="$_content_!=''">'<format:simpleQuotes2HTML><xo:value select="$_content_"/></format:simpleQuotes2HTML>'</xsl:when>
+				<xsl:when test="@is_empty='yes'">''</xsl:when>
+				<xsl:otherwise>'<xo:value select="@value"/>'</xsl:otherwise>
+			</xsl:choose>
+		</xsl:variable>  
+
+	<block>
+	 <xsl:text>
+'</xsl:text><xo:value select="@value"/>'<xsl:text>=></xsl:text>
+	<xsl:value-of select="$label" /><xsl:text>,
+</xsl:text>
+	</block>
+	</xo:tag>
+
+<xo:tag name="_comment">
+</xo:tag>
+
+</xo:taglib>
+
+</nxl>

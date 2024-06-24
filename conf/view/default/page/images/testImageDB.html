@@ -1,0 +1,49 @@
+<!doctype html public "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title> Form Image Chooser </title>
+<script type="text/javascript" src="../../res/js/NxDialog.js"></script>
+
+<script>
+// Dialog API
+// manage input field
+function InputChooseImage(field) {
+	this.field=field;
+	this.open('imageDialog.php',600,400);
+}
+
+InputChooseImage.prototype.open = function(url,h,w) {
+	this.w=600;
+	this.h=400;
+	openDialog(url,this,w,h);
+}
+
+InputChooseImage.prototype.onOk = function(result) {
+	var box=result.size.box;
+	this.field.value=box+":"+result.url;
+}
+
+InputChooseImage.prototype.onCancel = function() {
+	alert("dialog cancel");
+}
+
+function RT_chooseImage(field,url,w,h) {
+	var handler=new InputChooseImage(field);
+	var res=openDialog(url,handler,w,h);
+}
+
+</script>
+
+
+</head>
+<body>
+
+Choose image by clicking in the field
+<form>
+<input id="image" name="image" type="text" value="" onclick="new InputChooseImage(this)">
+<span id="imgHolder"></span>
+</form>
+
+
+</body>
+</html>

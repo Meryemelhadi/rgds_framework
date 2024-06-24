@@ -1,0 +1,65 @@
+<?xml version="1.0"?> 
+<nxl version="1.0"
+	xmlns="http://www.nxfrontier.com/nxl/nxl" 
+	xmlns:site_config="http://www.nxfrontier.com/site_config"
+	config="site_config"
+	>
+<!-- data -->
+<data xmlns="http://www.nxfrontier.com/dml/dml" package="rh">
+	<views>
+		<!-- =========================================================== -->
+		<!-- Ordres de mission en intersection avec une demande de cong&eacute; -->
+		<!-- =========================================================== -->
+		<view name="rh.conge.demand.demande_mission" table="rh_mission_demand">			
+			<key>
+				<field name="empid" type="ref-oid" value="%{record:empid}" />
+				<field name="demand_state" type="line" relation="NE" value="4" />
+				<or>
+					<or>
+						<and>
+							<field name="start_date" type="date" relation="GE" value="%{record:start_date}" />
+							<field name="start_date" type="date" relation="LE" value="%{record:end_date}" />
+							<or>
+								<field name="demand_state" label="demand_state" type="line" value="3" />
+								<and>
+									<field name="demand_state" label="demand_state" type="line" value="1" />
+									<field name="start_date" label="start_date" type="date" relation="GE" value="now"/>
+								</and>
+							</or>
+						</and>
+						<and>
+							<field name="end_date" type="date" relation="GE" value="%{record:start_date}" />
+							<field name="end_date" type="date" relation="LE" value="%{record:end_date}" />
+							<or>
+								<field name="demand_state" type="line" value="3" />
+								<and>
+									<field name="demand_state" label="demand_state"  type="line" value="1" />
+									<field name="start_date" label="start_date" type="date" relation="GE" value="now"/>
+								</and>
+							</or>
+						</and>
+					</or>
+					<and>
+						<field name="start_date" type="date" relation="LE" value="%{record:start_date}" />
+						<field name="end_date" type="date" relation="GE" value="%{record:end_date}" />
+						<or>
+							<field name="demand_state" type="line" value="3" />
+							<and>
+								<field name="demand_state" type="line" value="1" />
+								<field name="start_date" type="date" relation="GE" value="now"/>
+							</and>
+						</or>
+					</and>
+				</or>
+			</key>
+			<fields>
+				<field name="oid" label="oid" type="oid" isKey="primary" show="hidden" isEdit="no" />
+				<field name="start_date" label="start_date" type="date" default="now" />
+				<field name="end_date" label="end_date" type="date" default="now" />
+				<field name="mission_location" label="mission_location" type="text" size="20" />
+			</fields>
+		</view>	
+	</views>
+</data>
+
+</nxl>

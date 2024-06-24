@@ -1,0 +1,1 @@
+<?php $properties["query"]="DELETE FROM _ds_category WHERE _soid='".$props->getProperty("site.oid","",true)."' AND _treeid='".$props->getProperty("cat.id","",true)."'"; ?>

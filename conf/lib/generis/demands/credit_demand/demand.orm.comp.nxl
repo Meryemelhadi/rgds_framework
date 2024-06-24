@@ -1,0 +1,674 @@
+<?xml version="1.0"?>
+<!-- 
+____________________________________________
+Presence Media | Rabat
+____________________________________________
+Projet    : Intranet WafaAssurance
+Composant : demande
+Auteur    : Nadir Elasri / Mustapha Elgharbi
+Version   : 1.0
+Création  : -
+Modif     : 26/02/2008
+____________________________________________
+
+Fonctionnalités du composant :
+
+		- Demande
+		- Demande avec autovalidation
+
+Paramètres :
+
+		ApplicationParams :
+			- name    : Nom de l'application qui instancie le module
+			- path    : Chemin de l'application ... très important pour pointer les classes de validation
+			- skin    : Skin par défaut de l'application
+			- strings : Nom des strings utilisés par l'application
+
+			- demant_state_field : Champ à utiliser pour savoir si la demande est dans un état 'modifié' et activer le mécanisme de refus/acceptation pour un simple employé
+
+			- autovalidation : S'il y a de l'autovalidation
+			- calcul_conges  : Calcul du reliquat
+			- userinfo       : Récupération des données sur l'utilisateur courant (Utilisé jusqu'à maintenant pour le mgc)
+
+-->
+<xo:taglib 
+	uri		   = "http://www.generis.ma/demands/credit_demand/demand.orm.comp" 
+	xmlns:xo   = "http://www.nxfrontier.com/xo/core"
+	xmlns:xsl  = "http://www.w3.org/1999/XSL/Transform"
+	xmlns:nxl  = "http://www.nxfrontier.com/nxl/nxl"
+	xmlns:tpl  = "http://www.nxfrontier.com/tpl/tpml"
+	xmlns:this = "http://www.generis.ma/demands/credit_demand/demand.comp" 
+	xmlns:ds   = "http://www.nxfrontier.com/nxl/ds"
+	xmlns      = "http://www.nxfrontier.com/nxl/nxl"
+	
+	xmlns:tags_library	= "http://www.presencemedia.ma/tags_library"	
+	xmlns:site_config	= "http://www.nxfrontier.com/site_config">
+
+	<xo:tag name="composant">
+
+		<!-- Component params ... -->
+
+		<!-- component parameters -->
+		<!-- @param string site mode	defines page and application settings related to this part of the site.
+			ex. skin or page name etc. Loads setting from site_config lib.	-->
+		<xo:param name="site_mode" value="user" />
+
+		<!-- @param string user_service		which user type (login service) -->
+		<xo:param name="user_service" value="user" />
+
+		<xo:param name="path" />
+		<xo:param name="skin" />
+
+		<xo:param name="name" />
+		<xo:param name="application_name" value="#{$path}##{$name}#" />
+		
+		<xo:param name="label" />
+		<xo:param name="label_list" />
+		<xo:param name="strings" />
+
+		<xo:param name="autovalidation" value="false" />
+		<xo:param name="calcul_conges" value="false" />
+
+		<xo:param name="db" value="db"/>
+		<xo:param name="service_class" />
+
+		<xo:param name="ds_update_user_infos" />
+
+		<xo:param name="ds_search" />
+		<xo:param name="ds_list" />
+		<xo:param name="ds_add_record" />
+		<xo:param name="ds_record" />
+
+		<xo:param name="ds_show_record" />
+		<xo:param name="ds_get_user_info"  />
+		<xo:param name="ds_validation_show_log" />
+		<xo:param name = "ds_gen_word" value="#{$ds_record}#" />
+
+		<xo:param name="userinfo" value="false" />
+		
+		<xo:param name="demand_state_field" />
+
+		<xo:param name="template_type" value="tpl"/>
+		<xo:param name="template_list"/>
+		<xo:param name="template_add_record"/>
+		<xo:param name="template_edit_record"/>
+		<xo:param name="template_view_record"/>
+		<xo:param name="template_message"/>
+		<xo:param name="template_gen_word"/>
+		<xo:param name="template_email" value="common.mail"/>
+
+
+		<xo:param name="first_operation" value="list_records"/>
+
+		<xo:param name = "record_property" value = "page.record"/>
+		<xo:param name = "record_user" value = "user.record"/>
+		<xo:param name = "record_properties" value = "page.records"/>
+		<xo:param name = "record_search" value = "page.search"/>
+
+		<!-- pages -->
+		<pages xmlns="http://www.nxfrontier.com/nxl/page">
+
+			<page name="#{$name}#" protected="#{$user_service}#"   path="#{$path}#" cache="no" lang="fr" skin="#{$skin}#">
+				<exec logic="#{$application_name}#_logic" strings="#{$strings}#">
+					<property name="page_message_aide" value="#string:page_message_add_aide#" />
+				</exec>
+			</page>
+		</pages>
+
+		<!-- logic -->
+		<logic xmlns="http://www.nxfrontier.com/nxl/nxl" xmlns:ds="http://www.nxfrontier.com/nxl/ds"
+		   xmlns:button="http://www.nxfrontier.com/nxl/button">
+
+			<application name="#{$application_name}#_logic">
+				
+				<operation name="add_record">
+					
+					<step name="add_record">
+						<code>
+
+							<set name="var:loadedRecord">
+								<ds:load media="empty" ds="#{$ds_record}#" property="#{$record_property}#" multiple="no" addProperties="no" />
+							</set>
+
+<xsl:if test="$userinfo='true'">
+							<set name="property:userinformations">
+								<ds:load media="db" ds="#{$ds_get_user_info}#" property="#{$record_user}#" multiple="no" addProperties="no"/>
+							</set>
+</xsl:if>
+
+							<set name="property:validator_path">
+								<bean:call class="#{$service_class}#" method="getValidationPath" params="#$loadedRecord#,#user:oid#" 
+									xmlns:bean  = "http://www.nxfrontier.com/nxl/bean" />
+							</set>
+
+							<button:set name="submit" step="add_record_process"/>
+
+							<button:set name="getReliquat" operation="ajax_ws" step="getReliquat"/>
+							
+							<button:set name="back" operation="list_records" params="#request:filterKey#">
+								<button:param name="mode" value="ajax" />
+							</button:set>
+
+							<button:set name="list" operation="list_records">
+								<button:param name="mode" value="ajax" />
+							</button:set>
+
+							<set name="property:page_message_aide" value="#string:page_message_add_aide#" />
+
+							<set name="var:viewMode" value="'page'" />
+							
+							<if condition="in_array(#get:mode#,array('page','ajax'))">
+								<set name="var:viewMode" value="#get:mode#" />
+							</if>
+
+							<choose>
+								<when test="$viewMode == 'page'">
+									<display_form view="#{$application_name}##{$template_type}#_addpage" />
+								</when>
+								<otherwise>
+									<display_form view="#{$application_name}##{$template_type}#_addajax" />
+								</otherwise>
+							</choose>
+
+						</code>
+					</step>
+
+					<step name="add_record_update">
+						<code>
+							<ds:load media="post" ds="#{$ds_add_record}#" property="#{$record_property}#" multiple="no" addProperties="no" />
+
+<xsl:if test="$userinfo='true'">
+							
+							<set name="property:userinformations">
+								<ds:load media="db" ds="#{$ds_get_user_info}#" property="#{$record_user}#" multiple="no" addProperties="no"/>
+							</set>
+
+</xsl:if>
+
+							<button:set name="submit" step="add_record_process"/>
+							
+							<button:set name="back" operation="list_records" params="#request:filterKey#">
+								<button:param name="mode" value="ajax" />
+							</button:set>
+
+							<button:set name="list" operation="list_records">
+								<button:param name="mode" value="ajax" />
+							</button:set>
+
+							<set name="property:page_message_aide" value="#string:page_message_add_aide#" />
+
+							<set name="var:viewMode" value="'page'" />
+							
+							<if condition="in_array(#get:mode#,array('page','ajax'))">
+								<set name="var:viewMode" value="#get:mode#" />
+							</if>
+
+							<choose>
+								<display_form view="#{$application_name}##{$template_type}#_addajax" />
+							</choose>
+
+						</code>
+					</step>
+
+					<step name="add_record_process">
+						<code>
+							<set name="var:loadedRecord">
+								<ds:load media="post" ds="#{$ds_add_record}#" property="#{$record_property}#" multiple="no" addProperties="no"/>
+							</set>
+
+							<set name="property:page_message_aide" value="#string:page_message_add_aide#" />
+
+							<button:set name="list" operation="list_records">
+								<button:param name="mode" value="ajax" />
+							</button:set>
+
+							<button:set name="submit" operation="add_record" step="add_record_process"/>
+
+							<ds:saveProperties record="#$loadedRecord#" format="HTML" to="recordToValidate" />
+							
+							<set name="var:applicationName" value="#{$application_name}#" />
+							<set name="var:classPath" value="#{$path}#" />
+							
+ 							
+							<set name="var:validation">
+								<bean:call class="#{$service_class}#" method="submitDemand" params="#user:oid#,#$loadedRecord#" 
+									xmlns:bean  = "http://www.nxfrontier.com/nxl/bean" />
+							</set>
+
+<xsl:if test="$userinfo='true'">
+							<set name="property:userinformations">
+								<ds:load media="db" ds="#{$ds_get_user_info}#" property="#{$record_user}#" multiple="no" addProperties="no" />
+							</set>
+</xsl:if>
+
+ 							<choose>
+								<when test="is_bool($validation)">
+									<button:set name="list" operation="list_records">
+										<button:param name="mode" value="ajax" />
+									</button:set>
+
+									<set name="property:page_message_aide" value="#string:page_message_add_aide#" />
+									<set name="property:pageMessage" value="#string:message_add_success#"/>
+<!-- 									<display_form view="#{$application_name}##{$template_type}#_addajax" />
+ -->
+								</when>
+								<otherwise>
+
+									<set name="property:page_message_aide" value="#string:page_message_add_aide#" />
+									<set name="property:errorMessage" value="#string:$validation#"/>
+									<display_form view="#{$application_name}##{$template_type}#_message" />
+
+								</otherwise>
+							</choose>
+							
+						</code>
+					</step>
+				</operation>
+
+				<operation name="ajax_ws">
+					<step name="getReliquat">
+						<code>
+
+							<echo>
+								<bean:call class="#{$service_class}#" method="AJAX_getReliquat" 
+									xmlns:bean  = "http://www.nxfrontier.com/nxl/bean" />
+							</echo>
+
+						</code>
+					</step>
+				</operation>
+				
+				<operation name="list_records">
+					<step name="list_records">
+						<code>
+							<tags_library:filter_key 
+								ds_search		= "#{$ds_search}#"
+								searchData		= "searchData"
+								filterKey		= "filterKey"
+								record_search	= "#{$record_search}#"
+							/>
+
+							<ds:load media="#{$db}#" ds="#{$ds_list}#" property="#{$record_properties}#" multiple="yes" addProperties="no" record="#$searchData#"/>
+
+							<set name="property:rh_state_modify">
+								<bean:call class="#{$service_class}#" method="getStateModifyLimit" params="#user:oid#" 
+									xmlns:bean  = "http://www.nxfrontier.com/nxl/bean" />
+							</set>
+
+
+							<!-- Buttons initialization -->
+
+							<!-- Search submission button -->
+							<button:set name="back" operation="add_record" />
+							<button:set name="add" operation="add_record" >
+						    	<button:param name="filterKey" value="#property:filterKey#" encode="true"/>
+							</button:set>
+
+							<button:set name="search" operation="list_records">
+						    	<button:param name="filterKey" value="#property:filterKey#" encode="true"/>
+								<button:param name="mode" value="ajax"/>
+							</button:set>
+
+							<!-- view record details -->
+							<button:set name="view" operation="validate_record" >
+						    	<button:param name="filterKey" value="#property:filterKey#" encode="true"/>
+							</button:set>
+
+							<!-- edit record -->
+							<button:set name="edit" operation="edit_record">
+						    	<button:param name="filterKey" value="#property:filterKey#" encode="true"/>
+							</button:set>
+
+							<!-- delete record -->
+							<button:set name="delete" operation="delete_record" />
+
+							<set name="var:viewMode" value="'page'" />
+							
+							<if condition="in_array(#get:mode#,array('page','ajax'))">
+								<set name="var:viewMode" value="#get:mode#" />
+							</if>
+
+							<choose>
+								<when test="$viewMode == 'page'">
+									<display view="#{$application_name}##{$template_type}#_listpage" />
+								</when>
+								<otherwise>
+									<display view="#{$application_name}##{$template_type}#_listajax" />
+								</otherwise>
+							</choose>
+
+						</code>
+					</step>
+				</operation>
+
+				<operation name="edit_record">
+					
+					<step name="edit_record">	
+						<code>
+
+							<set name="var:loadedRecord">
+								<ds:load media="db" ds="#{$ds_record}#" property="#{$record_property}#" multiple="no" addProperties="no">
+									<ds:property name="oid" value="#request:oid#" />
+								</ds:load>
+							</set>
+
+							<!-- display log -->
+							<set name="var:logRecords">
+								<ds:load media="db" ds="#{$ds_validation_show_log}#" property="log.records" multiple="yes" addProperties="no">
+									<ds:property name="demand_id" value="#request:oid#" />
+								</ds:load>
+							</set>
+
+<xsl:if test="$userinfo='true'">
+							<set name="property:userinfos">
+								<ds:load media="db" ds="#{$ds_get_user_info}#" property="#{$record_user}#" multiple="no" addProperties="no" />
+							</set>
+</xsl:if>
+							<set name="page_message" value="#string:page_message_edit#" />
+							<button:set name="getReliquat" operation="ajax_ws" step="getReliquat"/>
+
+							<button:set name="submit" step="edit_record_process"/>
+
+							<button:set name="list" operation="list_records">
+								<button:param name="mode" value="ajax" />
+							</button:set>
+
+<xsl:if test="$autovalidation='true'">
+							<set name="property:validator_path">
+								<bean:call class="#{$service_class}#" method="getValidationPath" params="#$loadedRecord#,#user:oid#" 
+									xmlns:bean  = "http://www.nxfrontier.com/nxl/bean" />
+							</set>
+</xsl:if>
+
+							<display view="#{$application_name}##{$template_type}#_edit"/>
+
+						</code>
+					</step>
+
+					<step name="edit_record_process">
+						<code>
+							
+							<set name="var:loadedRecord">
+								<ds:load media="post" ds="#{$ds_record}#" property="#{$record_property}#" multiple="no" addProperties="no"/>
+							</set>
+
+							<set name="var:validation">
+								<bean:call class="#{$service_class}#" method="editDemand" params="#user:oid#,#$loadedRecord#" 
+									xmlns:bean  = "http://www.nxfrontier.com/nxl/bean" />
+							</set>
+
+							<choose>
+								<when test="is_bool($validation)">
+
+									<redirect operation="list_records">
+										<url_param name="mode" value="ajax"/>
+									</redirect>
+
+								</when>
+								<otherwise>
+
+<xsl:if test="$userinfo='true'">
+									<set name="property:userinformations">
+										<ds:load media="db" ds="#{$ds_get_user_info}#" property="#{$record_user}#" multiple="no" addProperties="no" />
+									</set>
+</xsl:if>
+
+									<button:set name="submit" operation="edit_record" step="edit_record_process"/>
+
+									<button:set name="back" operation="list_records" params="#request:filterKey#">
+										<button:param name="mode" value="ajax" />
+									</button:set>
+
+									<set name="property:errorMessage" value="#string:$validation#"/>
+
+									<display_form view="#{$application_name}##{$template_type}#_message" />
+
+								</otherwise>
+							</choose>
+
+						</code>
+					</step>
+
+				</operation>
+				
+				<operation name="validate_record">
+					<step name="display">
+						<code>
+
+							<set name="var:loadedRecord">
+								<ds:load media="db" ds="#{$ds_show_record}#" property="#{$record_property}#" multiple="no" addProperties="no" />
+							</set>
+
+<xsl:if test="$userinfo='true'">
+							<set name="userinfos">
+								<ds:load media="db" ds="#{$ds_get_user_info}#" property="#{$record_user}#" multiple="no" addProperties="no"/>
+							</set>
+</xsl:if>
+							<button:set name="getReliquat" operation="ajax_ws" step="getReliquat"/>
+
+<xsl:if test="$autovalidation='true'">
+
+							<set name="property:validator_path">
+								<bean:call class="#{$service_class}#" method="getValidationPath" params="#$loadedRecord#,#user:oid#" 
+									xmlns:bean  = "http://www.nxfrontier.com/nxl/bean" />
+							</set>
+</xsl:if>
+
+							<!-- display log -->
+							<set name="var:logRecords">
+								<ds:load media="db" ds="#{$ds_validation_show_log}#" property="#{$record_properties}#" multiple="yes" addProperties="no">
+									<ds:property name="demand_id" value="#request:oid#" />
+								</ds:load>
+							</set>
+
+							<set name="var:demandState">
+								<ds:field name="#{$demand_state_field}#" format="string" record="#$loadedRecord#"/>
+							</set>							
+							
+							<bean:call class="#{$service_class}#" 
+								method="getActions" 
+								params="#user:oid#,null,#$loadedRecord#,$canEdit,$canValidate" 
+									xmlns:bean  = "http://www.nxfrontier.com/nxl/bean" />
+
+							<if test="#$canEdit#">
+								<button:set name="edit" operation="edit_record" />
+								<button:set name="delete" operation="delete_record" />
+							</if>
+							<if test="#$Validate#">
+								<button:set name="accept" step="process_accept">
+									<button:param name="filterKey" value="#get:filterKey#" encode="true"/>
+								</button:set>
+
+								<button:set name="refuse" step="process_deny">
+									<button:param name="filterKey" value="#get:filterKey#" encode="true"/>
+								</button:set>
+							</if>
+
+							<choose>
+								<when test="#$demandState# == 1">
+									<set name="page_message" value="#string:demande_en_instance#" />
+								</when>
+								<when test="#$demandState# == 2">
+									<set name="page_message" value="#string:demande_modifiee#" />
+								</when>									
+								<when test="#$demandState# == 3">
+									<set name="page_message" value="#string:demande_validee#" />
+								</when>
+								<when test="#$demandState# == 4">
+									<set name="page_message" value="#string:demande_refusee#" />
+								</when>
+								<otherwise>
+									<set name="page_message" value="#string:demande_erreur#" />
+								</otherwise>
+							</choose>
+					
+							<button:set name="list" operation="list_records" params="#get:filterKey#">
+								<button:param name="mode" value="ajax" />
+							</button:set>
+
+							<!-- generate word -->
+							<button:set name="gen_word" operation="genword"/>					
+							 				
+							<display view="#{$application_name}##{$template_type}#_view" />
+							
+						</code>
+					</step>
+
+					<step name="process_accept">
+						<code>
+							
+							<set name="var:loadedRecord">
+								<ds:load media="db" ds="#{$ds_record}#" property="#{$record_property}#" multiple="no" addProperties="no">
+									<ds:property name="oid" value="#request:oid#" />
+								</ds:load>
+							</set>
+
+							<set name="var:record_key">
+								<ds:expr record="#$loadedRecord#" expression="record.url_key" />
+							</set>
+
+							<set name="var:validation">
+								<bean:call class="#{$service_class}#" method="acceptDemand" params="#user:oid#,#$loadedRecord#" 
+									xmlns:bean  = "http://www.nxfrontier.com/nxl/bean" />
+							</set>
+
+							<choose>
+								<when test="is_bool($validation)">
+
+									<redirect operation="list_records" params="#request:filterKey#" />
+
+								</when>
+								<otherwise>
+
+									<redirect step="display" params="#$record_key#">
+										<url_param name="filterKey" value="#request:filterKey#"/>
+									</redirect>
+
+								</otherwise>
+							</choose>
+
+						</code>
+					</step>
+
+					<step name="process_deny">
+						<code>
+							
+							<set name="var:loadedRecord">
+								<ds:load media="db" ds="#{$ds_record}#" property="#{$record_property}#" multiple="no" addProperties="no">
+									<ds:property name="oid" value="#request:oid#" />
+								</ds:load>
+							</set>
+
+							<set name="var:record_key">
+								<ds:expr record="#$loadedRecord#" expression="record.url_key" />
+							</set>
+
+							<set name="var:validation">
+								<bean:call class="#{$service_class}#" method="denyDemand" params="#user:oid#,#$loadedRecord#" 
+									xmlns:bean  = "http://www.nxfrontier.com/nxl/bean" />
+							</set>
+
+							<choose>
+								<when test="is_bool($validation)">
+
+									<redirect operation="list_records" params="#request:filterKey#" />
+
+								</when>
+								<otherwise>
+
+									<redirect step="display" params="#$record_key#">
+										<url_param name="filterKey" value="#request:filterKey#" encode="true"/>
+									</redirect>
+
+								</otherwise>
+							</choose>
+
+						</code>
+					</step>
+				</operation>
+				
+				<operation name="genword">
+					<step name="genword">
+						<code>
+						
+							<set name="var:rec_attest">
+								<ds:load media="db" ds="#{$ds_gen_word}#" multiple="no" addProperties="yes"/>		
+							</set>
+							
+							<ds:load media="db" ds="#{$ds_get_user_info}#" property="page.records" multiple="yes" addProperties="yes" record="#$rec_attest#"/>
+							
+							<display view="#{$template_gen_word}#" type="WORD" />
+							
+						</code>
+					</step>
+				</operation>
+
+				<operation name="delete_record">
+					<step name="delete_record">
+						<code>
+							<set name="var:loadedRecord">
+								<ds:load media="db" ds="#{$ds_record}#" property="#{$record_property}#" multiple="no" addProperties="no">
+									<ds:property name="oid" value="#request:oid#" />
+								</ds:load>
+							</set>
+
+							<set name="var:validation">
+								<bean:call class="#{$service_class}#" method="deleteDemand" params="#user:oid#,#$loadedRecord#" 
+									xmlns:bean  = "http://www.nxfrontier.com/nxl/bean" />
+							</set>
+
+							<redirect operation="list_records">
+								<url_param name="mode" value="ajax"/>
+							</redirect>
+
+						</code>
+					</step>
+				</operation>
+				
+			</application>
+		</logic>
+		
+		<!-- views / screens -->
+		<tpl:screens xmlns="http://www.nxfrontier.com/tpl/tpml" xmlns:tpl="http://www.nxfrontier.com/tpl/tpml"
+			  path="/" skin="default" suffix="#{$template_type}#">
+
+				<tpl:screen name="#{$application_name}##{$template_type}#_addajax" trace="yes">
+					<load view="#{$template_add_record}#" />
+				</tpl:screen>
+
+				<tpl:screen name="#{$application_name}##{$template_type}#_addpage" trace="yes" inherit="page">	
+					<zone>
+						<load view="#{$template_add_record}#" />
+					</zone>
+				</tpl:screen>
+
+				<tpl:screen name="#{$application_name}##{$template_type}#_edit" trace="yes">
+					<load view="#{$template_edit_record}#" />
+				</tpl:screen>
+		
+				<tpl:screen name="#{$application_name}##{$template_type}#_view" trace="yes">
+					<load view="#{$template_view_record}#" />
+				</tpl:screen>
+				
+				<tpl:screen name="#{$application_name}##{$template_type}#_listpage" trace="yes" inherit="page">	
+					<zone>
+						<load view="#{$template_list}#" />
+					</zone>
+				</tpl:screen>
+
+				<tpl:screen name="#{$application_name}##{$template_type}#_listajax" trace="yes">
+					<load view="#{$template_list}#" />
+				</tpl:screen>
+
+				<tpl:screen name="#{$application_name}##{$template_type}#_message" trace="yes">
+					<load view="#{$template_message}#" />
+				</tpl:screen>
+
+				<tpl:screen name="#{$application_name}#_email_template" trace="yes">
+				    <tpl:load view="#{$template_email}#" />
+			    </tpl:screen>
+				
+
+			</tpl:screens>			
+	</xo:tag>
+</xo:taglib>

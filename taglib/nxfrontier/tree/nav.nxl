@@ -1,0 +1,128 @@
+<?xml version="1.0"?>
+<nxl:nxl version="1.0"
+	xmlns:nxl="http://www.nxfrontier.com/nxl/nxl"
+	xmlns="http://www.w3.org/TR/REC-html40"
+	xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+	xmlns:xo="http://www.nxfrontier.com/xo/core"
+	xmlns:compil="http://www.nxfrontier.com/nxl/compil"
+	xmlns:js="http://www.nxfrontier.com/js/js"
+	xmlns:format="http://www.nxfrontier.com/nxl/format"
+	xmlns:navtree="http://www.nxfrontier.com/tree/nav"
+	xmlns:num="http://www.nxfrontier.com/functions/numeric"
+	xmlns:tree_list="http://www.nxfrontier.com/tree/list"
+>
+<!-- 
+	Generate PHP reference tree (navigation structure) from XML description 
+	=======================================================================
+	- generate list of values to be used in html forms
+	- generate nav tree as an array
+
+	NB. this tree is populated with articles (tree leaves) by application "nav.js_tree"
+	called by "nav.php" page.
+-->
+<xo:taglib uri="http://www.nxfrontier.com/tree/nav">
+
+	<xo:tag name="tree" trace="yes" xmlns="http://www.nxfrontier.com/nxl/nxl">
+		<xsl:variable name="id"><format:toIdentifier><xsl:value-of select="@id" /></format:toIdentifier></xsl:variable>
+ 
+	<!-- generate navigation lists -->
+	<tree_list:tree>
+		<xsl:with-param name="tree" select="."/>
+		<xsl:with-param name="name" select="@nav"/>
+	</tree_list:tree>
+
+	<!-- generate reference tree -->
+	<xsl:variable name="info">  
+		<xsl:text>array('level'=>'0','id'=>'</xsl:text><xsl:value-of select="$id"/><xsl:text>'</xsl:text>
+
+		<xsl:text>,'name'=>'</xsl:text>
+		<xsl:choose>
+			<xsl:when test="@name"><xsl:value-of select="@name"/></xsl:when>
+			<xsl:otherwise><xsl:value-of select="$id"/></xsl:otherwise>
+		</xsl:choose>
+		<xsl:text>'</xsl:text>
+
+		<xsl:text>,'fullName'=>'</xsl:text>
+		<xsl:choose>
+			<xsl:when test="@fullName"><xsl:value-of select="@fullName"/></xsl:when>
+			<xsl:when test="@name"><xsl:value-of select="@name"/></xsl:when>
+			<xsl:otherwise><xsl:value-of select="$id"/></xsl:otherwise>
+		</xsl:choose>
+		<xsl:text>'</xsl:text>
+
+		<xsl:text>,'index'=>'0'</xsl:text>
+
+		<xsl:if test="help">
+			<xsl:text>,'help'=>'</xsl:text>
+				<xsl:value-of select="$help"/>
+			<xsl:text>'</xsl:text>
+		</xsl:if>
+
+		<xsl:if test="node"><xsl:text> ,'children'=>array(
+			</xsl:text><xsl:value-of select="$_content_" /><xsl:text>
+		)
+		</xsl:text>
+		</xsl:if>
+		<xsl:text>)
+		</xsl:text>
+	</xsl:variable>
+
+	<!-- output PHP tree -->
+	<compil:output file="#const:NX_CONF#content/nav/#xo:xpath(@nav)#.inc" method="php" indent="no" trace="yes">
+<xsl:text>
+$tree =
+</xsl:text><xsl:value-of select="$info" /><xsl:text>;</xsl:text>
+		</compil:output>
+
+	</xo:tag>
+
+	<xo:tag name="node">
+		<xsl:variable name="id"><format:toIdentifier><xsl:value-of select="@id" /></format:toIdentifier></xsl:variable>
+
+		<xsl:text>'</xsl:text><xsl:value-of select="$id"/>
+		<xsl:text>'=>array('level'=>'</xsl:text><num:decrement><xsl:value-of select="$_level_" /></num:decrement>
+		<xsl:text>','id'=>'</xsl:text><xsl:value-of select="$id"/><xsl:text>'</xsl:text>
+
+		<xsl:text>,'name'=>'</xsl:text>
+		<xsl:choose>
+			<xsl:when test="@name"><xsl:value-of select="@name"/></xsl:when>
+			<xsl:otherwise><xsl:value-of select="$id"/></xsl:otherwise>
+		</xsl:choose>
+		<xsl:text>'</xsl:text>
+
+		<xsl:text>,'fullName'=>'</xsl:text>
+		<xsl:choose>
+			<xsl:when test="@fullName"><xsl:value-of select="@fullName"/></xsl:when>
+			<xsl:when test="@name"><xsl:value-of select="@name"/></xsl:when>
+			<xsl:otherwise><xsl:value-of select="$id"/></xsl:otherwise>
+		</xsl:choose>
+		<xsl:text>'</xsl:text>
+
+		<xsl:text>,'index'=>'</xsl:text>
+			<xsl:value-of select="position()"/>
+		<xsl:text>'</xsl:text>
+
+		<xsl:text>,'access'=>'</xsl:text>
+		<xsl:choose>
+			<xsl:when test="@access"><xsl:value-of select="@access"/></xsl:when>
+			<xsl:otherwise></xsl:otherwise>
+		</xsl:choose>
+		<xsl:text>'</xsl:text>
+
+		<xsl:if test="help">
+			<xsl:text>,'help'=>'</xsl:text>
+				<xsl:value-of select="$help"/>
+			<xsl:text>'</xsl:text>
+		</xsl:if>
+
+		<xsl:if test="node"><xsl:text> ,'children'=>array(
+			</xsl:text><xsl:value-of select="$_content_" /><xsl:text>
+		)
+		</xsl:text>
+		</xsl:if>
+		<xsl:text>),
+		</xsl:text>
+	</xo:tag>
+</xo:taglib>
+
+</nxl:nxl>

@@ -1,0 +1,45 @@
+<?xml version="1.0"?> 
+
+<data xmlns="http://www.nxfrontier.com/dml/dml">
+		
+	<views>
+		<view name="rh.conge.legal_days" table="rh_demande_conges_legal_days" xhandler="rh.conge.legalDays">
+			<key>
+				<field name="oid" type="oid" value="%{property:legal_days}" isEdit="no" show="hidden" />
+			</key>
+			<fields>
+				<field name="oid" label="object_id" type="oid" isKey="primary" show="hidden" isEdit="no" />
+				<field name="legal_day_name" label="legal_day_name"  type="line" size="100"  />
+				<field name="allowed_days" label="allowed_days" type="integer" />
+				<field name="observations" label="observations" type="text" size="255" multiLines="auto" />
+			</fields>
+		</view>
+
+		<view name="rh.conge.demand.get_all_legal_days" table="rh_demande_conges_legal_days">
+			<sort>
+				<field name="oid" label="object_id" type="oid" isKey="primary" show="hidden" isEdit="no" />
+				<field name="allowed_days" direction="asc"/>
+			</sort>
+			<fields>
+				<field name="oid" label="object_id" type="oid" isKey="primary" show="hidden" isEdit="no" />
+				<field name="legal_day_name" label="legal_day_name"  type="line" size="100"  />
+				<field name="allowed_days" label="allowed_days" type="integer" />
+				<field name="observations" label="observations" type="text" size="255" multiLines="auto" />
+			</fields>
+		</view>
+		<view name="rh.conge.validation.get_all_legal_days" table="rh_demande_conges_legal_days">
+			<sort>
+				<field name="oid" label="object_id" type="oid" isKey="primary" show="hidden" isEdit="no" />
+				<field name="allowed_days" direction="asc"/>
+			</sort>
+			<fields>
+				<field name="oid" label="object_id" type="oid" isKey="primary" show="hidden" isEdit="no" />
+				<field name="legal_day_name" label="legal_day_name"  type="line" size="100"  />
+				<field name="allowed_days" label="allowed_days" type="integer" />
+				<field name="observations" label="observations" type="text" size="255" multiLines="auto" />
+			</fields>
+		</view>
+
+	</views>
+
+</data>

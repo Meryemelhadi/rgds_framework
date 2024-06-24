@@ -1,0 +1,1008 @@
+<?php
+
+// NX extension of FPDF and FPFI, allow to use a template + descriptor
+/*
+		$pdf = new PDFDoc($orientation='P', $unit='mm', $format='A4');
+		$self = $this;
+		$pdf->loadDoc($path,$configDoc,
+			function($content) use ($self,$mapper,$sessionInfos,$infos) {
+				return $self->processInviteBody($mapper,$sessionInfos,$infos,$content,$i=0,$n=10);
+			});
+
+		$pdf->Output("I",$filename.".pdf");
+*/
+
+require(NX_LIB.'fpdf/fpdf.php');
+require(NX_LIB.'fpdi/fpdi.php');
+
+//function hex2dec
+//returns an associative array (keys: R,G,B) from
+//a hex html code (e.g. #3FE5AA)
+function hex2dec($couleur = "#000000"){
+    $R = substr($couleur, 1, 2);
+    $rouge = hexdec($R);
+    $V = substr($couleur, 3, 2);
+    $vert = hexdec($V);
+    $B = substr($couleur, 5, 2);
+    $bleu = hexdec($B);
+    $tbl_couleur = array();
+    $tbl_couleur['R']=$rouge;
+    $tbl_couleur['V']=$vert;
+    $tbl_couleur['B']=$bleu;
+    return $tbl_couleur;
+}
+
+class UnitsConv {
+	static $dpi=72;
+
+	static function setDPI($dpi) {
+		self::$dpi=$dpi;
+	}
+
+	//conversion pixel -> millimeter at 72 dpi (with screenshots, adjust image DPI before mesuring in pixels..)
+	static function px2mm($px){
+		return $px*25.4/self::$dpi;
+		//return $px*0.266497462;
+	}
+
+	static function mm2px($px){
+		return $px*self::$dpi/25.4;
+		// return $px/0.266497462;
+	}
+
+	//points to mm
+	static function pt2mm($pt){
+		return 0.352778*$pt;
+	}
+
+	static function mm2pt($pt){
+		return $pt/0.352778;
+	}
+
+	static function px2pt($px){
+		return self::mm2pt(self::px2mm($px));
+	}
+}
+
+function txtentities($html){
+    $trans = get_html_translation_table(HTML_ENTITIES);
+    $trans = array_flip($trans);
+    return strtr($html, $trans);
+}
+
+class PDF_HTML extends FPDI
+{
+	//variables of html parser
+	protected $B;
+	protected $I;
+	protected $U;
+	protected $HREF;
+	protected $fontList;
+	protected $issetfont;
+	protected $issetcolor;
+	var $prevWrite='';
+	var $debug = false;
+
+	var $defaultStyle = array('font'=>'arial','size'=>'8','style'=>'','color'=>'#000000','align'=>'justify');
+
+	var $tags = array(
+		'h1'=>array('size'=>'20','style'=>'B','color'=>'#550000'),
+		'h2'=>array('size'=>'18','style'=>'B','color'=>'#000000'),
+		'h3'=>array('size'=>'16','style'=>'B','color'=>'#000000'),
+		'h4'=>array('size'=>'12','style'=>'BI','color'=>'#000000'),
+		'h5'=>array('size'=>'9','style'=>'I','color'=>'#000000'),
+		'p'=> array('size'=>'5','style'=>'','color'=>'#000000'),
+		'html'=> array('font'=>'arial','size'=>'5','style'=>'','color'=>'#000000','align'=>'justify'),
+		'pagebreakwhen'=> array('maxY'=>'28cm'),
+	);
+
+	var $mapAlign = array(
+		'left'=>'L',
+		'right'=>'R',
+		'center'=>'C',
+		'justify'=>'J'		
+	);
+
+	function __construct($orientation='P', $unit='mm', $format='A4')
+	{
+		//Call parent constructor
+		parent::__construct($orientation,$unit,$format);
+
+		//Initialization
+		$this->B=0;
+		$this->I=0;
+		$this->U=0;
+		$this->HREF='';
+		$this->fontlist=array('arial', 'times', 'courier', 'helvetica', 'symbol');
+		$this->issetfont=false;
+		$this->issetcolor=false;
+		$this->pushStyle($this->defaultStyle);
+	}
+
+	function initTagsStyles($tags) {
+
+		foreach($tags as $t=>$desc)
+		{
+			$desc['tag']=$t;
+			$tags2[strtolower($t)]=$desc;
+		}
+
+		$allowedTags = explode(',','b,u,i,a,img,p,br,strong,em,font,tr,blockquote,ul,ol,li,pagebreakwhen');
+		$allowedTags = array_unique(array_merge(array_keys($tags2),$allowedTags));	
+		$this->allowedTags = '<'.implode('><',$allowedTags).'>';
+
+		return $tags2;
+	}
+
+	function Write($h, $txt, $link='',$lineHeight=null,$border=false)
+	{
+		if(!$lineHeight)
+			$lineHeight = $h;
+
+		if($this->debug)
+			$border=1;
+
+		// Output text in flowing mode
+		if(!isset($this->CurrentFont))
+			$this->Error('No font has been set');
+		$cw = &$this->CurrentFont['cw'];
+		$w = $this->w-$this->rMargin-$this->x;
+		$wmax = ($w-2*$this->cMargin)*1000/$this->FontSize;
+		$s = str_replace("\r",'',$txt);
+		$nb = strlen($s);
+		$sep = -1;
+		$i = 0;
+		$j = 0;
+		$l = 0;
+		$nl = 1;
+		while($i<$nb)
+		{
+			// Get next character
+			$c = $s[$i];
+			if($c=="\n")
+			{
+				// Explicit line break
+				$this->Cell($w,$h,substr($s,$j,$i-$j),$border,2,'',false,$link);
+				$i++;
+				$sep = -1;
+				$j = $i;
+				$l = 0;
+				if($nl==1)
+				{
+					$this->x = $this->lMargin;
+					$w = $this->w-$this->rMargin-$this->x;
+					$wmax = ($w-2*$this->cMargin)*1000/$this->FontSize;
+				}
+				$nl++;
+				continue;
+			}
+			if($c==' ')
+				$sep = $i;
+			$l += $cw[$c];
+			if($l>$wmax)
+			{
+				// Automatic line break
+				if($sep==-1)
+				{
+					if($this->x>$this->lMargin)
+					{
+						// Move to next line
+						$this->x = $this->lMargin;
+						$this->y += $h;
+						nxLog("auto br +$h",'FPDF');
+
+						$w = $this->w-$this->rMargin-$this->x;
+						$wmax = ($w-2*$this->cMargin)*1000/$this->FontSize;
+						$i++;
+						$nl++;
+						continue;
+					}
+					if($i==$j)
+						$i++;
+					$this->Cell($w,$h,substr($s,$j,$i-$j),$border,2,'',false,$link);
+				}
+				else
+				{
+					$this->Cell($w,$h,substr($s,$j,$sep-$j),$border,2,'',false,$link);
+					$i = $sep+1;
+				}
+				$sep = -1;
+				$j = $i;
+				$l = 0;
+				if($nl==1)
+				{
+					$this->x = $this->lMargin;
+					$w = $this->w-$this->rMargin-$this->x;
+					$wmax = ($w-2*$this->cMargin)*1000/$this->FontSize;
+				}
+				$nl++;
+			}
+			else
+				$i++;
+		}
+		// Last chunk
+		if($i!=$j)
+			$this->Cell($l/1000*$this->FontSize,$h,substr($s,$j),$border,0,'',false,$link);
+	}
+
+	function isStartOfLine() {
+		if($this->x == $this->lMargin)
+			return true;
+		else
+			return false;
+	}
+
+	function writeText($s) {
+
+		$s2 = stripslashes(txtentities($s));
+		if(!trim($s2))
+			return;
+
+		$tag = $this->curStyle['tag'];
+
+		if($this->debug ||(isset($this->curStyle['debug'])&&$this->curStyle['debug']))
+			$debug=true;
+		else
+			$debug=false;
+
+		if($this->debug ||(isset($this->curStyle['break'])&&$this->curStyle['break']))
+			DebugBreak();
+
+		if(isset($this->curStyle['beforeWrite']))
+			$s2 = $this->curStyle['beforeWrite']($s2,$this->curStyle,$this);
+
+		if(isset($this->curStyle['size']))
+			$size = $this->curStyle['size'];
+		else
+			$size = 16;
+
+		if(isset($this->curStyle['height']))
+			$h = $this->curStyle['height'];
+		else
+			$h = UnitsConv::pt2mm($size);
+
+		if(isset($this->curStyle['border']) && $this->curStyle['border'])
+			$border = 1;
+		else
+			$border = 0;
+
+		if($this->textPrefix)
+			$s2 = $this->textPrefix.$s2;
+
+		$align = $this->curStyle['align'] ? strtoupper($this->curStyle['align'][0]) : '';
+		if($border || ($align && $align!='J' && $align!='L'))
+		{
+			nxLog($log="[$tag]Write MultiCell text align:{$align},height:{$h}mm, size:{$size}pt,text:{$s2}",'FPDF');
+
+			if($debug)
+				$s2 = $log;
+
+			$this->MultiCell(0,$h,$s2,$border, $align);
+			$this->prevWrite='block';
+		}
+		else {
+			nxLog($log="[$tag] Write height:{$h}mm, size:{$size}pt, text:{$s2}",'FPDF');
+			if($debug)
+				$s2 = $log;
+
+			$this->Write($h,$s2);
+			$this->prevWrite='inline-block';
+		}
+	}
+
+	function writeHTML($html,$curStyle)
+	{
+		// set new style
+		$this->pushStyle($curStyle);
+		$this->prevWrite='';
+
+		//HTML parser
+		$html=strip_tags($html,$this->allowedTags); //supprime tous les tags sauf ceux reconnus
+		$html=str_replace("\n",' ',$html); //remplace retour à la ligne par un espace
+		$a=preg_split('/<(.*)>/U',$html,-1,PREG_SPLIT_DELIM_CAPTURE); //éclate la chaîne avec les balises
+		foreach($a as $i=>$e)
+		{
+			if($i%2==0)
+			{
+				//Text
+				if($this->HREF)
+					$this->PutLink($this->HREF,$e);
+				else
+					$this->writeText($e);
+			}
+			else
+			{
+				//Tag
+				if($e[0]=='/')
+					$this->CloseTag(strtoupper(substr($e,1)));
+				else
+				{
+					//Extract attributes
+					$a2=explode(' ',$e);
+					$tag=strtoupper(array_shift($a2));
+					$attr=array();
+					foreach($a2 as $v)
+					{
+						if(preg_match('/([^=]*)=["\']?([^"\']*)/',$v,$a3))
+							$attr[strtoupper($a3[1])]=$a3[2];
+					}
+					$this->OpenTag($tag,$attr);
+				}
+			}
+		}
+
+		// restore previous style
+		$this->pullStyle();
+	}
+
+	function br() {
+
+		if($this->prevWrite!='block')
+		{
+			nxLog("br : LN(5)",'FPDF');
+			$this->Ln(5);
+		}
+
+		if($this->inBlock())
+			$this->prevWrite='block';
+		else
+			$this->prevWrite='';
+	}
+
+	function nl() {
+		if($this->prevWrite!='block')
+		{
+			nxLog("nl(5)",'FPDF');
+			$this->Ln(5);
+		}
+
+		if($this->inBlock())
+			$this->prevWrite='block';
+		else
+			$this->prevWrite='';
+	}
+
+	function enterUL() {
+		if(!$this->isStartOfLine())
+			$this->nl();
+	}
+	function enterOL() {
+		if(!$this->isStartOfLine())
+			$this->nl();
+	}
+	function closeUL() {
+	}
+	function closeOL() {
+	}
+	function li() {
+		$this->textPrefix = '- ';
+	}
+	function closeLi() {
+		$this->br();
+		$this->textPrefix = '';
+	}
+
+	function pageBreakWhen() {
+		if(isset($this->curStyle['maxY']))
+		{
+			$maxY = $this->any2mm($this->curStyle['maxY']);
+			if($this->y > $maxY)
+				$this->AddPage();
+		}
+		else
+			$this->AddPage();
+	}
+
+	function OpenTag($tag, $attr)
+	{
+		nxLog("<{$tag}>",'FPDF');
+
+		//Opening tag
+		switch($tag){
+			case 'STRONG':
+				$this->SetTextDecoration('B',true);
+				break;
+			case 'EM':
+				$this->SetTextDecoration('I',true);
+				break;
+			case 'B':
+			case 'I':
+			case 'U':
+				$this->SetTextDecoration($tag,true);
+				break;
+			case 'A':
+				$this->HREF=$attr['HREF'];
+				break;
+			case 'UL':
+				$this->enterUL();
+				break;
+			case 'OL':
+				$this->enterOL();
+				break;
+			case 'LI':
+				$this->li();
+				break;		
+			case 'IMG':
+				if(isset($attr['SRC']) && (isset($attr['WIDTH']) || isset($attr['HEIGHT']))) {
+					if(!isset($attr['WIDTH']))
+						$attr['WIDTH'] = 0;
+					if(!isset($attr['HEIGHT']))
+						$attr['HEIGHT'] = 0;
+					$this->Image($attr['SRC'], $this->GetX(), $this->GetY(), UnitsConv::px2mm($attr['WIDTH']), UnitsConv::px2mm($attr['HEIGHT']));
+				}
+				break;
+			case 'TR':
+			case 'BLOCKQUOTE':
+			case 'BR':
+				$this->br();
+				break;
+			case 'P':
+				$this->nl();
+				$this->pushTagStyle($tag);
+				break;
+			case 'FONT':
+				if (isset($attr['COLOR']) && $attr['COLOR']!='') {
+					$this->SetTextColorHex($attr['COLOR']);
+					$this->issetcolor=true;
+				}
+				if (isset($attr['FACE']) && in_array(strtolower($attr['FACE']), $this->fontlist)) {
+					$this->SetFont(strtolower($attr['FACE']));
+					$this->issetfont=true;
+				}
+				break;
+			case 'PAGEBREAKWHEN':
+				$this->pushTagStyle($tag);
+				$this->pageBreakWhen();
+				break;
+			case 'H1':
+			case 'H2':
+			case 'H3':
+			case 'H4':
+			case 'H5':
+			default: // support any tag defined in tag list from config
+				$this->pushTagStyle($tag);
+				break;
+		}
+	}
+
+	function CloseTag($tag)
+	{
+		nxLog("</{$tag}>",'FPDF');
+
+		//Closing tag
+		if($tag=='STRONG')
+			$tag='B';
+		elseif($tag=='EM')
+			$tag='I';
+
+		if($tag=='B' || $tag=='I' || $tag=='U')
+			$this->SetTextDecoration($tag,false);
+		elseif($tag=='LI')
+			$this->closeLi();
+		elseif($tag=='OL')
+			$this->closeOL();
+		elseif($tag=='UL')
+			$this->closeUL();
+		elseif($tag=='A')
+			$this->HREF='';
+		elseif($tag=='PAGEBREAKWHEN')
+			$this->pullTagStyle($tag);
+		elseif($tag=='FONT'){
+			if ($this->issetcolor==true) {
+				$this->SetTextColor(0,0,0);
+			}
+			if ($this->issetfont) {
+				$this->SetFont('arial');
+				$this->issetfont=false;
+			}
+		}
+		else
+		{
+			$this->pullTagStyle($tag);
+		}
+	}
+
+	function SetTextDecoration($tag, $enable)
+	{
+		//Modify style and select corresponding font
+		$this->$tag+=($enable ? 1 : -1);
+		$style='';
+		foreach(array('B','I','U') as $s)
+		{
+			if($this->$s>0)
+				$style.=$s;
+		}
+		$this->SetFont('',$style);
+	}
+
+	function pushTagStyle($tag)
+	{
+		$tag = strtolower($tag);
+		if(isset($this->tags[$tag]))
+			$this->pushStyle($this->tags[$tag]);
+	}
+	function pullTagStyle($tag)
+	{
+		$tag = strtolower($tag);
+		if(isset($this->tags[$tag]))
+			$this->pullStyle();
+	}
+
+	function PutLink($URL, $txt)
+	{
+		//Put a hyperlink
+		$this->SetTextColor(0,0,255);
+		$this->SetTextDecoration('U',true);
+		$this->Write(5,$txt,$URL);
+		$this->SetTextDecoration('U',false);
+		$this->SetTextColor(0,0,0);
+	}
+
+	// style stack management (allow to have <b> in <p>, of <i> in <h1> or <b>)
+	var $styleStack = array();
+	var $curStyle;
+
+	function _setStyle($style) {
+		// get new UBI value
+		if(isset($style['style']))
+			$curUbi = $this->getCurUBI($style['style']);
+		else
+			$curUbi = '';
+		$style['style'] = $curUbi;
+
+		if(!isset($style['align']))
+			$style['align'] = '';
+
+		if(!isset($style['font']))
+			$style['font'] = $this->curStyle['font'];
+
+		if(!isset($style['color']))
+			$style['color'] = $this->curStyle['color'];
+
+		if(isset($style['line-height']))
+			$style['height'] = $style['line-height'];
+
+		if(!isset($style['height']))
+			$style['height'] = $this->any2mm($this->curStyle['size'],'pt');
+		else
+			$style['height'] = $this->any2mm($style['height']);
+
+		if(isset($style['font-size']))
+			$style['size'] = $style['font-size'];
+
+		if(!isset($style['size']))
+			$style['size'] = $this->any2pt($this->curStyle['size']);
+		else
+			$style['size'] = $this->any2pt($style['size']);
+
+		if(!isset($style['align']))
+			$style['align'] = $this->curStyle['align'];
+
+		$this->SetFont($style['font'],$curUbi,$style['size']);
+		$this->SetTextColorHex($style['color']);
+		nxLog("Apply font style font:{$style['font']},decoration:{$style['style']},size:{$style['size']},color:{$style['color']}",'FPDF');
+
+		$this->curStyle = $style;
+		return $style;
+	}
+
+	function getCurStyle() {
+		return $this->curStyle;
+	}
+
+	function inBlock() {
+		return $this->curStyle['align']!='' && strtoupper($this->curStyle['align'][0])!='L';
+	}
+
+	function getCurUBI($ubi) {
+		
+		$this->U=$this->B=$this->I=false;
+
+		$l = strlen($ubi);
+		for($i=0;$i<$l;$i++)
+		{
+			$u = $ubi[$i];
+			$this->$u = 1;
+		}
+		$cur = ($this->U?'U':'').($this->B?'B':'').($this->I?'I':'');
+		return $cur;
+	}
+
+	function pushStyle($style) {
+		$newStyle = $this->_setStyle($style);
+		$this->styleStack[]=$newStyle;
+	}
+
+	function pullStyle() {
+		if(count($this->styleStack))
+		{
+			$curStyle = array_pop($this->styleStack);
+			$prevStyle=$this->styleStack[count($this->styleStack)-1];
+			$this->_setStyle($prevStyle);
+		}
+	}
+
+	function SetTextColorHex($hex) {
+		$coul=hex2dec($hex);
+		$this->SetTextColor($coul['R'],$coul['V'],$coul['B']);
+	}
+
+	function _setY($y)
+	{
+		$y2 = $this->any2mm($y);
+
+		if($y2!=$y)
+			nxLog("SetY({$y}) -> SetY({$y2})",'FPDF');
+		else
+			nxLog("SetY({$y})",'FPDF');
+
+		$this->SetY($y2,true);
+	}
+
+	function _setXY($x,$y)
+	{
+		$x2 = $this->any2mm($x);
+		$y2 = $this->any2mm($y);
+
+		if($y2!=$y)
+			nxLog("SetXY({$y},{$x}) -> SetXY({$x2},{$y2})",'FPDF');
+		else
+			nxLog("SetXY({$x},{$y})",'FPDF');
+
+		$this->SetXY($x2,$y2,true);
+	}
+
+	function em2mm($pt){
+		return $this->curStyle['size']*$em;
+	}
+
+	function any2mm($x,$unit='mm') {
+
+		if(is_numeric($x))
+		{
+			if($unit)
+				$x=''.$x.$unit;
+			else
+				return $x;
+		}
+
+		if(strpos($x,'mm')>-1)
+		{
+			$x2 = str_replace('mm','',$x);
+			return $x2;
+		}
+
+		if(strpos($x,'cm')>-1)
+		{
+			$x2 = str_replace('cm','',$x);
+			return $x2*10;
+		}
+
+		if(strpos($x,'px')>-1)
+		{
+			$x2 = str_replace('px','',$x);
+			return UnitsConv::px2mm($x2);
+		}
+
+		if(strpos($x,'pt')>-1)
+		{
+			$x2 = str_replace('pt','',$x);
+			return UnitsConv::pt2mm($x2);
+		}
+
+		if(strpos($x,'em')>-1)
+		{
+			$x2 = str_replace('em','',$x);
+			return $this->em2mm($x2);
+		}
+
+		return $x;
+	}
+
+	function any2pt($x,$unit='pt') {
+
+		if(is_numeric($x))
+		{
+			if($unit)
+				$x=''.$x.$unit;
+			else
+				return $x;
+		}
+
+		if(strpos($x,'pt')>-1)
+		{
+			$x2 = str_replace('pt','',$x);
+			return $x2;
+		}
+
+		if(strpos($x,'mm')>-1)
+		{
+			$x2 = str_replace('mm','',$x);
+			return UnitsConv::mm2pt($x2);
+		}
+
+		if(strpos($x,'cm')>-1)
+		{
+			$x2 = str_replace('cm','',$x);
+			return UnitsConv::mm2pt($x2)*10;
+		}
+
+		if(strpos($x,'px')>-1)
+		{
+			$x2 = str_replace('px','',$x);
+			return UnitsConv::px2pt($x2);
+		}
+
+		if(strpos($x,'em')>-1)
+		{
+			$x2 = str_replace('em','',$x);
+			return UnitsConv::mm2pt($this->em2mm($x2));
+		}
+
+		return $x;
+	}
+
+
+}//end of class
+
+class PDFDocTpl 
+{
+	var $pageCount=1;
+	var $pageNo=0;
+	var $path=null;
+	var $pdf;
+	
+	function __construct($pdf,$path) {
+		$this->pdf = $pdf;
+		$this->path = $path;
+
+		$this->init();
+	}
+
+	function init() 
+	{
+		if($this->path)
+			$this->pageCount = $this->pdf->setSourceFile($this->path);
+		else
+			$this->pageCount = 0;
+
+		$this->pageNo = 1;
+	}
+
+	function pageIdx() {
+		return $this->pageNo - 1;
+	}
+
+	function addPage() {
+		if($this->path)
+		{
+			$templateId = $this->pdf->importPage($this->pageNo);
+			$this->pdf->AddPage();
+
+			// use the imported page and adjust the page size
+			$this->pdf->useTemplate($templateId);
+		}
+		else
+		{
+			$this->pdf->AddPage();
+		}
+
+		$this->pageNo++;
+	}
+}
+
+class PDFDoc extends PDF_HTML
+{
+	// default tags styles
+	var $tags = array(
+		'h1'=>array('size'=>'20','style'=>'B','color'=>'#550000'),
+		'h2'=>array('size'=>'18','style'=>'B','color'=>'#000000'),
+		'h3'=>array('size'=>'16','style'=>'B','color'=>'#000000'),
+		'h4'=>array('size'=>'12','style'=>'BI','color'=>'#000000'),
+		'h5'=>array('size'=>'9','style'=>'I','color'=>'#000000'),
+		'p'=> array('size'=>'8','style'=>'','color'=>'#000000'),
+		'div'=> array('size'=>'8','style'=>'','color'=>'#000000'),
+		'html'=> array('size'=>'8','style'=>'','color'=>'#000000','align'=>'justify'),
+		'pagebreakwhen'=> array('maxY'=>'28cm'),
+	);
+
+	function __construct($configDoc=null,$orientation='P', $unit='mm', $format='A4')
+	{
+		if($configDoc && $p=$configDoc['page'])
+		{
+			if($p['orientation'])
+				$orientation=$p['orientation'];
+
+			if($p['unit'])
+				$unit=$p['unit'];
+
+			if($p['format'])
+				$format=$p['format'];
+
+
+			if($p['dpi'])
+				UnitsConv::setDPI($p['dpi']);
+		}
+
+		//Call parent constructor
+		parent::__construct($orientation,$unit,$format);
+	}
+
+	function createDoc($configDoc=null,$fnReplace=null) {
+		if($configDoc['model'])
+			$path = $configDoc['model'];
+
+		return $this->loadDoc($path,$configDoc,$fnReplace);
+	}
+
+	function loadDoc($path,$configDoc=null,$fnReplace=null) {
+		if($configDoc['debug'])
+			$this->debug=true;
+		else
+			$this->debug=false;
+
+		if($configDoc['page'] && $configDoc['page']['marginsXY'])
+		{
+			$mX = $this->any2mm($configDoc['page']['marginsXY'][0]);
+			$mY = $this->any2mm($configDoc['page']['marginsXY'][1]);
+
+			$this->SetLeftMargin($mX);
+			$this->SetRightMargin($mX);
+
+			$this->SetTopMargin($mY);
+		}
+
+		if($configDoc['tags'])
+		{
+			$tags = array_merge($this->tags,$configDoc['tags']);
+		}
+		else
+			$tags = $this->tags;
+
+		$this->tags = $this->initTagsStyles($tags);
+
+		if($configDoc['defaultStyle'])
+		{
+			$this->defaultStyle = array_merge($this->tags['p'],$configDoc['defaultStyle']);
+		}
+		else
+			$this->defaultStyle = $this->tags['html'];
+
+		// init default style
+		$this->pushStyle($this->defaultStyle);
+
+		if(isset($configDoc['pages']))
+			$partsByPage = $configDoc['pages'];
+		else
+			$partsByPage = null;
+
+		// set the source file
+		$tpl = $this->tplDoc = new PDFDocTpl($this,$path);
+
+		$pageCountDesc = count($partsByPage);
+		if($pageCountDesc<$tpl->pageCount)
+			$tpl->pageCount = $pageCountDesc;
+
+		// iterate through all pages
+		for ($i = 0; $i < count($partsByPage); $i++) 
+		{
+			$tplIdx = $tpl->pageIdx();
+
+			if($tplIdx <= $i)
+				// import page
+				$tpl->addPage();
+
+			// write in page
+			$this->writeParts($partsByPage[$i],$fnReplace);
+		}
+
+		return;
+		// iterate through all pages
+		for ($tpl->pageNo = 1; $tpl->pageNo <= $tpl->pageCount; $tpl->pageNo++) 
+		{
+			$idx = $tpl->pageIdx();
+
+			// import page
+			$tpl->addPage();
+
+			// $templateId = $this->importPage($tpl->pageNo);
+			// $this->AddPage();
+			// use the imported page and adjust the page size
+			// $this->useTemplate($templateId);
+
+			// write in page
+			if($partsByPage && count($partsByPage) >  $idx)
+				$this->writeParts($partsByPage[$idx],$fnReplace);
+		}
+	 }
+	
+	// add a new page and load nexwt template page if any
+	function nextDocPage() {
+		$this->tplDoc->addPage();
+	}
+
+	function pageBreakWhen() {
+		if(isset($this->curStyle['maxY']))
+		{
+			$maxY = $this->any2mm($this->curStyle['maxY']);
+			if($this->y > $maxY) 
+			{
+				$this->nextDocPage();
+
+				if(isset($this->curStyle['moveToY']))
+				{
+					$toY = $this->any2mm($this->curStyle['moveToY']);
+					$this->setY($toY);
+				}
+			}
+		}
+		else
+		{
+			$this->nextDocPage();
+
+			if(isset($this->curStyle['moveToY']))
+			{
+				$toY = $this->any2mm($this->curStyle['moveToY']);
+				$this->setY($toY);
+			}
+		}
+	}
+
+	function writeParts($parts,$fnReplace) 
+	{
+		// $this->SetFont(strtolower('arial'));
+		
+		foreach($parts as $part) 
+		{
+			$curStyle = $this->getCurStyle();
+
+			if(isset($part['active']) && $part['active']===false)
+				continue;
+
+			if(isset($part['font']))
+				$curStyle['font']=$part['font'];
+
+			if(isset($part['xy']))
+			{
+				nxLog("SetXY({$part['xy'][0]},{$part['xy'][1]})",'FPDF');
+				$this->_setXY($part['xy'][0],$part['xy'][1]);
+			}
+
+			if(isset($part['y']))
+			{
+				nxLog("SetY({$part['y']})",'FPDF');
+				$this->_setY($part['y']);
+			}
+
+			if(isset($part['align']))
+				$curStyle['align']=$part['align'];
+
+			if(isset($part['size']))
+				$curStyle['size']=$part['size'];
+
+			if(isset($part['debug']))
+				$curStyle['debug']=$part['debug'];
+
+			if(isset($part['break']))
+				DebugBreak();
+
+			if(isset($part['text']))
+				$this->Write($curStyle['size'], $part['text']);
+
+			if(isset($part['html']))
+			{
+				$content = $part['html'];
+				if($fnReplace)
+					$content = $fnReplace($content);
+
+				$content = iconv('UTF-8', 'windows-1252', $content);
+
+				if(isset($part['beforeWrite']))
+					$s2 = $part['beforeWrite']($content,$this->curStyle,$this,$fnReplace);
+
+				$this->writeHTML($content,$curStyle);
+			}
+		 }
+	}
+}
+?>

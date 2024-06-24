@@ -1,0 +1,873 @@
+<?xml version="1.0"?> 
+<!DOCTYPE nxl [<!ENTITY eacute "&#233;">]>
+
+<!-- preload the workflow taglib describing the settings to be used for the worklow -->
+<nxl version="1.0"
+	xmlns:xo="http://www.nxfrontier.com/xo/core"
+	xmlns="http://www.nxfrontier.com/nxl/nxl" 
+	xmlns:ruleset="http://www.generis.com/rh/conge/ruleset"
+	preload="/rh/conge/ruleset"
+	>
+
+<include file="/rh/user.nxl" />
+
+<data xmlns="http://www.nxfrontier.com/dml/dml" package="rh">
+	
+	<lists xmlns="http://www.nxfrontier.com/nxl/lists" xmlns:lists="http://www.nxfrontier.com/nxl/lists">
+		<list name="rh.conge.demands_state_orm" lang="fr">
+			<option value="0">Demand&eacute;e</option>
+			<option value="1">En instance</option>
+			<option value="2">Modifi&eacute;e</option>
+			<option value="3">Valid&eacute;e</option>
+			<option value="4">Refus&eacute;e</option>
+			<option value="5">Trait&eacute;e</option>
+			<option value="6">Annul&eacute;e</option>
+			<option value="7">Supprim&eacute;e</option>
+			<option value="8">*Modifi&eacute;e</option>
+		</list>
+		<list name="rh.conge.direction_demands_state_orm" lang="fr">
+			<option value="1">En instance</option>
+			<option value="2">Modifi&eacute;e</option>
+			<option value="3">A traiter</option>
+			<option value="4">Refus&eacute;e</option>
+			<option value="5">Trait&eacute;e</option>
+			<option value="6">Annul&eacute;e</option>
+			<option value="7">Supprim&eacute;e</option>
+			<option value="8">*Modifi&eacute;e</option>
+		</list>
+		<list name="rh.conge.demands_state_orm" lang="en">
+			<option value="1">Pending</option>
+			<option value="2">Modified</option>
+			<option value="3">Validated</option>
+			<option value="4">Denied</option>
+			<option value="5">Printed</option>
+			<option value="6">Cancelled</option>
+			<option value="7">Removed</option>
+			<option value="8">*Modified</option>
+		</list>
+	</lists><!-- rh_conges_state -->
+	
+	<lists xmlns="http://www.nxfrontier.com/nxl/lists" xmlns:lists="http://www.nxfrontier.com/nxl/lists">
+		<list name="rh.conge.demi_journee_am_values" lang="fr">
+			<option value="0">Départ le matin</option>
+			<option value="1">Départ l'après-midi</option>
+		</list>
+		<list name="rh.conge.demi_journee_pm_values" lang="fr">
+			<option value="0">Reprise le matin</option>
+			<option value="1">Reprise l'après-midi</option>
+		</list>
+		<list name="rh.conge.demi_journee_values" lang="en">
+			<option value="1">yes</option>
+			<option value="0">no</option>
+		</list>
+	</lists>
+
+	<tables component="" init="create">
+		<table name="rh_demande_conges">
+			<fields>
+				<!-- Identifiant de la mission -->
+				<field name="oid" label="object_id" type="oid" isKey="primary" show="hidden" isEdit="no"/>
+				<!-- Identifiant du demandeur -->
+				<field name="empid" label="empid" type="ref-oid" isKey="secondary" show="hidden"/>
+				<!-- Identifiant du validateur -->
+				<field name="group_oid" label="group_oid" type="ref-oid" isKey="secondary" show="hidden" />
+
+				<field name="demand_state" label="demand_state" type="text-choice" default="1" list="rh.conge.demands_state_orm"/>
+				<field name="traiter" label="traiter" type="line" default="0" />
+				
+				<field name="remplacant" label="remplacant" type="ref-oid" isKey="secondary" />
+				
+				<field name="request_date" label="request_date" type="timestamp" default="now" />
+
+				<field name="start_date" label="starting_date" type="date" default="now" />
+				<field name="end_date" label="ending_date" type="date" default="now" />
+
+				<demand_counters xmlns="http://www.generis.com/rh/conge/ruleset" />
+
+				<field name="observations" label="observations" type="text" size="255" multiLines="auto" />
+				<field name="demand_state" label="demand_state" type="integer" default="1" />
+				<field name="notification" label="notification" type="integer" default="0" />	
+				<field name="half_start_date" label="half_start_date" type="line" default="0" />
+				<field name="half_end_date" label="half_end_date" type="line" default="0" />
+			</fields>
+		</table>
+
+
+		<table name="rh_demande_conge_log">
+			<fields>
+				<!-- Identifiant de la mission -->
+				<field name="oid" label="object_id" type="oid" isKey="primary" show="hidden" isEdit="no"/>
+				<!-- Identifiant de la demande -->
+				<field name="demand_id" label="demand_id" type="ref-oid" isKey="secondary" show="hidden"/>
+				<!-- Identifiant du validateur -->
+				<field name="validator_oid" label="validator oid" type="ref-oid" isKey="secondary" />
+				<!-- Etat de la demande -->
+				<field name="demand_state_log" label="demand_state_log" type="integer"/>
+				<field name="validation_date" label="validation_date" type="timestamp" default="now" value="now" />
+
+				<field name="printer_oid" label="printer_oid" type="ref-oid" isKey="secondary" />
+				<field name="date_traitement" label="date_traitement" type="timestamp" default="now" value="now" />
+			</fields>
+		</table>
+		
+	</tables>
+				
+	<!-- view used by ORM -->
+	<views>
+		<view name="rh.conge.records.demand" table="rh_demande_conges" handler="lib.rh.conge.records.demand">
+			<fields>
+			</fields>
+		</view>
+
+		<view name="rh.conge.demand" table="rh_demande_conges">
+			<key mode="by_oid">
+				<field name="oid" type="oid" isKey="primary" value="%{param:oid}"  />
+			</key>
+			<key>
+				<field name="oid" type="oid" isKey="primary" value="%{param:oid}"  />
+			</key>
+			<key mode="by_date">
+				<or>
+					<and>
+						<field name="start_date" label="start_date" type="date" relation="GE" value="%{param:start_date}" />
+						<field name="start_date" label="end_date" type="date" relation="LE" value="%{param:end_date}" />
+					</and>
+					<and>
+						<field name="end_date" label="start_date" type="date" relation="GE" value="%{param:start_date}" />
+						<field name="end_date" label="end_date" type="date" relation="LE" value="%{param:end_date}" />
+					</and>
+					<and>
+						<field name="start_date" label="start_date" type="date" relation="lE" value="%{param:start_date}" />
+						<field name="end_date" label="end_date" type="date" relation="GE" value="%{param:end_date}" />
+					</and>
+				</or>
+				<field name="demand_state" label="demand_state" type="integer" relation="eq-or-null" value="%{param:demand_state}" />
+				<field name="empid" label="empid" type="ref-oid" relation="eq-or-null" value="%{param:empid}" />
+			</key>
+			<fields>
+				<field name="oid" label="object_id" type="oid" isKey="primary" show="hidden" isEdit="no" />
+				<demand_workflow_fields xmlns="http://www.generis.com/rh/conge/ruleset" />
+				<demand_fields xmlns="http://www.generis.com/rh/conge/ruleset" />
+			</fields>
+		</view>
+
+		<view name="rh.conge.demand.new" table="rh_demande_conges">
+			<fields>
+				<demand_workflow_fields xmlns="http://www.generis.com/rh/conge/ruleset" />
+
+				<demand_fields xmlns="http://www.generis.com/rh/conge/ruleset" />
+			</fields>
+		</view>
+
+		<view name="rh.conge.demand.valid_demands" table="rh_demande_conges">			
+			<key>
+				<field name="empid" type="ref-oid" value="%{record:empid}" />
+				<field name="demand_state" type="line" relation="in" value="0,1,2,3,5,8" />
+				<field name="oid" label="object_id" type="oid" relation="NE" value="%{record:oid}"/>
+				<or>
+					<or>
+						<and>
+							<field name="start_date" type="date" relation="GE" value="%{record:start_date}" />
+							<field name="start_date" type="date" relation="LE" value="%{record:end_date}" />
+						</and>
+						<and>
+							<field name="end_date" type="date" relation="GE" value="%{record:start_date}" />
+							<field name="end_date" type="date" relation="LE" value="%{record:end_date}" />
+						</and>
+					</or>
+					<and>
+						<field name="start_date" type="date" relation="LE" value="%{record:start_date}" />
+						<field name="end_date" type="date" relation="GE" value="%{record:end_date}" />
+					</and>
+				</or>
+			</key>
+			<fields>
+				<field name="oid" label="object_id" type="oid" isKey="primary" show="hidden" isEdit="no" />
+				<field name="start_date" label="starting_date" type="date" default="now" />
+				<field name="end_date" label="ending_date" type="date" default="now" />
+				<field name="half_start_date" label="half_start_date" type="line" default="0" />
+				<field name="half_end_date" label="half_end_date" type="line" default="0" />
+			</fields>
+		</view>
+
+		<!-- Structure du filtre de validation -->
+		<view name="rh.conge.demand.search" table="rh_demande_conges">
+			<fields>
+				<field name="demand_state" label="demand_state" type="text-choice" multilines="no" control="select" list="rh.conge.demands_state_orm" prompt="Select state ..." />
+				<field name="legal_days" label="legal_days" multiLines="no" type="text-choice" prompt="Jours de droit ..." multiple="false" control="select" ds="db:rh.conge.demand.get_all_legal_days" ds_format="{field:legal_day_name}" ds_field_value="oid" />						
+				<field name="start_date" label="start_date" type="date" />
+				<field name="end_date" label="end_date" type="date" />
+<!-- 				<field name="days_to_take" label="days_to_take" type="text" />
+ -->			</fields>
+		</view>
+
+		<!-- Liste des demandes employee -->
+		<view name="rh.conge.demand.list" table="rh_demande_conges" handler="lib.rh.conge.records.mydemands">
+		</view>
+
+		<view name="rh.conge.demand.mydemands" table="rh_demande_conges" handler="lib.rh.conge.records.mydemands">
+			<pages alias="page" pageOffset="%{get:page}" recordsPerPage="15" />	
+			<key>
+				<field name="empid" type="integer" value="%{user:oid}"/>
+				<field name="demand_state" type="line" relation="LIKE"/>
+				<!--
+				<field name="start_date" type="date" relation="gte-or-null"/>
+				-->
+				<field name="start_date" type="date" relation="gte-or-null"/>
+				<field name="end_date" type="date" relation="lte-or-null"/>
+
+				<!-- <field name="days_to_take" type="text" relation="eq-match-or-null" /> -->
+
+			</key>
+			<sort>
+				<field name="request_date" type="timestamp" direction="desc" />
+			</sort>
+			<fields>
+				<field name="oid" label="object_id" alias="oid" type="oid" isKey="primary" show="hidden" isEdit="no" />
+				<field name="legal_days" label="legal_days" multiLines="no" type="text-choice" prompt="Jours de droit ..." multiple="false" control="select" ds="db:rh.conge.demand.get_all_legal_days" ds_format="{field:legal_day_name}" ds_field_value="oid" />						
+				<field name="start_date" alias="start_date" label="start_date" type="date" format="%d/%m/%y" />
+				<field name="end_date" alias="end_date" label="end_date" type="date" format="%d/%m/%y" />
+				<field name="days_to_take" alias="days_to_take" label="days_to_take" type="text" />
+
+				<field name="remplacant" alias="remplacant" label="remplacant" multiLines="no" type="text-choice" prompt="remplacant" 
+				multiple="false" control="select" ds="rh.conge.demand.get_employee" ds_format="{field:first_name} {field:last_name}" 
+				ds_field_value="oid" />
+
+				<field name="demand_state" alias="demand_state" label="demand_state" type="text-choice" list="rh.conge.demands_state_orm" />
+			</fields>
+		</view>
+
+		
+		<!-- 
+		
+		
+		validation log 
+		
+		
+		-->
+
+		<view name="rh.conge.log" table="rh_demande_conge_log">
+			<key>
+				<field name="oid" type="oid" isKey="primary" value="%{param:oid}"  />
+			</key>
+			<key mode="byDemand">
+				<field name="demand_id" type="ref-oid" isKey="secondary" value="%{param:demand_id}" />
+			</key>
+			<key mode="byValidator">
+				<field name="validator_oid" type="ref-oid" value="%{param:validator_oid}" />
+			</key>
+
+			<sort mode="byDemand">
+				<field name="validation_date" type="timestamp" default="now"/>
+				<field name="oid" label="object_id" type="oid" isKey="primary" show="hidden" isEdit="no"/>
+			</sort>
+			<sort mode="byValidator">
+				<field name="validation_date" type="timestamp" default="now"/>
+				<field name="oid" label="object_id" type="oid" isKey="primary" show="hidden" isEdit="no"/>
+			</sort>
+			
+			<fields>					
+				<field name="oid" label="object_id" type="oid" isKey="primary" show="hidden" isEdit="no"/>
+				<field name="demand_id" type="ref-oid" isKey="secondary" />
+				<field name="validator_oid" label="validator_oid" multiLines="no" type="text-choice" prompt="Validator" multiple="false" control="select" ds="rh.user.all" ds_format="{field:first_name} {field:last_name}" ds_field_value="oid" />
+				<field name="demand_state_log" label="demand_state" type="text-choice" default="1" list="rh.conge.demands_state_orm"/>
+				<field name="validation_date" type="timestamp" default="now"/>
+			</fields>
+		</view>
+
+		<view name="rh.conge.log.byUser" table="rh_demande_conge_log">
+			<key>
+				<field name="empid" table="rh_demande_conges" type="ref-oid" value="%{param:user_oid}" />
+				<field name="demand_id" type="ref-oid"  value="%{field:rh_demande_conges.oid}" />
+			</key>
+			<fields>					
+				<field name="oid" label="object_id" type="oid" isKey="primary" show="hidden" isEdit="no"/>
+				<field name="demand_id" type="ref-oid" isKey="secondary" />
+				<field name="validator_oid" type="ref-oid"  />
+				<field name="demand_state_log" label="demand_state" type="text-choice" default="1" list="rh.conge.demands_state_orm"/>
+				<field name="validation_date" type="timestamp" />
+			</fields>
+		</view>
+
+	</views>
+
+
+	<!-- 
+	
+	
+	views used in demand application
+	
+	
+	-->
+
+	<views>
+<!-- 		<view name="rh.conge.demand.list" table="rh_demande_conges">
+			<pages alias="page" pageOffset="%{get:page}" recordsPerPage="15" />	
+			<key>
+				<field name="empid" type="integer" value="%{user:oid}"/>
+				<field name="demand_state" type="line" relation="LIKE"/>
+				<field name="start_date" type="date" relation="gte-or-null"/>
+				<field name="end_date" type="date" relation="lte-or-null"/>
+
+				<field name="days_to_take" type="text" relation="eq-match-or-null" />
+
+			</key>
+			<sort>
+				<field name="request_date" type="timestamp" direction="desc" />
+			</sort>
+			<fields>
+				<field name="oid" label="object_id" alias="oid" type="oid" isKey="primary" show="hidden" isEdit="no" />
+
+				<demand_fields_list xmlns="http://www.generis.com/rh/conge/ruleset" />
+		
+			</fields>
+		</view>
+ -->
+		<view name="rh.conge.demand.show" table="rh_demande_conges">
+			<key>
+				<field name="oid" type="oid" isKey="primary" value="%{request:oid}" />
+
+				<field name="empid" type="ref-oid" value="%{user:oid}"/>
+				
+			</key>
+			<fields>
+				<field name="oid" label="oid" alias="oid" type="oid" isKey="primary" show="hidden" isEdit="no" />
+				<field name="request_date" label="request_date" type="timestamp" format="long" isEdit="no"/>
+				<field name="legal_days" label="legal_days" multiLines="no" type="text-choice" prompt="Jours de droit ..." multiple="false" control="select" ds="db:rh.conge.demand.get_all_legal_days" ds_format="{field:legal_day_name}" ds_field_value="oid" />
+
+
+
+				<field name="start_date" label="start_date" type="date" isEdit="no" />
+				<field name="half_start_date" type="text-choice" alias="half_start_date" label="half_start_date" multiple="no" control="radio" list="rh.conge.demi_journee_am_values" default="0" isEdit="no" />
+
+
+				<field name="end_date" label="end_date" type="date" isEdit="no" />
+				<field name="half_end_date" type="text-choice" alias="half_end_date" label="half_end_date" multiple="no" control="radio" list="rh.conge.demi_journee_pm_values" default="0" />
+				
+				<field name="days_to_take" label="days_to_take" type="text" isEdit="no" />
+				
+				<field name="remplacant" label="remplacant" multiLines="no" type="text-choice" prompt="remplacant" 
+				multiple="false" control="select" ds="rh.conge.demand.get_employee" ds_format="{field:first_name} {field:last_name}" ds_field_value="oid" isEdit="no" />
+
+				<field name="observations" label="observations" type="text" size="255" multiLines="auto"  isEdit="no" />
+				<field name="demand_state" label="demand_state" type="integer" show="hidden" isEdit="no"/>
+			</fields>
+		</view>
+
+		<view name="rh.conge.demand.gen_word" table="rh_demande_conges">
+			<key>
+				<field name="empid" type="ref-oid" value="%{user:oid}"/>					
+				<field name="oid" label="oid" type="oid" isKey="primary" show="hidden" value="%{request:oid}" />
+			</key>
+			<fields>
+				<field name="oid" alias="oid" label="object_id" type="oid" show="hidden" isEdit="no"/>
+				<field name="empid" alias="empid" label="empid" type="ref-oid" isKey="secondary" isEdit="no" show="hidden"/>
+						
+				<field name="request_date" label="request_date" type="timestamp" format="long" isEdit="no"/>			
+				<field name="legal_days" label="legal_days" multiLines="no" type="text-choice" prompt="Jours de droit ..." multiple="false" control="select" ds="db:rh.conge.demand.get_all_legal_days" ds_format="{field:legal_day_name}" ds_field_value="oid" />						
+				<field name="start_date" label="start_date" type="date" format="%A %d %B %Y" isEdit="no" />
+				<field name="end_date" label="end_date" type="date" format="%A %d %B %Y" isEdit="no" />
+				<field name="days_to_take" label="days_to_take" type="text" isEdit="no" />
+				
+				<field name="remplacant" label="remplacant" multiLines="no" type="text-choice" prompt="remplacant" 
+				multiple="false" control="select" ds="rh.conge.demand.get_employee" ds_format="{field:first_name} {field:last_name}" ds_field_value="oid" isEdit="no" />
+
+				<field name="observations" label="observations" type="text" size="255" multiLines="auto"  isEdit="no" />
+				<field name="demand_state" label="demand_state" type="integer" show="hidden" isEdit="no"/>
+
+			</fields>
+		</view>
+
+		<view name="rh.conge.demand.get_user_info" table="user">
+			<key>
+				<field name="oid" type="oid" value="%{user:oid}" />
+			</key>
+			<fields>
+				<field name="current_year" alias="current_year" label="current_year" type="date" default="now" format="year" table="user" isEdit="no" />
+				<field name="last_credit" alias="last_credit" label="last_credit" type="text" table="user" isEdit="no" />
+				<field name="current_credit" alias="current_credit" label="current_credit" type="text" table="user" isEdit="no" />	
+				<field name="reliquat" alias="reliquat" label="reliquat" type="text" table="user" isEdit="no" />
+
+				<field name="hr_manager" alias="validatorName" label="hr_manager" multiLines="true" type="text-choice" multiple="true" control="select" ds="rh.conge.demand.get_employee" ds_format="{field:first_name} {field:last_name}" ds_field_value="oid" default="0" show="hidden"/>
+
+				<field name="mgc_parent_group_RH" label="parent_group_RH_mgc" type="text-choice" multiple="true" control="lists_filter" colums="2" ds="rh.conge.demand.group_list" ds_format="{field:group_name}" ds_field_value="oid" prompt="Aucun groupe RH parent" show="hidden"/>	
+				
+			</fields>
+		</view>
+
+		<view name="rh.conge.demand.get_conge_log" table="rh_demande_conge_log">
+			<key>
+				<field name="demand_id" label="demand_id" type="ref-oid" isKey="secondary" value="%{request:oid}" />
+			</key>
+			<fields>
+				<field name="oid" label="object_id" type="oid" isKey="primary" show="hidden" isEdit="no" />
+				<field name="demand_id" label="demand_id" type="integer" show="hidden"/>
+				<field name="validator_oid" label="validator_oid" multiLines="no" type="text-choice" prompt="Validator" multiple="false" control="select" ds="rh.conge.demand.get_all_employees" ds_format="{field:first_name} {field:last_name}" ds_field_value="oid" />
+				<field name="validation_date" label="validation_date" type="timestamp" />
+				<field name="demand_state_log" label="demand_state_log" type="text-choice" list="rh.conge.demands_state_orm" />							
+				
+			</fields>
+		</view>
+
+		<view name="rh.conge.demand.get_liste_remplacants" table="user">
+			<key>
+				<field name="oid" type="oid" value="%{user:oid}" relation="NE"/>
+			</key>
+			<sort>
+				<field name="first_name" type="text"  direction="asc" />
+				<field name="last_name" type="text"  direction="asc" />
+			</sort>						
+			<fields>
+				<field name="oid" label="oid" type="oid" isKey="primary" show="hidden" isEdit="no" />
+				<field name="first_name" label="first_name" type="text" size="30" />
+				<field name="last_name" label="last_name" type="text" size="30" />
+			</fields>
+		</view>
+
+		<view name="rh.conge.demand.edit" table="rh_demande_conges">
+			<key>
+				<field name="empid" type="ref-oid" value="%{user:oid}"/>					
+				<field name="oid" label="oid" type="oid" isKey="primary" show="hidden" value="%{request:oid}" />
+				<!-- autorisation modif demande sauf si annulée -->
+				<field name="demand_state" label="demand_state" type="integer" relation="LT" value="6" />
+			</key>
+			<fields>
+				<field name="oid" alias="oid" label="object_id" type="oid" show="hidden" isEdit="no"/>
+				<field name="empid" alias="empid" label="empid" type="ref-oid" isKey="secondary" isEdit="no" show="hidden"/>
+						
+				<field name="request_date" label="request_date" type="timestamp" format="timestamp" isEdit="no" show="hidden"/>			
+				<field name="legal_days" label="legal_days" multiLines="no" type="text-choice" prompt="Jours de droit ..." multiple="false" control="radio" ds="db:rh.conge.demand.get_all_legal_days" ds_format="{field:legal_day_name}" ds_field_value="oid" />						
+				<field name="start_date" alias="start_date" label="start_date" type="date" isRequired="true"/>
+				<field name="half_start_date" type="text-choice" alias="half_start_date" label="half_start_date" multiple="no" control="radio" list="rh.conge.demi_journee_am_values" help="half_start_date_help" />
+
+				<field name="end_date" alias="end_date" label="ending_date" type="date" />
+				<field name="half_end_date" type="text-choice" alias="half_end_date" label="half_end_date" multiple="no" control="radio" list="rh.conge.demi_journee_pm_values" help="half_end_date_help" />
+
+				<field name="days_to_take" alias="days_to_take" label="days_to_take" type="text"  isEdit="no" help="days_to_take_help" />
+
+				<field name="remplacant" alias="remplacant" label="remplacant" multiLines="no" type="text-choice" prompt="remplacant" 
+				multiple="false" control="select" ds="rh.conge.demand.get_liste_remplacants" ds_format="{field:first_name} {field:last_name}" 
+				ds_field_value="oid" />
+
+				<field name="observations" alias="observations" label="observations" type="text" size="255" multiLines="auto" help="observations_help" />
+			</fields>
+		</view>
+
+		<view name="rh.conge.demand.edit_process" table="rh_demande_conges">
+			<key>
+				<field name="empid" type="ref-oid" value="%{user:oid}"/>					
+				<field name="oid" label="object_id" type="oid" isKey="primary" show="hidden" value="%{request:oid}" />
+			</key>
+			<fields>
+				<field name="request_date" label="request_date" type="timestamp" value="now" />			
+				<field name="legal_days" label="legal_days" multiLines="no" type="text-choice" prompt="Jours de droit ..." multiple="false" control="select" ds="db:rh.conge.demand.get_all_legal_days" ds_format="{field:legal_day_name}" ds_field_value="oid" />						
+				<field name="start_date" label="start_date" type="date" isRequired="true"/>
+				<field name="end_date" label="end_date" type="date" />
+				<field name="days_to_take" label="days_to_take" type="text"  />
+				<field name="observations" label="observations" type="text" size="255" multiLines="auto" />
+				<field name="remplacant" label="remplacant" type="integer" />
+				<field name="demand_state" label="demand_state" type="integer" value="1" />
+				<field name="notification" label="notification" type="integer" value="0" />
+
+				<field name="group_oid" label="group_oid" type="ref-oid" isKey="secondary" value="%{property:validationGroup}" />
+			</fields>
+		</view>
+
+		<view name="rh.conge.demand.delete" table="rh_demande_conges">
+			<key>
+				<field name="empid" type="ref-oid" value="%{user:oid}"/>
+				<field name="oid" label="object_id" type="oid" isKey="primary" show="hidden" value="%{request:oid}" />
+			</key>
+			<fields>
+				<field name="oid" label="object_id" type="oid" isKey="primary" show="hidden" />
+			</fields>
+		</view>
+
+	</views>
+
+	<!-- 
+	
+	views used in validation application
+	
+	-->
+
+	<views>
+		<view name="rh.conge.validation.list" table="rh_demande_conges" handler="lib.rh.conge.records.demandsToValidate">
+		</view>
+
+		<!-- Liste des ordres de conge &agrave; valider -->
+		<view name="rh.conge.validation.demandsToValidate" table="rh_demande_conges">
+			<pages alias="page" pageOffset="%{get:page}" recordsPerPage="15" />	
+			<key>
+				<!-- 
+				A affiner par la suite pour exclure les demandes l'utilisateur courant
+				-->
+				<!-- Filtre sur l'identifiant de l'utilisateur selectionné depuis le filtre -->
+				<field name="empid" type="integer" relation="eq-match-or-null"/>
+
+				<field name="start_date" type="date" relation="gte-or-null"/>
+				<field name="end_date" type="date" relation="lte-or-null"/>
+
+				<field name="legal_days" type="text" relation="match"/>
+
+				<field name="days_to_take" type="text" relation="LIKE"/>						
+				
+				<field name="demand_state" type="line" relation="=" value="1" />
+
+				<field name="group_oid" type="ref-oid" value="%{field:directory_group.oid}" />
+				<field name="hr_manager" type="text-choice" table="directory_group" relation="like" value="%{user:oid}" pattern_match_left="%|" pattern_match_right="|%" />
+
+			</key>
+			<sort>
+				<field name="request_date" type="timestamp" direction="desc" />
+			</sort>
+			<fields>
+<!-- 				<data_fields_validator xmlns="http://www.presencemedia.ma/workflow/mgc" />
+ -->
+				<field name="oid" alias="oid" label="oid" type="oid" isKey="primary" show="hidden" isEdit="no" />
+<!-- 				<field name="empid" alias="empid" label="empid" type="ref-oid" isKey="secondary" show="hidden"/>
+ -->
+				<field name="empid" alias="empid" label="empid" multiLines="no" show="show" type="text-choice" multiple="false" control="select" ds="rh.conge.validation.get_employee" ds_format="{field:first_name} {field:last_name}" ds_field_value="oid" isEdit="no" isKey="secondary" />
+
+				<!--
+				<field name="first_name" alias="first_name" label="first_name" type="line" table="user"/>
+				<field name="last_name" alias="last_name" label="last_name" type="line" table="user"/>
+				-->
+				<field name="legal_days" label="legal_days" multiLines="no" type="text-choice" prompt="Jours de droit ..." multiple="false" control="radio" ds="db:rh.conge.validation.get_all_legal_days" ds_format="{field:legal_day_name}" ds_field_value="oid" />
+
+				<field name="start_date" alias="start_date" label="start_date" type="date" format="%d/%m/%y" />
+				<field name="end_date" alias="end_date" label="end_date" type="date" format="%d/%m/%y" />
+				<field name="days_to_take" alias="days_to_take" label="days_to_take" type="text" />
+				
+				<field name="remplacant" alias="remplacant" label="remplacant" multiLines="no" type="text-choice" prompt="remplacant" 
+				multiple="false" control="select" ds="rh.conge.validation.getEmployees" ds_format="{field:first_name} {field:last_name}" 
+				ds_field_value="oid" />
+				
+				<field name="demand_state" alias="demand_date" label="demand_state" type="text-choice" list="rh.conge.demands_state_orm" />
+			</fields>
+		</view>
+
+		<!-- Structure du filtre de validation -->
+		<view name="rh.conge.validation.add" table="rh_demande_conges">
+			<key>
+				<field name="oid" type="oid" isKey="primary" value="%{request:oid}" />
+			</key>
+			<fields>
+				<field name="empid" alias="empid" label="empid" multiLines="no" type="text-choice" multiple="false" control="select" ds="handler:rh.user.myteam" value="%{request:empid}" ds_format="{field:first_name} {field:last_name}" ds_field_value="oid" isRequired="true" show="show"/>
+
+				<field name="oid" label="object_id" type="oid" isKey="primary" show="hidden" isEdit="no" />
+				<!-- Identifiant du demandeur -->
+				<field name="group_oid" label="group_oid" type="ref-oid" isKey="secondary" show="hidden"/>
+				<field name="demand_state" label="demand_state" type="text-choice" default="1" list="rh.conge.demands_state_orm" show="hidden"/>
+				<field name="request_date" label="request_date" type="timestamp" default="now" show="hidden"/>
+
+				<demand_fields xmlns="http://www.generis.com/rh/conge/ruleset" />
+
+			</fields>
+		</view>
+		
+		<!-- Structure du filtre de validation -->
+		<view name="rh.conge.validation.add_process" table="rh_demande_conges">
+			<key>
+				<field name="oid" type="oid" isKey="primary" table="user" value="%{user:oid}"  />
+			</key>
+			<fields>
+				<field name="empid" alias="empid" type="ref-oid" isEdit="no"  />
+				
+				<!--<field name="validator_oid" alias="validator_oid" type="ref-oid" value="%{user:oid}" />-->
+				<field name="group_oid" label="group_oid" type="ref-oid" isKey="secondary" value="%{property:group}" />
+				<field name="legal_days" label="legal_days" multiLines="no" type="text-choice" prompt="Jours de droit ..." multiple="false" control="radio" ds="db:rh.conge.validation.get_all_legal_days" ds_format="{field:legal_day_name}" ds_field_value="oid" />
+
+				<field name="request_date" alias="request_date" label="request_date" type="timestamp" value="now" />			
+				<field name="start_date" alias="start_date" label="start_date" type="date" isRequired="true"/>
+				<field name="end_date" alias="end_date" label="end_date" type="date" />
+				<field name="days_to_take" alias="days_to_take" label="days_to_take" type="text" />
+
+				<field name="remplacant" alias="remplacant" type="ref-oid" />
+				
+				<field name="observations" alias="observations" label="observations" type="text" size="255" multiLines="auto" />
+
+				<field name="traiter" label="traiter" type="line" value="0" />
+				
+				<field name="demand_state" alias="demand_state" label="demand_state" type="integer" default="2" show="hidden" isEdit="no"/>
+				<field name="notification" alias="notification" label="notification" type="integer" default="1" show="hidden" isEdit="no"/>
+
+				<field name="half_start_date" alias="half_start_date" label="half_start_date" type="line" default="0" />
+				<field name="half_end_date" alias="half_end_date" label="half_end_date" type="line" default="0" />
+
+			</fields>
+		</view>
+		<view name="rh.conge.validation.edit" table="rh_demande_conges">
+			<key>
+				<!--<field name="validator_oid" type="ref-oid" value="%{user:oid}"/>					-->
+				<field name="oid" label="oid" type="oid" isKey="primary" show="hidden" value="%{request:oid}" />
+			</key>
+			<fields>
+				<field name="empid" alias="empid" label="empid" type="ref-oid" isKey="secondary" isEdit="no" show="hidden"/>
+
+				<field name="oid" label="object_id" type="oid" isKey="primary" show="hidden" isEdit="no" />
+				<!-- Identifiant du demandeur -->
+				<field name="group_oid" label="group_oid" type="ref-oid" isKey="secondary" show="hidden"/>
+				<field name="demand_state" label="demand_state" type="text-choice" default="1" list="rh.conge.demands_state_orm" show="hidden"/>
+				<field name="request_date" label="request_date" type="timestamp" default="now" show="hidden"/>
+
+				<demand_fields xmlns="http://www.generis.com/rh/conge/ruleset" />
+
+
+			</fields>
+		</view>
+
+		<view name="rh.conge.validation.edit_process" table="rh_demande_conges">
+			<key>
+				<!--<field name="validator_oid" type="ref-oid" value="%{user:oid}"/>	-->
+				<field name="oid" label="object_id" type="oid" isKey="primary" show="hidden" value="%{request:oid}" />
+			</key>
+			<fields>			
+				<field name="empid" alias="empid" label="empid" type="ref-oid" isKey="secondary" isEdit="no" show="hidden"/>
+
+				<field name="oid" label="object_id" type="oid" isKey="primary" show="hidden" isEdit="no" />
+				<!-- Identifiant du demandeur -->
+				<field name="group_oid" label="group_oid" type="ref-oid" isKey="secondary" show="hidden"/>
+				<field name="demand_state" label="demand_state" type="text-choice" default="1" list="rh.conge.demands_state_orm" show="hidden"/>
+				<field name="request_date" label="request_date" type="timestamp" default="now" show="hidden"/>
+
+				<demand_fields xmlns="http://www.generis.com/rh/conge/ruleset" />
+			</fields>
+		</view>
+
+		<!-- ============ ARCHIVES VALIDATEUR ================ -->
+<!-- 		<view name="rh.conge.archive.validator.list" table="rh_demande_conges" handler="lib.rh.conge.records.demandsArchive">
+		</view>
+ -->
+		<!-- Liste des ordres de conge &agrave; valider -->
+		<view name="rh.conge.archive.validator.list" table="rh_demande_conges">
+			<pages alias="page" pageOffset="%{get:page}" recordsPerPage="15" />	
+			<key>
+				<!-- filtre de recherche -->
+				<field name="empid" type="integer" relation="NEQ" value="%{user:oid}"/>
+				<field name="empid" type="ref-oid" relation="EQ-OR-NULL" />
+				<field name="days_to_take" type="text" relation="LIKE" />
+
+				<field name="start_date" type="date" relation="gte-or-null"/>
+				<field name="end_date" type="date" relation="lte-or-null"/>
+
+				<or>
+					<!-- 1er cas : manager directe indique dans ficher utilisateur (même si pas été validé par lui, au moins il voit ce qui s'est passé) -->
+ 					<field name="hr_manager" type="oid" table="user" relation="match" value="%{user:oid}" />
+
+					<!-- 2eme cas : valeur indiquée dans le log en tant que validateur -->
+					<and>
+						<field name="validator_oid" type="ref-oid" table="rh_demande_conge_log" value="%{user:oid}" />
+						<field name="oid" type="oid" value="%{field:rh_demande_conge_log.demand_id}" />
+					</and>
+
+					<!-- 3eme cas : manager du groupe principal de l'utilisateur (permet de voir ce qui se passe ds le groupe) -->
+ 					<and>
+						<field name="empid" type="ref-oid" value="%{field:user.oid}" />
+						<field name="group" type="ref-oid" table="user" value="%{field:directory_group.oid}" />
+						<field name="hr_manager" type="oid" table="directory_group" relation="match" value="%{user:oid}" />
+					</and>
+
+					<!-- 4eme cas : manager du groupe RH de l'utilisateur (permet de voir ce qui se passe) -->
+ 					<and>
+						<field name="empid" type="ref-oid" value="%{field:user.oid}" />
+						<field name="mgc_parent_group_RH" type="ref-oid" table="user" value="%{field:directory_group.oid}" />
+						<field name="hr_manager" type="oid" table="directory_group" relation="match" value="%{user:oid}" />
+					</and>
+ 				</or>
+			</key>
+			<sort>
+				<field name="request_date" type="timestamp" direction="desc" />
+			</sort>
+
+			<group_by>
+				<field name="oid" alias="oid" label="oid" type="oid" isKey="primary" show="hidden" isEdit="no" />
+			</group_by>
+			
+			<fields>
+				<data_fields_validator xmlns="http://www.presencemedia.ma/workflow/mgc" />
+
+				<field name="oid" alias="oid" label="oid" type="oid" isKey="primary" show="hidden" isEdit="no" />
+<!-- 				<field name="empid" alias="empid" label="empid" type="ref-oid" isKey="secondary" show="hidden"/>
+ -->
+				<field name="empid" alias="empid" label="empid" multiLines="no" type="text-choice" show="show" multiple="false" control="select" ds="rh.conge.archive.validator.get_employee" ds_format="{field:first_name} {field:last_name}" ds_field_value="oid" isEdit="no" isKey="secondary" />
+
+				<!--
+				<field name="first_name" alias="first_name" label="first_name" type="line" table="user"/>
+				<field name="last_name" alias="last_name" label="last_name" type="line" table="user"/>
+				-->
+				<field name="legal_days" label="legal_days" multiLines="no" type="text-choice" prompt="Jours de droit ..." multiple="false" control="radio" ds="db:rh.conge.validation.get_all_legal_days" ds_format="{field:legal_day_name}" ds_field_value="oid" />
+
+				<field name="start_date" alias="start_date" label="start_date" type="date" format="%d/%m/%y" />
+				<field name="end_date" alias="end_date" label="end_date" type="date" format="%d/%m/%y" />
+				<field name="days_to_take" alias="days_to_take" label="days_to_take" type="text" />
+				
+				<field name="remplacant" alias="remplacant" label="remplacant" multiLines="no" type="text-choice" prompt="remplacant" 
+				multiple="false" control="select" ds="rh.conge.validation.getEmployees" ds_format="{field:first_name} {field:last_name}" 
+				ds_field_value="oid" />
+				
+				<field name="demand_state" alias="demand_date" label="demand_state" type="text-choice" list="rh.conge.demands_state_orm" />
+			</fields>
+		</view>
+
+		<!-- Liste des ordres de conge &agrave; valider -->
+		<view name="rh.conge.archive.validator.excel" table="rh_demande_conges">
+			<key>
+				<!-- filtre de recherche -->
+				<field name="empid" type="integer" relation="NEQ" value="%{user:oid}"/>
+				<field name="empid" type="ref-oid" relation="EQ-OR-NULL" />
+				<field name="days_to_take" type="text" relation="LIKE" />
+				<field name="start_date" type="date" relation="gte-or-null"/>
+				<field name="end_date" type="date" relation="lte-or-null"/>
+
+				<or>
+					<!-- 1er cas : manager directe indique dans ficher utilisateur (même si pas été validé par lui, au moins il voit ce qui s'est passé) -->
+ 					<field name="hr_manager" type="oid" table="user" relation="match" value="%{user:oid}" />
+
+					<!-- 2eme cas : valeur indiquée dans le log en tant que validateur -->
+					<and>
+						<field name="validator_oid" type="ref-oid" table="rh_demande_conge_log" value="%{user:oid}" />
+						<field name="oid" type="oid" value="%{field:rh_demande_conge_log.demand_id}" />
+					</and>
+
+					<!-- 3eme cas : manager du groupe principal de l'utilisateur (permet de voir ce qui se passe ds le groupe) -->
+ 					<and>
+						<field name="empid" type="ref-oid" value="%{field:user.oid}" />
+						<field name="group" type="ref-oid" table="user" value="%{field:directory_group.oid}" />
+						<field name="hr_manager" type="oid" table="directory_group" relation="match" value="%{user:oid}" />
+					</and>
+
+					<!-- 4eme cas : manager du groupe RH de l'utilisateur (permet de voir ce qui se passe) -->
+ 					<and>
+						<field name="empid" type="ref-oid" value="%{field:user.oid}" />
+						<field name="mgc_parent_group_RH" type="ref-oid" table="user" value="%{field:directory_group.oid}" />
+						<field name="hr_manager" type="oid" table="directory_group" relation="match" value="%{user:oid}" />
+					</and>
+ 				</or>
+			</key>
+			<sort>
+				<field name="request_date" type="timestamp" direction="desc" />
+			</sort>
+			<group_by>
+				<field name="oid" alias="oid" label="oid" type="oid" isKey="primary" show="hidden" isEdit="no" />
+			</group_by>
+			<fields>
+				<data_fields_validator xmlns="http://www.presencemedia.ma/workflow/mgc" />
+
+				<field name="oid" alias="oid" label="oid" type="oid" isKey="primary" show="hidden" isEdit="no" />
+				<field name="empid" alias="empid" label="empid" type="ref-oid" isKey="secondary" show="hidden"/>
+
+				<field name="empid" alias="empid" label="empid" multiLines="no" type="text-choice" show="show" multiple="false" control="select" ds="rh.conge.archive.validator.get_employee" ds_format="{field:first_name} {field:last_name}" ds_field_value="oid" isEdit="no" isKey="secondary" />
+
+				<!--
+				<field name="first_name" alias="first_name" label="first_name" type="line" table="user"/>
+				<field name="last_name" alias="last_name" label="last_name" type="line" table="user"/>
+				-->
+				<field name="legal_days" label="legal_days" multiLines="no" type="text-choice" prompt="Jours de droit ..." multiple="false" control="radio" ds="db:rh.conge.validation.get_all_legal_days" ds_format="{field:legal_day_name}" ds_field_value="oid" />
+
+				<field name="start_date" alias="start_date" label="start_date" type="date" format="%d/%m/%y" />
+				<field name="end_date" alias="end_date" label="end_date" type="date" format="%d/%m/%y" />
+				<field name="days_to_take" alias="days_to_take" label="days_to_take" type="text" />
+				
+				<field name="remplacant" alias="remplacant" label="remplacant" multiLines="no" type="text-choice" prompt="remplacant" 
+				multiple="false" control="select" ds="rh.conge.validation.getEmployees" ds_format="{field:first_name} {field:last_name}" 
+				ds_field_value="oid" />
+				
+				<field name="demand_state" alias="demand_date" label="demand_state" type="text-choice" list="rh.conge.demands_state_orm" />
+			</fields>
+		</view>
+
+		<view name="rh.conge.archive.validator.view" table="rh_demande_conges">
+			<key>
+				<field name="oid" type="oid" isKey="primary" value="%{request:oid}" />
+			</key>
+			<fields>
+				<field name="oid" alias="oid" label="oid" type="oid" show="hidden" isEdit="no"/>
+				<field name="empid" label="empid" multiLines="no" type="text-choice" multiple="false" control="select" ds="rh.conge.archive.validator.get_employee" ds_format="{field:first_name} {field:last_name}" show="show" ds_field_value="oid" />
+				
+				<field name="request_date" label="request_date" type="timestamp" format="long" isEdit="no"/>			
+				
+				
+				<field name="start_date" label="start_date" type="date" format="%A %d %B %Y" isEdit="no" />
+				<field name="half_start_date" type="text-choice" alias="half_start_date" label="half_start_date" multiple="no" control="radio" list="rh.conge.demi_journee_am_values" default="0" isEdit="no" />
+
+				<field name="end_date" label="end_date" type="date" format="%A %d %B %Y" isEdit="no" />
+				<field name="half_end_date" type="text-choice" alias="half_end_date" label="half_end_date" multiple="no" control="radio" list="rh.conge.demi_journee_pm_values" default="0" />
+
+
+				<field name="days_to_take" label="days_to_take" type="text"  isEdit="no" />
+				
+				<field name="remplacant" label="remplacant" multiLines="no" type="text-choice" prompt="remplacant" 
+				multiple="false" control="select" ds="rh.conge.archive.validator.get_employee" ds_format="{field:first_name} {field:last_name}" ds_field_value="oid" isEdit="no" />
+
+				<field name="observations" label="observations" type="text" size="255" multiLines="auto"  isEdit="no" />
+				<field name="demand_state" label="demand_state" type="integer" show="hidden" isEdit="no"/>
+
+			</fields>
+		</view>
+
+		<view name="rh.conge.archive.validator.get_employee" table="user">
+			<sort>
+				<field name="first_name" type="text"  direction="asc" />
+				<field name="last_name" type="text"  direction="asc" />
+			</sort>									
+			<fields>
+				<field name="oid" label="oid" type="oid" isKey="primary" show="hidden" isEdit="no" />
+				<field name="first_name" label="first_name" type="text" size="30" />
+				<field name="last_name" label="last_name" type="text" size="30" />
+			</fields>
+		</view>
+
+		<view name="rh.conge.archive.validator.get_sub_employees" table="user">
+			<key>
+				<field name="empid" type="integer" relation="NEQ" value="%{user:oid}"/>
+				<or>
+					<field name="hr_manager" type="oid" table="user" relation="eq-match" value="%{user:oid}" />
+					
+					<and>
+						<field name="group" type="ref-oid" value="%{field:directory_group.oid}" />
+						<field name="hr_manager" type="oid" table="directory_group" relation="match" value="%{user:oid}" />
+					</and>
+					
+					<and>
+						<field name="oid" type="oid" value="%{field:rh_demande_conges.empid}" />
+						<field name="oid" type="oid" table="rh_demande_conges" value="%{field:rh_demande_conge_log.demand_id}" />
+						<field name="validator_oid" type="ref-oid" table="rh_demande_conge_log" value="%{user:oid}" />				
+					</and>
+
+					<and>
+						<field name="mgc_parent_group_RH" type="ref-oid" value="%{field:directory_group.oid}" />
+						<field name="hr_manager" type="oid" table="directory_group" relation="match" value="%{user:oid}" />
+					</and>
+				</or>
+			</key>
+			<group_by>
+				<field name="oid" alias="oid" label="oid" type="oid" isKey="primary" />
+			</group_by>
+			<sort>
+				<field name="first_name" type="text"  direction="asc" />
+				<field name="last_name" type="text"  direction="asc" />
+			</sort>						
+			<fields>
+				<field name="oid" alias="oid" label="oid" type="oid" isKey="primary" show="hidden" isEdit="no" />
+				<field name="first_name" alias="first_name" label="first_name" type="text" size="30" />
+				<field name="last_name" alias="last_name" label="last_name" type="text" size="30" />
+			</fields>
+		</view>
+
+		<!-- Search filter -->
+		<view name="rh.conge.archive.validator.search" table="rh_demande_conges">
+			<fields>
+				<field name="empid" label="empid" multiLines="no" type="text-choice" prompt="empid" 
+				multiple="false" control="select" ds="handler:rh.user.myteam" ds_format="{field:first_name} {field:last_name}" ds_field_value="oid"  show="show" isEdit="yes"/>
+				<field name="days_to_take" label="days_to_take" type="text" show="show" isEdit="yes"/>
+				<field name="start_date" type="date" relation="gte-or-null"  show="show" isEdit="yes"/>
+				<field name="end_date" type="date" relation="lte-or-null"  show="show" isEdit="yes"/>
+
+			</fields>
+		</view>
+	</views>
+
+</data>
+
+</nxl>

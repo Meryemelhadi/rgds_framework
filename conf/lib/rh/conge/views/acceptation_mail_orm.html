@@ -1,0 +1,65 @@
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <title>Email de validation d'une demande RH</title>
+</head>
+<body>
+
+<div style="font-family:verdana,arial,helvetica,sans-serif !important; font-size: 11px !important;">
+	<div style="background:#0F9CFE;padding:10px;">
+		<h1 style="font-family:trebuchet ms, Arial,Helvetica,sans-serif; font-weight: bold; font-size: 22px;margin:0 !important;padding:0 !important;color: #fff; ">
+			Votre Intranet
+		</h1>
+		<p style="background:#003355;margin:0 !important;padding:10px !important;color:#fff !important;">
+			Etat du traitement de votre {=demand->type}: {=demand->demand_state->html}
+		</p>
+	</div>
+
+	<div style="font-family:verdana,arial,helvetica,sans-serif !important; font-size: 11px !important;margin:10px 0;padding:10px;line-height:16px;color:#333;">
+		Bonjour {=user->civility} {=user->first_name} {=user->last_name},
+		<br/><br/>
+		{if:#property:demand->demand_state->object# == 1  }
+			Votre {=demand->type} a déja été validée par {=validator} et est toujours en cours de validation...
+		{/if}
+		{if:#property:demand->demand_state->object# == 2  }
+			Votre {=demand->type} a été modifiée par {=validator}
+		{/if}
+		{if:#property:demand->demand_state->object# == 3}
+			Félicitations, votre {=demand->type} a été acceptée.
+		{/if}
+		{if:#property:demand->demand_state->object# == 4}
+			Malheureusement, votre {=demand->type} a été refusée.
+		{/if}
+		{if:#property:demand->demand_state->object# == 5  }
+			Votre {=demand->type} a été traitée par le service RH.
+		{/if}
+		{if:#property:demand->demand_state->object# > 5  }
+			Votre {=demand->type} a été annulée par {=validator}
+		{/if}
+		Ci-suit les détails de la demande :
+		<br/><br/>
+		<!--! {record:page.record} -->
+		<ul style="">
+			<!--!{fields}-->
+			<li>{field.label} : <span style="font-family:verdana,arial,helvetica,sans-serif !important; font-size: 11px !important; font-weight:bold;">{field}</span></li>
+			<!--!{/fields}-->
+		</ul>
+		<!--! {/record} -->
+		<br/>
+		Veuillez vous connecter à votre intranet <a style="font-weight:bold;text-decoration:none;padding-bottom:1px;border-bottom:#01548B 1px solid;color:#01548B;" href="http://{global:NX_DOMAIN}">http://{global:NX_DOMAIN}</a> afin d'avoir plus de détails.
+		<br/><br/>
+		Cordialement.
+	</div>
+	<div style="font-family:verdana,arial,helvetica,sans-serif !important; font-size: 11px !important;margin:10px 0;padding:10px;line-height:16px;">
+		<span style="color:#888;">
+			Mail généré automatiquement depuis votre intranet, Veuillez ne pas y répondre. Pour faire une nouvelle demande ou valider une demande de vos collaborateurs veuillez vous connecter à l'intranet 
+		</span>
+		<br /><br />
+		<span style="color:#888;">
+			CONFIDENTIALITE : Ce message est à destination de <span style="font-weight:bold;">{=validator->civility} {=validator->first_name} {=validator->last_name}</span>. Si vous n'êtes pas le destinataire présumé veuillez informer votre responsable immédiatement et ne pas divulguer le contenu à une tierce personne, ne pas l'utiliser pour quelque raison que ce soit, ne pas stocker ou copier l'information qu'il contient sur un quelconque support.
+		</span>
+	</div>
+</div>
+
+</body>
+</html>

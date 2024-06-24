@@ -1,0 +1,34 @@
+<?xml version="1.0"?> 
+<nxl version="1.0"
+	xmlns="http://www.nxfrontier.com/nxl/nxl"
+
+	xmlns:tpl="http://www.nxfrontier.com/tpl/tpml"
+	xmlns:html="http://www.w3.org/TR/REC-html40"
+	xmlns:pecr="http://www.pecr.com/views/modules">
+
+<views xmlns="http://www.nxfrontier.com/tpl/tpml"  xmlns:tpl="http://www.nxfrontier.com/tpl/tpml" 
+	  path="/" 
+	  skin="public">
+
+	<pecr:html_view view="register.msg_record_edit" file="/pecr/views/default/page_enveloppe.html" section="register">
+		<head/>
+		<header><pecr:module name="header_title_msg" title="register" prompt="register"/></header>
+		<content><pecr:module name="record_input" trace="yes" /></content>
+	</pecr:html_view>
+
+	<pecr:html_view view="register.msg_record_display" file="/pecr/views/default/page_enveloppe.html" section="register">
+		<head/>
+		<header><pecr:module name="header_title_msg" title="register" prompt="register"/></header>
+		<content><pecr:module name="record_display" trace="yes" /></content>
+	</pecr:html_view>
+
+	<pecr:html_view view="register.message" file="/pecr/views/default/page_enveloppe.html" section="register">
+		<head/>
+		<header><pecr:module name="header_title" title="register" /></header>
+		<content><pecr:module name="message" trace="yes" /></content>
+	</pecr:html_view>
+	
+</views>
+
+
+</nxl>

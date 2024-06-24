@@ -1,0 +1,229 @@
+<?xml version="1.0"?> 
+<nxl version="1.0"
+	xmlns="http://www.nxfrontier.com/nxl/nxl" 
+	xmlns:email="http://www.nxfrontier.com/nxl/email"
+	xmlns:ds="http://www.nxfrontier.com/nxl/ds"
+	xmlns:button="http://www.nxfrontier.com/nxl/button"
+	xmlns:format="http://www.nxfrontier.com/nxl/format"
+	xmlns:tpl="http://www.nxfrontier.com/tpl/tpml"
+	xmlns:html="http://www.w3.org/TR/REC-html40">
+
+<logic xmlns="http://www.nxfrontier.com/nxl/nxl"
+   xmlns:ds="http://www.nxfrontier.com/nxl/ds" >
+
+<application name="portal.register">
+	<operation name="newUser" default="no">
+		<step name="input">	
+			<transitions>
+				<next step="confirm" />
+			</transitions>
+			<code>
+				<!-- create empty record -->
+				<ds:load media="empty" ds="reg.input" property="page.record" multiple="no" addProperties="no"/>
+				<button:set name="back" url="/" />
+				
+				<!-- display view -->
+				<form view="reg.input">
+					<property name="msg" value="#string:enter information#" />
+				</form>			
+			</code>
+		</step>
+
+		<step name="modify">	
+			<transitions>
+				<next step="confirm" />
+			</transitions>
+			<code>
+				<!-- create empty record -->
+				<ds:load media="session" ds="reg.input" property="page.record" multiple="no" addProperties="no"/>
+				<button:set name="back" url="/" />
+				
+				<!-- display view -->
+				<form view="reg.input">
+					<property name="msg" value="#string:enter information#" />
+				</form>			
+			</code>
+		</step>
+
+		<step name="confirm">	
+			<transitions>
+				<next step="confirm" />
+			</transitions>
+			<code>
+
+				<!-- confirm input: 
+					- check that required fields are entered correctly
+					- check that user ID is not already taken.
+					- if user ID taken, propose one with country suffix (if available) or asks user to change it.
+					- if everything ok, display user details (user id is reformated as an identifier) with button to last step.
+				-->
+
+				<!-- gets info from user -->
+				<set name="var:record">
+					<ds:load media="post" ds="reg.confirm" property="page.record" multiple="no" addProperties="yes"/>				
+				</set>
+
+				<button:set name="back" operation="modify" />
+				
+				<!-- check errors -->
+				<iferror>
+					<form view="input.error">
+						<property name="msg" value="#error:msg#"/>
+					</form>
+					<exit result="error"/>
+				</iferror>
+
+				<!-- ======= check ID ========= -->
+
+				<!-- get user id from record -->
+				<set name="var:userID">
+					<format:toIdentifier><ds:field name="user.userID" record="#$record#"/></format:toIdentifier>
+				</set>
+
+				<set name="property:user.exist.userID" value="#$userID#" />
+				<set name="var:sameIDRecs">
+					<ds:load media="DB" ds="reg.checkid" multiple="yes" addProperties="no"/>				
+				</set>
+
+				<set name="var:rec_count"><ds:record_count records="#$sameIDRecs#" /></set>
+				<if condition="#$rec_count# GT 0">
+					<!-- id already taken : try a version with country suffix -->
+					<set name="var:country">
+						<format:toIdentifier><ds:field name="user.country"  record="#$record#" format="object" /></format:toIdentifier>
+					</set>
+
+					<set name="property:user.exist.userID" value="'#$userID##$country#'" />
+					<set name="var:sameIDRecs">
+						<ds:load media="DB" ds="reg.checkid" multiple="yes" addProperties="no"/>				
+					</set>
+					<set name="var:rec_count"><ds:record_count records="#$sameIDRecs#" /></set>
+					<choose>
+						<when test="#$rec_count# == 0">
+							<!-- ok: works with country suffix -->
+							<set name="property:msg" value="'#string:Suggested id#: #$userID##$country#.'">
+							</set>
+						</when>
+						<otherwise>
+							<!-- no suggestion.. -->
+							<set name="property:msg">
+								<string value="User id already taken" />
+							</set>
+						</otherwise>
+					</choose>
+
+					<button:set name="back" url="/" />
+					
+					<!-- display input form with message -->
+					<form view="reg.confirm.input" />
+					<exit />
+				</if>
+
+				<!-- == OK: user id is not already taken :
+					- update field in record
+					- store record in session
+					- display confimation message
+				 -->
+				<ds:setField name="user.userID" value="#$userID#" record="#$record#"/>
+				<ds:store ds="reg.update_pwd" media="session" mode="insert" record="#$record#"/>
+
+				<button:set name="back" step="modify" />
+				<button:set name="next" step="finish" />
+
+				<!-- display view -->
+				<display view="reg.confirm">
+					<property name="msg" value="#string:confirm your information#" />
+					<property name="page.record" value="#$record#" />
+				</display>			
+			</code>
+		</step>
+
+		<step name="finish">	
+			<transitions>
+				<check fromsteps="input"/>
+				<onerror>
+					<redirect step="input" />
+				</onerror>
+				<back step="input"/>
+				<next page="/" />
+			</transitions>
+			<code>
+				<!-- finish: 
+					- create password
+					- send email to user with his details and password
+					- create account
+					- display login form
+				-->
+
+				<!-- create password -->
+				<set name="property:user.password">
+					<format:genPassword length="#property:password.length#" type="easy" />
+				</set>
+
+				<!-- load session record and update with password and sys fields -->
+				<set name="var:record">
+					<ds:load media="session" ds="reg.update_pwd" property="page.record" multiple="no" addProperties="no"/>
+				</set>
+				
+				<!-- check presence of record. If doesnt exist, probably a refresh... -->
+				<if test="!empty(#$record#)">
+				
+					<!-- create account -->
+					<ds:store ds="reg.update_pwd" media="db" mode="insert" record="#$record#"/>
+
+	<!-- TODO : 
+		+  display redirected to property: ok
+		+ string #string:# selector: ok
+		+ email send, with/without connexion selector
+		+ update edit+ snippets
+		+ check views
+	-->
+					<!-- create email message -->
+					<!-- get user eamil from record -->
+					<set name="var:user_email">
+						<ds:field name="user.email" record="#$record#"/>
+					</set>
+
+					<!-- get user id from record -->
+					<set name="property:user.userID">
+						<ds:field name="user.userID" record="#$record#"/>
+					</set>
+
+					<display view="email.text" property="email.text" />
+					<display view="email.html" property="email.html" />
+
+					<!-- send email -->
+					<email:send
+						to="#$user_email#"
+						subject="#string:your details#"
+						text="#property:email.text#" 
+						html="#property:email.html#"
+						ds="register.email"	/>
+
+					<iferror>
+						<!-- display error message -->
+						<button:set name="back" url="#property:login.url#" />
+						<button:set name="next" url="#property:login.url#" />
+						<display view="reg.email_error">
+							<property name="msg" value="#error:msg#" />
+						</display>
+						<exit />
+					</iferror>
+
+					<!-- cleanup session record -->
+					<ds:delete ds="reg.update_pwd" media="session" records="#$record#" />
+
+				</if>
+
+				<!-- display welcome message with button to login form -->
+				<button:set name="back" url="#property:login.url#" />
+				<button:set name="next" url="#property:login.url#" />
+				<button:set name="ok" url="#property:login.url#" />
+				<display view="reg.finish">
+					<property name="msg" value="#string:account created#" />
+				</display>
+			</code>
+		</step>
+		</operation>
+	</application>
+</logic>
+</nxl>

@@ -1,0 +1,221 @@
+<?php
+
+include_once(NX_LIB.'orm/persistence.inc');
+
+class Framework {
+
+	static $context=null;
+
+	static function getContext() {
+		return self::$context ? self::$context : $GLOBALS['current_page'];
+	}
+
+	static function setContext($context) {
+		Framework::$context = $context;
+	}
+
+	static function getUser() {
+		if (isset($GLOBALS['_NX_user']))
+			return $GLOBALS['_NX_user'];
+            
+        if (isset($_SESSION['_NX_user']))
+            return $_SESSION['_NX_user'];
+            
+		return null;
+	}
+
+	static function fs() {
+		if (isset($GLOBALS['_NX_fs']))
+			return $GLOBALS['_NX_fs'];
+
+		return $GLOBALS['_NX_fs'] = self::getContext()->getPlugin('FileSys');
+	}
+
+	static function getSite() {
+		if (isset($GLOBALS['_NX_site']))
+			return $GLOBALS['_NX_site'];
+		return null;
+	}
+
+	static function timer() {
+		global $siteDesc;
+		return $siteDesc->timer();
+	}
+
+	static function getString($str,$lang=null,$bundle=null) {
+		return $this->getContext()->getString($str,$lang,$bundle);
+	}
+
+	static function getField($fdesc,$data=null,$dataFormat='form') {
+		if (!isset($fdesc['name']))
+			return null;
+
+		if (!isset($fdesc['type']))
+			$fdesc['type']='text';
+		else
+			$fdesc['type']=strtr($fdesc['type'],'-','_');
+
+		if (isset($fdesc['ds_format']))
+		{
+			$fdesc['ds_format']=preg_replace(array('/(\[\[)/','/(\]\])/'),array('{','}'),$fdesc['ds_format']);
+			if (!isset($fdesc['ds_field_value']))
+				$fdesc['ds_field_value']='oid';
+		}
+
+		if ($data == null)
+			$data = array("{$fdesc['name']}" => '');
+		else
+			$data = array("{$fdesc['name']}" => $data);
+
+		$context = self::getContext();
+
+		$errorCB = new NxErrorCB();
+		$fdesc = new NxFieldDesc($fdesc,$context);
+		return $fdesc->createField($data,$dataFormat,$errorCB,$context);
+	}
+}
+
+/*
+<script language="php">
+
+$select = Framework::getField(array(
+		'name'=>'test',
+		'type'=>'text-choice',
+		'control'=>'select_array',
+		'ds_format'=>'[[field:first_name]] [[field:last_name]]',
+		'ds'=>'rh.conge.validation.get_employee@rh'
+		))->form;
+
+echo json_encode($select);
+
+</script>
+
+		
+		$ufname = $fdesc['name'];
+		$fprops=array($fdesc);
+		$falias=array();
+		$rprops=array();
+		$frole=array();
+		$falias[$ufname]=$ufname;				
+		$pageDesc=null;
+		$recdesc = new NxData_RecordDesc($rprops, $fprops, $falias, $pageDesc, $frole);
+		$record = new NxData_ArrayRecords(array($fdesc),$recdesc);
+*/
+
+if(!function_exists('preg_replace_callback_array'))
+{
+	function preg_replace_callback_array($a,$s) {
+
+		foreach($a as $re=>$rep) {
+			$s = preg_replace_callback($re,$rep,$s);
+		}
+		return $s;
+	}
+}
+
+function preg_replaceX($are,$arep,$s,$self=null) {
+	return preg_replace_mapX($are,$arep,$s,$self,array('$this'=>'$self'));
+}
+
+function preg_replace_mapX($are,$arep,$s,$self=null,$map=null) {
+	$arep2=array();
+	if($self !== null)
+	{
+        if(is_array($arep))
+		    foreach($arep as $i=>$rep) 
+		    {
+			    $arep2[] = str_replace(array_keys($map),array_values($map),$rep);
+		    }
+        else
+		{
+            $arep2 = str_replace(array_keys($map),array_values($map),$arep);        
+		}
+	}
+	else
+		$arep2 = $arep;
+
+	if(PHP_VERSION < '5.6')
+		return preg_replace($are,$arep2,$s);
+
+	if(!is_array($are))
+		$are = array($are);
+
+	if(!is_array($arep2))
+		$arep2 = array($arep2);
+	
+
+	$a2=array();
+	foreach($are as $i=>$re) 
+	{
+		$rep = $arep2[$i];
+
+		if($re[strlen($re)-1]=='e')
+		{  // reg with eval
+			$re2 = rtrim($re,'e');
+			$rep = str_replace(array_keys($map),array_values($map),$rep);
+			$cb = function($m) use($i,$self,$rep) 
+			{
+				if(count($m))
+				{
+					foreach($m as $i=>$v) {
+						$are3['/"\$'.$i.'"/']='"'.str_replace('"','\\"',$m[$i]).'"';
+						$are3['/\$'.$i.'/']=$m[$i];
+					}
+					for($i++;$i<10;$i++)
+						$are3['/\$'.$i.'/']='';
+
+					$rep = preg_replace(array_keys($are3),array_values($are3),$rep);
+				}
+				
+				$exp = 'return '.$rep.';';
+				// echo $expr;
+				try {
+					//nxLog($exp,"EVAL");
+					// DebugBreak();
+					$res = eval($exp);
+                    return $res;
+				}
+				catch(Throwable $t) {
+					nxError('preg_replaceX : cant eval '.$exp);
+					DebugBreak();
+					return '';
+				}
+			};
+
+			$a2[$re2]=$cb;
+		}
+		else
+		{ // simple reg
+			$cb = function($m) use($self,$rep) 
+			{
+				if(count($m))
+				{
+					foreach($m as $i=>$v) {
+						$are3['/"\$'.$i.'"/']='"'.str_replace('"','\\"',$m[$i]).'"';
+						$are3['/\$'.$i.'/']=$m[$i];
+					}
+					for($i++;$i<10;$i++)
+						$are3['/\$'.$i.'/']='';
+					$rep = preg_replace(array_keys($are3),array_values($are3),$rep);
+				}
+				return $rep;
+			};
+
+			$a2[$re]=$cb;
+		}
+	}
+	
+	$ret = preg_replace_callback_array($a2,$s);
+	if(preg_last_error() != PREG_NO_ERROR)
+	{
+		nxError("Error in preg_replace_callback_array for regex = ",implode(array_keys($a2),"\n"));
+		// DebugBreak();
+	}
+	return $ret;
+}
+
+function preg_replace_array($are,$s,$self=null) {
+	return preg_replaceX(array_keys($are),array_values($are),$s,$self);
+}
+
+?>

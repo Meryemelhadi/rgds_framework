@@ -1,0 +1,14 @@
+<?xml version="1.0"?> 
+<nxl version="1.0"
+	xmlns="http://www.nxfrontier.com/nxl/nxl" 
+	xmlns:site_config="http://www.nxfrontier.com/site_config"
+	config="site_config"
+	>
+
+	
+	<set name="var:validation">
+		<bean:call class="CC" method="submitMyDemand" params="XX" trace="true"
+			xmlns:bean  = "http://www.nxfrontier.com/nxl/bean" />
+	</set>
+
+</nxl>

@@ -1,0 +1,106 @@
+<?php
+
+class nxEvents
+{
+	static function fireEvent($event,$subject,$body,$details=null,$cb=null) {
+
+ 		if(defined('IFTT_KEY') && IFTT_KEY)
+			self::fireEvent_IFTT(IFTT_KEY,$event,$subject,$body,$details,$cb);
+
+ 		if(defined('INTEGROMAT_KEY') && INTEGROMAT_KEY)
+			self::fireEvent_integromat(INTEGROMAT_KEY,$event,$subject,$body,$details,$cb);
+	}
+
+	static function addDetails(&$details,$event) {
+		if(!isset($details['event']))
+			$details['event']=$event;
+
+		$details['date_event']=date("Y-m-d H:i:s");
+		if(isset($GLOBALS['_NX_user']))
+		{
+			$details['user']=$GLOBALS['_NX_user']->getProperty('user.fullName','',false);
+		}
+	}
+
+	static function fireEvent_IFTT($key,$event,$subject,$body,$details=null,$cb=null) {
+	
+		self::addDetails($details,$event);
+
+		if($cb)
+		{
+			$cb($event,$subject,$body,$details);
+		}
+
+		$url = 	"https://maker.ifttt.com/trigger/{$event}/with/key/".$key;
+
+		$data = array(
+			'value1' => $subject,  // subject
+			'value2' => $body,
+			'value3'=>json_encode($details)
+		);
+
+		self::postRest($url,$data);
+	}
+
+	static function fireEvent_integromat($key,$event,$subject,$body,$details=null,$cb=null) {
+
+		$key2 = 'INTEGROMAT_KEY_'.$event;
+ 		if(defined($key2) && constant($key2))
+		{
+			$key = constant($key2);
+		}
+	
+		self::addDetails($details,$event);
+
+		if($cb)
+		{
+			$cb($event,$subject,$body,$details);
+		}
+
+
+		$url = 	"https://hook.integromat.com/".$key;
+
+		$data = $details + array(
+			'value1' => $subject,  // subject
+			'value2' => $body,
+			'value3'=>json_encode($details)
+			);
+
+		self::postRest($url,$data);
+	}
+
+
+	static function postRest($url,$data) {
+		$data_string = json_encode($data);
+	
+		$ch = curl_init($url);
+
+		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+		curl_setopt($ch, CURLOPT_POSTFIELDS, $data_string);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+			'Content-Type: application/json',
+			'Content-Length: ' . strlen($data_string))
+		);
+		// curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+		curl_setopt($ch, CURLOPT_FRESH_CONNECT, true);
+		curl_setopt($ch, CURLOPT_TIMEOUT, 2);
+
+		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+
+		//execute post
+		$result = curl_exec($ch);
+		if($result===false)
+		{
+			$error = curl_error($ch);
+			nxError($error);
+		}
+
+		//close connection
+		curl_close($ch);
+	}
+
+}
+
+?>

@@ -1,0 +1,78 @@
+<?xml version="1.0"?> 
+<nxl version="1.0"
+	xmlns="http://www.nxfrontier.com/nxl/nxl" 
+	xmlns:nxl="http://www.nxfrontier.com/nxl/nxl" 
+	xmlns:compil="http://www.nxfrontier.com/nxl/compil" 
+	xmlns:xo="http://www.nxfrontier.com/xo/core"
+	xmlns:html="http://www.w3.org/TR/REC-html40"
+	xmlns:format="http://www.nxfrontier.com/nxl/format"
+	xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+	xmlns:cache="http://www.nxfrontier.com/nxl/cache"
+	>
+
+<xo:taglib uri="http://www.nxfrontier.com/nxl/i8n_v1">
+	<xo:tag name="strings" trace="yes">
+
+		<xo:param name="lang" value="en"/>  
+
+		<cache:invalidate dir="/cache/#site:site.domain#/content/strings/#xo:xpath(@name)#_#{$lang}#/" storage="nx_gen" runat="compil" />
+		<cache:invalidate dir="/cache/#site:site.domain#/content/strings/#xo:xpath(@name)#/" storage="nx_gen" runat="compil" />
+
+		<compil:output file="#const:NX_CONF#content/strings/#xo:xpath(@name)#_#{$lang}#.inc" method="php" indent="no">
+			<xo:text>// file generated automatically, do not edit.
+$list = array(</xo:text>
+	<xsl:value-of select="$_content_" />
+<xo:text>
+);
+</xo:text>		
+	</compil:output>
+
+		<compil:output file="#const:NX_CONF#content/strings/#xo:xpath(@name)#.inc" method="php" indent="no">
+			<xo:text>// file generated automatically, do not edit.
+$list = array(</xo:text>
+	<xsl:value-of select="$_content_" />
+<xo:text>
+);
+</xo:text>		
+	</compil:output>
+	</xo:tag>
+
+	<xo:tag name="values" trace="yes">
+		<compil:output file="#const:NX_CONF#content/strings/#xo:xpath(@name)#.values" method="text" indent="no">
+			<xo:for-each select="string">
+				<xo:value select="@id"/><xsl:text>=</xsl:text><format:quotes2HTML><xo:value select="text()"/></format:quotes2HTML><xsl:text>
+</xsl:text>
+			</xo:for-each>
+		</compil:output>
+		<cache:invalidate dir="/cache/#site:site.domain#/content/strings/#xo:xpath(@name)#/" storage="nx_gen" runat="compil" />
+	</xo:tag>
+
+	<xo:tag name="string">
+		<xo:param name="value" value="#{$_content_}#" />
+
+		<xsl:variable name="escape">
+			<xsl:choose>
+				<xsl:when test="@escape='no'">false</xsl:when>
+				<xsl:when test="@escape='false'">false</xsl:when>
+				<xsl:when test="@value">false</xsl:when>
+				<xsl:otherwise>true</xsl:otherwise>
+			</xsl:choose>
+		</xsl:variable>
+
+	<block>
+	 <xsl:text>
+'</xsl:text><xo:value select="@id"/>'<xsl:text>=></xsl:text>
+<xsl:choose>
+	<xsl:when test="$escape='false'">'<xo:value select="$value"/>'</xsl:when>
+	<xsl:when test="./*"><format:parseHTML><format:simpleQuotes2HTML><xo:value select="$_content_"/></format:simpleQuotes2HTML></format:parseHTML></xsl:when>
+	<xsl:when test="$_content_!=''">'<format:simpleQuotes2HTML><xo:value select="$_content_"/></format:simpleQuotes2HTML>'</xsl:when>
+	<xsl:otherwise>'<format:quotes2HTML><xo:value select="$value"/></format:quotes2HTML>'</xsl:otherwise>
+</xsl:choose>
+<xsl:text>,
+</xsl:text>
+	</block>
+	</xo:tag>
+
+</xo:taglib>
+
+</nxl>

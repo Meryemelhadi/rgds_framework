@@ -1,0 +1,1 @@
+<?php $properties["query"]="SELECT _oid,_soid,_treeid,_fullpath,_path,_name,_itemid,_full_name,_selprompt,_index,_perms,_lang FROM _ds_category WHERE _soid='".$props->getProperty("site.oid","",true)."' AND _treeid='".$props->getProperty("cat.id","",true)."' ORDER BY _index ASC,_oid ASC "; ?>

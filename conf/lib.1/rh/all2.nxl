@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<nxl version="1.0"
+	xmlns="http://www.nxfrontier.com/nxl/nxl" 
+	xmlns:xo="http://www.nxfrontier.com/xo/core"
+	>
+
+<include file="rh/hrTime.nxl" mode="once" />
+<include file="pim/message.nxl" mode="once" />
+<include file="rh/user.nxl" mode="once" />
+<include file="rh/conge/missions.nxl" mode="once" />
+<include file="rh/conge/demand.nxl" mode="once" />
+<include file="rh/conge/legal_days.nxl" mode="once" />
+
+<!-- compile applications as well -->
+<include file="rh/mgc/demand.nxl" mode="once" />
+<include file="rh/mgc/validation.nxl" mode="once" />
+<include file="rh/mgc/archive_validator.nxl" mode="once" />
+<include file="admin/directory_holiday.nxl" mode="once" />
+
+</nxl>

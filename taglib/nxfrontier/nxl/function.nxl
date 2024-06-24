@@ -1,0 +1,50 @@
+<?xml version="1.0"?> 
+<nxl version="1.0"
+	xmlns="http://www.nxfrontier.com/nxl/nxl" 
+	xmlns:nxl="http://www.nxfrontier.com/nxl/nxl" 
+	xmlns:compil="http://www.nxfrontier.com/nxl/compil" 
+	xmlns:xo="http://www.nxfrontier.com/xo/core"
+	xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+	xmlns:html="http://www.w3.org/TR/REC-html40"
+	xmlns:func="http://www.nxfrontier.com/nxl/function"
+	>
+
+<xo:taglib uri="http://www.nxfrontier.com/nxl/function">
+	<!-- <func:declare name="myFunc">
+			<func:arg name="xx" />
+			<set name="n" value="$xx"/>
+		</func:declare>
+	-->
+	
+	<xo:tag name="declare" trace="yes">
+		<xo:declareInstructionBlock/>
+		
+		<xsl:text>function </xsl:text><xsl:value-of select="@name" /><xsl:text>(</xsl:text>
+		<xsl:for-each select="param">
+			<xsl:text>$</xsl:text><xsl:value-of select="@name" /><xsl:text>,</xsl:text>
+		</xsl:for-each>
+		<xsl:text>$__p=null) {
+	</xsl:text>
+		<xsl:value-of select="$_content_" /><xsl:text>
+	}</xsl:text>		
+	</xo:tag>
+
+	<!-- <func:call name="myFunc">
+			<func:arg>10</func:arg>
+		</func:call>
+	-->
+	<xo:tag name="call" trace="yes">
+		<xsl:text>$this-></xsl:text><xsl:value-of select="@name" /><xsl:text>(</xsl:text>
+	<xsl:for-each select="arg">
+		<xsl:value-of select="." /><xsl:text>,</xsl:text>
+	</xsl:for-each>
+	<xsl:text>null);
+</xsl:text>
+	</xo:tag>
+
+	<xo:tag name="arg">	
+	</xo:tag>
+
+</xo:taglib>
+
+</nxl>

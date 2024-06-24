@@ -1,0 +1,73 @@
+<!doctype html public "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title> Form Image Chooser </title>
+<script type="text/javascript" src="../res/js/NxDialog.js"></script>
+
+<script>
+// Dialog API
+// manage input field
+function InputChooseImage() {
+	this.open('imageDialog.html',600,400);
+}
+
+InputChooseImage.prototype.open = function(url,h,w) {
+	this.w=600;
+	this.h=400;
+	openDialog(url,this,w,h);
+}
+
+InputChooseImage.prototype.onOk = function(result) {
+	var box=result.size.box;
+
+	document.execCommand("InsertImage",false,result.url);
+	if (document.selection.type=="Control")
+	{
+		// get inserted img object
+		var oControlRange = document.selection.createRange();
+		var img = oControlRange.item(0);
+		if (img.tagName=="IMG")
+		{
+			img.border=result.border;
+			if (result.align!="inline")
+				img.align=result.align;
+		}
+	}
+}
+
+InputChooseImage.prototype.onCancel = function() {
+	alert("dialog cancel");
+}
+
+function AddLink()
+{//Identify selected text
+var sText = document.selection.createRange();
+if (!sText==""){
+    //Create link
+     document.execCommand("CreateLink");
+     //Replace text with URL
+     if (sText.parentElement().tagName == "A"){
+       sText.parentElement().innerText=sText.parentElement().href;
+       document.execCommand("ForeColor","false","#FF0033");
+     }    
+  }
+else{
+    alert("Please select some blue text!");
+  }   
+}
+
+function RT_chooseImage() {
+	new InputChooseImage();
+}
+
+</script>
+
+
+</head>
+<body>
+
+<span UNSELECTABLE='on' onclick="RT_chooseImage()">Insert Image</span>
+<div UNSELECTABLE='off' id="editor" style="border:solid 1px black;height:300px;overflow:auto;" CONTENTEDITABLE class="rich_text">Test fasfasdfq</div>
+
+</body>
+</html>

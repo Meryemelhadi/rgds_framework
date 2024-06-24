@@ -1,0 +1,59 @@
+<!--
+{@include:init/rich_edit}
+
+{@require:css/form.csx:skin and device}
+{@require:js/checkForm.jsx:skin and device}
+-->
+
+{button:back}
+  <table border="0" cellspacing="0" cellpadding="0">
+    <tr>
+      <td><img src="../res/images/spacer.gif" width="40" height="1"></td>
+      <td class="msg">{=msg}</td>
+    </tr>
+    <tr>
+      <td colspan="2"><img src="../res/images/spacer.gif" width="1" height="10"></td>
+    </tr>
+  </table>
+{records}{record}
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+  <tr>
+    <td><img src="../res/images/spacer.gif" width="70" height="1"></td>
+    <td><img src="../res/images/spacer.gif" width="535" height="1"></td>
+    <td><img src="../res/images/spacer.gif" width="195" height="1"></td>
+    <td><img src="../res/images/spacer.gif" width="10" height="1"></td>
+  </tr>
+  <tr>
+    <td rowspan="2"><img src="../res/images/spacer.gif" width="70" height="{global:innerFrameHeight|460}"></td>
+    <td rowspan="2">
+      <div style="height:{global:innerFrameHeight|460}px" class="contentBox"> 
+		<table>
+		{fields}
+		<tr>
+			<td valign="top" class="form_label">{field.label} {if: is_form and field.required}&nbsp;<span class="required">*</span>{/if}</td>
+            <td valign="top" class="form_field">{field}{if:is_form and field.is_help}&nbsp;<img onClick='helpPlease(this,"{field.help}","{field.label}")' src="../res/images/help.gif" width="16" height="16">{/if}</td>
+          </tr>			
+		{/fields}
+		</table>
+        </div>
+    </td>
+    <td align="center" valign="top"> 
+	{if:is_help}
+      <div id="helpBox">
+      <table class="help" bgcolor="#ffffff" width="150" border="0" cellspacing="0" cellpadding="3">
+		<tr><td><img src="../res/images/spacer.gif" width="150" height="1"></td></tr>
+		<tr><th class="help">Help</th></tr>
+		<tr><td class="help">For help on form fields please click on icons.</td></tr>
+		<tr><td><img src="../res/images/spacer.gif" width="150" height="10"></td></tr>
+	</table>
+      </div>
+	{else}
+	&nbsp;
+	{/if}
+</td>
+    <td rowspan="2"><img src="../res/images/spacer.gif" width="10" height="1"></td>
+  </tr>
+</table>
+<p>{=cancelButton}&nbsp;{if:is_form}{submit}{else}{button:submit}{/if}</p>
+{/record}
+{/records}

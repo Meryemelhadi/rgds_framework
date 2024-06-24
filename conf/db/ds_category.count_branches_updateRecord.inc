@@ -1,0 +1,1 @@
+<?php $properties["query"]="UPDATE _ds_category SET _oid=".$record->getFieldValue("oid","DB","NULL")." WHERE _soid='".$props->getProperty("site.oid","",true)."' AND _treeid='".$props->getProperty("cat.id","",true)."' AND _path='".$props->getProperty("cat.path","",true)."'"; ?>

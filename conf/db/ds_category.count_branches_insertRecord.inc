@@ -1,0 +1,1 @@
+<?php $properties["query"]="INSERT INTO _ds_category(_oid) VALUES(".$record->getFieldValue("oid","DB","NULL").")"; ?>

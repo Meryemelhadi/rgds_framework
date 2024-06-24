@@ -1,0 +1,109 @@
+<?xml version="1.0"?> 
+<nxl version="1.0"
+	xmlns="http://www.nxfrontier.com/nxl/nxl">
+
+<data xmlns="http://www.nxfrontier.com/dml/dml">
+	<models>
+		<model name="user">
+
+			<key mode="user_check">
+				<field name="company-id" value="%{property:user.exist.userID}" />
+			</key>
+			<fields mode="user_check">
+				<field name="company-id" label="login id" type="text" size="30" role="login.id"  isProp="user.userID"/>
+			</fields>
+
+			<key mode="login">
+				<field name="company-id" value="%{post:company_id}" />
+				<field name="password" value="%{post:password}" />
+			</key>
+			<fields mode="login">
+				<field name="oid" alias="coid" label="object id" type="oid" isProp="user.oid"/>
+				<field name="company-id" label="login id" type="text" size="30" role="login.id"  isProp="user.userID"/>
+				<field name="password" label="Password" type="login-password" size="30" value="%{property:user.password}" isProp="user.password" masked="no"/>
+			</fields>
+
+			<key mode="user_data">
+				<field name="company-id" value="%{post:company_id}" />
+				<field name="password" value="%{post:password}" />
+			</key>
+			<fields mode="user_data">
+				<field name="oid" alias="coid" label="object id" type="oid" isProp="user.oid"/>
+				<field name="company-id" label="login id" type="text" size="30" role="login.id"  isProp="user.userID"/>
+				<field name="email"		label="email"	type="login-email" isProp="user.email"/> 
+			</fields>
+
+			<fields mode="reg_input">
+				<field name="company-id" label="login" type="login-id" size="45" isRequired="true" isProp="user.userID"/>
+				<field name="email"		label="email"	type="login-email" isRequired="true" />
+			</fields>
+
+			<fields mode="reg_update">
+				<field name="oid" alias="coid" label="object id" type="oid" />
+				<field name="company-id" label="login id" type="text" size="30" role="login.id"  isProp="user.userID" isRequired="true" />
+				<field name="email"		label="email"	type="login-email" isProp="user.email" isRequired="true" /> 
+				<field name="password" label="Password" type="login-password" size="30" value="%{property:user.password}" isProp="user.password" masked="no"/>
+				<field name="checkedEmail" label="Is checked email"	 type="text-choice" value="1" show="no" /> 
+				<field name="reg-date"	  label="Registration date"	 type="date" value="now" isInput="false" />
+				<field name="reg-status"	   label="registration status" type="text-choice" value="1" isInput="false" />
+			</fields>
+
+			<key mode="profile">
+				<field name="oid" alias="coid" value="%{user:user.oid:0}"/>
+			</key>
+			<fields mode="profile">
+				<field name="oid" alias="coid" label="object id" type="oid" />
+				<field name="email"	label="user email"	type="email" /> 
+			</fields>
+
+			<!-- Update passord form -->
+			<fields mode="updatePasswordForm">
+				<field name="old_password_1" label="current Password" type="login-password" size="30" isRequired="true" isProp="password.current"/>
+				<field name="password" label="New password" type="login-password" size="30" isRequired="true" alias="password"/>
+				<field name="new_password_2" label="New Password (again)" type="login-password" size="30" isRequired="true" isProp="password.new2"/>
+			</fields>
+
+			<key mode="readPassword">
+				<field name="oid" alias="coid" value="%{user:user.oid:0}"/>
+			</key>
+			<fields mode="readPassword">
+				<field name="password" label="Password" type="login-password" size="30" isProp="password" />
+			</fields>
+
+			<key mode="updatePassword">
+				<field name="oid" alias="coid" value="%{user:user.oid:0}"/>
+			</key>
+			<fields mode="updatePassword">
+				<field name="password" label="Password" type="login-password" size="30" isProp="password.new" value="%{post-field:password:0}"/>
+			</fields>
+			
+			<!-- forgottent password facility : start  -->
+			<fields mode="forgotten_password">
+				<field name="company-id" label="login id" type="text" size="30" role="login.id"  isProp="user.userID"/>
+				<field name="email"	label="contact email" type="email" isProp="user.email"/> 
+			</fields>
+
+			<key mode="send_password">
+				<field name="company-id" value="%{http-field:company-id}" />
+			</key>
+			<fields mode="send_password">
+				<field name="company-id" label="login id" type="text" size="30" role="login.id"  isProp="user.userID"/>
+				<field name="password" label="password" type="login-password" size="30" isProp="user.password" masked="no"/>
+				<field name="email"	label="email" type="email" isProp="user.email"/> 
+			</fields>
+			<!-- forgottent password facility : end  -->
+
+			<fields>
+				<field name="oid" alias="coid" label="object id" type="oid"/>
+				<field name="company-id" label="login" type="login-id" size="45" isRequired="true" />
+				<field name="password" label="password" type="login-password" size="30"/>
+				<field name="email"	label="contact email"	type="login-email" isRequired="true"/> 
+				<field name="perms" label="permissions"	type="login-perms" /> 
+				<field name="reg-date" label="Registration date" type="date" default="now"/>
+				<field name="checkedEmail"	label="Is checked email"	type="text-choice"  default="0"/> 
+				<field name="reg-status" label="registration status" type="text-choice" default="0"/>
+			</fields>
+		</model>
+	</models>
+</data>
+</nxl>

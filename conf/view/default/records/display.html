@@ -1,0 +1,17 @@
+{!-- css file dependency --}
+{@require:css/console.css:skin and device}
+
+{!-- console main operations --}
+{button:back}
+
+{!-- records display --}
+{records}
+{record}
+<p>{field:name}</p>
+<p>{field:image}</p>
+<p>{field:description}</p>
+{/record}
+{/records}
+{no_record}
+	{string:"Empty table"}
+{/no_record}

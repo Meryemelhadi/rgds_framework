@@ -1,0 +1,244 @@
+<script type="text/javascript" id="/mainNav.js">
+MyAppLoader.addComponent(
+{ 
+	id:'mainNav',
+
+init:function(MyAppLoader) 
+{
+	var app = MyAppLoader.app;
+
+	// define mode : standalone application or webapp
+	// var mode = 'ws'; // standalone
+	var conMode = 'api' // webapp
+
+	// var screenFeedUrl = '/screen/'+conMode+'/screen_feed.php?op=list';
+	// var screenFeedUrl = '/livret/api/livret.php';
+
+	// Home page Control
+	// NB. we inject here services declared in components that need to be initialised when app starts
+	app.controller('MainNavCtrl',
+		['AppTools','Config','$rootScope','$scope','$window','ServerDataFactory','$sce','$state',
+		function(Config,$rootScope,$scope,$window,ServerDataFactory,$sce,$state)
+	{
+		$rootScope.user = Config.user;
+		$rootScope.homeUrl = Config.homeUrl;
+	}]);
+
+}});
+</script>
+
+<!-- ======= Menu ======== -->
+<script type="text/ng-template" id="/top-nav.htm">
+
+	<div id="page-header-inner" ng-controller="MainNavCtrl as nav">
+		<nav:nav>
+			<nav:header>
+				<a class="navbar-brand" href="{{homeUrl}}">
+					SI Formation
+				</a>
+			</nav:header>
+
+			<nav:body>
+				<nav:bar>
+				<?php
+				if($isBoManager)
+				{
+				?>
+					<nav:menu title="Sessions">
+						<nav:link state="main.sessions" params="{bomanager:{user:oid},session_display_mode:1}"> Mes sessions</nav:link>					
+						<nav:link state="main.sessions_list" params="{bomanager:{user:oid},session_display_mode:1,mode:'alerts'}"> Alertes sur mes sessions</nav:link>	
+						<nav:link state="main.sessions" params="{bomanager:null,session_display_mode:0}">Toutes les sessions</nav:link>					
+						<nav:link state="main.sessions" params="{bomanager:null,session_display_mode:1}"> Etats de toutes les sessions</nav:link>				
+					</nav:menu>
+				<?php
+				}
+				?>
+
+<?php
+if($isBoAdmin)
+{
+?>						
+					<nav:link state="main.catalog">Catalogue</nav:link>
+
+					<nav:menu title="Configuration">
+						<nav:column> 
+							<p>Organisation formations <b class="caret"></b></p>
+							<ul role="menu" aria-labelledby="split-button">
+								<nav:link href="#/home/bo_managers" target="config"> Gestionnaires</nav:link>    
+
+								<nav:link href="#/home/config_cat/catalog_tag" target="config"> Audiences</nav:link> 		
+								<nav:link state="main.config_cat.category" params="">Catégories</nav:link>					
+								<nav:link href="#/home/sessions_constraints" target="config"> Contraintes de planif.</nav:link>    
+								<nav:link state="main.config_cat.cycle" params="" target="config"> Cycles</nav:link> 
+								<nav:link href="#/home/config_cat/domain" target="config"> Domaines</nav:link> 
+								<nav:link state="main.config_cat.edition" target="config"> Editions du catalogue</nav:link> 
+								<nav:link href="#/home/config_cat/job" target="config"> Compétences</nav:link> 
+								<nav:link state="main.config_cat.progress_level" params="" target="config"> Niveaux de progression</nav:link> 
+								<nav:link href="#/home/config_cat/rayon" target="config"> Rayons</nav:link>
+								<nav:link href="#/home/config_cat/concerned" target="config"> Rôles concernés</nav:link> 
+								<nav:link state="main.catalog_edit">Table Catalogue</nav:link>
+							
+							</ul>
+							<p>Documents types <b class="caret"></b></p>
+							<ul role="menu" aria-labelledby="split-button">         
+								<nav:link href="#/home/config_app/doc_model" target="config"> Modèles de documents</nav:link> 
+								<nav:link href="#/home/config_app/email_model" target="config"> Modèles d'emails</nav:link> 
+								<nav:link href="#/home/config_app/graphic" target="config"> Configuration application</nav:link> 
+								<nav:link href="#/home/config_app/user" target="config">Utilisateurs</nav:link>					
+							</ul>
+						</nav:column> 
+						<nav:column>
+							<p>Formateurs <b class="caret"></b></p>
+							<ul role="menu" aria-labelledby="split-button">
+								<nav:link href="#/home/animator" target="config"> Formateurs</nav:link> 
+								<nav:link href="#/home/company" target="config"> Sociétés de formation</nav:link> 					
+							</ul>
+							<p>Magasins <b class="caret"></b></p>
+							<ul role="menu" aria-labelledby="split-button">
+								<nav:link state="main.config_mag.store" params="" target="mag"> Magasins</nav:link> 
+								<nav:link state="main.config_mag.trainee" params="" target="mag"> Stagiaires</nav:link> 
+								<nav:link state="main.config_mag.csp" params="" target="mag"> CSP</nav:link> 
+								<nav:link state="main.config_mag.job_function" params="" target="mag"> Missions/Métiers</nav:link> 
+								<nav:link state="main.config_mag.training_room" params="" target="mag"> Salles / lieux</nav:link> 
+								<nav:link state="main.config_mag.sector" params="" target="mag"> Régions animation</nav:link> 
+								<nav:link state="main.config_mag.zone" params="" target="mag"> Zones scolaires</nav:link> 
+							</ul>
+						</nav:column> 
+					</nav:menu>
+
+<?php
+}
+
+if($isStoreManager)
+{
+?>
+					<nav:menu title="Mes formations">
+						<nav:link state="main.sessions_mag_list" params="{eoid:user.entity,mode:'next'}">Mes sessions de formation à venir</nav:link> 
+						<nav:link state="main.sessions_mag_list" params="{eoid:user.entity,mode:'prev'}">Mes sessions de formation réalisées»</nav:link> 
+					</nav:menu>
+
+					<nav:menu title="Calendrier">
+						<nav:link state="main.sessions_mag_list" params="{eoid:null,mode:'next'}">Toutes les sessions de formation à venir</nav:link> 
+						<nav:link state="main.sessions_mag_list" params="{eoid:null,mode:'prev'}">Toutes les sessions de formation réalisées»</nav:link> 
+					</nav:menu>
+
+					<nav:menu title="Catalogue formations">
+						<nav:link state="main.catalog_mag">Programmes proposés</nav:link> 
+					</nav:menu>
+
+					<nav:menu title="Mon magasin">
+						<nav:link state="main.trainee_mag">Mes collaborateurs</nav:link> 
+						<nav:link state="main.session_trainee_mag">Mes sessions de formation</nav:link> 
+					</nav:menu>
+
+<?php
+}
+elseif($isAnimator)
+{
+?>
+					<nav:menu title="Sessions">
+						<nav:link state="main.sessions_anim_list" params="{bomanager:null,session_display_mode:0}">Toutes les sessions</nav:link>					
+					</nav:menu>
+
+					<nav:menu title="Mes formations">
+						<nav:link state="main.sessions_anim" params="{animator:{var:animator},session_display_mode:1}">Calendrier de mes sessions</nav:link> 
+						<nav:link state="main.sessions_anim_list" params="{animator:{var:animator},session_display_mode:1,mode:'next'}">Mes sessions de formation à venir</nav:link> 
+						<nav:link state="main.sessions_anim_list" params="{animator:{var:animator},session_display_mode:1,mode:'prev'}">Mes sessions de formation réalisées</nav:link> 
+					</nav:menu>
+
+					<nav:menu title="Catalogue formations">
+						<nav:link state="main.catalog_anim">Programmes proposés</nav:link> 
+					</nav:menu>
+
+<?php
+}
+?>
+				</nav:menu>
+			</nav:bar>
+
+			<nav:bar position="right">
+				<nav:menu title="{user:first_name} {user:last_name}" class-icon="glyphicon glyphicon-user">
+					{if:%var:isAdmin%}<li><p>Profil : Administrateur</p></li>{/if}
+					{if:%var:isBoAdmin%}<li><p>Profil : Gestionnaire de formation</p></li>{/if}
+					{if:%var:isStoreManager%}<li><p>Profil : Responsable de magasin</p></li>{/if}
+					{if:%var:isAnimator%}<li><p>Profil : Formateur</p></li>{/if}
+					<li><a href="/user/logout.php"><i class="glyphicon glyphicon-log-out"></i> Deconnexion</a></li>
+				</nav:menu>
+			</nav:bar>
+				
+			</nav:body>
+		</nav:nav>
+	</div>
+</script>
+
+
+<script type="text/ng-template" id="/nav/left/config_cat.htm">
+	<nav-left:nav>
+		<nav-left:header title="Configuration Catalogue"></nav-left:header>
+
+		<nav-left:body>
+			<nav-left:bar>
+				<nav-left:menu>
+					<nav-left:link state="main.config_cat.catalog_tag" params="">Audiences</nav-left:link>					
+					<nav-left:link state="main.config_cat.category" params="">Catégories</nav-left:link>					
+					<nav-left:link state="main.config_cat.cycle" params="">Cycles</nav-left:link>					
+					<nav-left:link state="main.config_cat.domain" params="" nav="domain">Domaines</nav-left:link>					
+					<nav-left:link state="main.config_cat.edition" params="">Editions</nav-left:link>					
+					<nav-left:link state="main.config_cat.job" params="">Métiers</nav-left:link>					
+					<nav-left:link state="main.config_cat.progress_level" params="">Niveaux de progression</nav-left:link>
+					<nav-left:link state="main.config_cat.rayon" params="">Rayons</nav-left:link>					
+					<nav-left:link state="main.config_cat.concerned" params="">Rôles</nav-left:link>					
+				</nav-left:menu>
+		</nav-left:body>
+	</nav-left:nav>
+</script>
+
+<style>
+#page-header-inner .dropdown-column p {
+	padding-bottom: 5px;
+	white-space: nowrap;
+    text-align: left;
+	display: block;
+	padding: 3px 20px;
+	clear: both;
+	font-weight: 400;
+	line-height: 1.42857143;	
+}
+
+div#page-header {
+	display:none;
+}
+
+#page-header-inner {
+    height: 54px;
+    top: 0;
+    width: 100%;
+    z-index: 100;
+    position: fixed;
+}
+
+#page-header-inner .navbar-default p,
+#page-header-inner .navbar-default a
+{
+	color:#fff;
+    background: transparent;
+}
+
+#page-header-inner .navbar-default .dropdown-menu a:hover
+{
+	background:#fff;
+    color: {var:config["top_menu_section"]};
+}
+
+#page-header-inner {
+    background-color: {var:config["top_menu"]};
+}
+
+#page-header-inner .navbar-default, 
+#page-header-inner .navbar-default .dropdown-menu {
+    background-color: {var:config["top_menu"]};
+    border-color: {var:config["top_menu"]};
+    color: #fff;
+}
+
+</style>

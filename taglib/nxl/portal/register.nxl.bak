@@ -1,0 +1,228 @@
+<?xml version="1.0"?> 
+<nxl version="1.0"
+	xmlns="http://www.nxfrontier.com/nxl/nxl" 
+	>
+
+<!-- pages -->
+<pages xmlns="http://www.nxfrontier.com/nxl/page">
+	<page	name="register" protected="no" 
+			path="/portal/" 
+			cache="no" 
+			lang="en"	
+			skin="my" 
+			strings="user_reg"
+		>
+		<exec logic="portal.register" strings="user_reg">
+			<!-- properties -->
+			<property name="password.length" value="8" />
+
+			<!-- DATA -->
+			<data name="reg.input" value="company.registration" media="db"/>
+			<data name="reg.confirm" value="company.registration" media="db"/>
+			<data name="reg.checkid" value="company.user_check" media="db"/>
+			
+			<!-- VIEWS -->
+			<view name="reg.input" value="my.msg_record_edit" />	
+			<view name="reg.confirm" value="page.page_msg_record_edit" />			
+			<view name="reg.confirm.input" value="page.page_msg_record_edit" />			
+			<view name="input.error" value="page.page_msg_record_edit" />			
+		</exec>
+	</page>
+</pages>
+
+<!-- logic -->
+<logic xmlns="http://www.nxfrontier.com/nxl/nxl"
+   xmlns:ds="http://www.nxfrontier.com/nxl/ds" >
+
+<application name="portal.register">
+	<operation name="newUser" default="no">
+		<step name="input">	
+			<transitions>
+				<next step="confirm" />
+			</transitions>
+			<code>
+				<!-- create empty record -->
+				<ds:load media="empty" ds="reg.input" property="page.record" multiple="no" addProperties="no"/>
+				<button:set name="back" url="/" />
+				
+				<!-- display view -->
+				<form view="reg.input">
+					<property name="msg" value="enter information"/>
+				</form>			
+			</code>
+		</step>
+
+		<step name="modify">	
+			<transitions>
+				<next step="confirm" />
+			</transitions>
+			<code>
+				<!-- create empty record -->
+				<ds:load media="session" ds="reg.input" property="page.record" multiple="no" addProperties="no"/>
+				<button:set name="back" url="/" />
+				
+				<!-- display view -->
+				<form view="reg.input">
+					<property name="msg" value="enter information"/>
+				</form>			
+			</code>
+		</step>
+
+		<step name="confirm">	
+			<transitions>
+				<next step="confirm" />
+			</transitions>
+			<code>
+
+				<!-- confirm input: 
+					- check that required fields are entered correctly
+					- check that user ID is not already taken.
+					- if user ID taken, propose one with country suffix (if available) or asks user to change it.
+					- if everything ok, display user details (user id is reformated as an identifier) with button to last step.
+				-->
+
+				<!-- create empty record -->
+				<set name="var:record">
+					<ds:load media="post" ds="reg.input" property="page.record" multiple="no" addProperties="yes"/>				
+				</set>
+
+				<button:set name="back" operation="modify" />
+				
+				<!-- check errors -->
+				<iferror>
+					<form view="input.error">
+						<property name="msg" value="#error:msg#"/>
+					</form>
+					<exit result="error"/>
+				</iferror>
+
+				<!-- ======= check ID ========= -->
+
+				<!-- get user id from record -->
+				<set name="var:userID">
+					<format:toIdentifier><ds:field name="user.userID" /></format:toIdentifier>
+				</set>
+
+				<set name="property:user.exist.userID" value="#$userID#" />
+				<set name="var:sameIDRecs">
+					<ds:load media="DB" ds="reg.input" multiple="yes" addProperties="no"/>				
+				</set>
+
+				<if condition="empty(#$sameIDRecs#) != true">
+					<!-- id already taken : try a version with country suffix -->
+					<set name="var:country">
+						<format:toIdentifier><ds:field name="user.userID" format="object" /></format:toIdentifier>
+					</set>
+
+					<set name="property:user.exist.userID" value="#$userID##$country#" />
+					<set name="var:sameIDRecs">
+						<ds:load media="DB" ds="reg.input" multiple="yes" addProperties="no"/>				
+					</set>
+					<choose>
+						<when test="empty(#$sameIDRecs#)">
+							<!-- ok: works with country suffix -->
+							<set name="property:msg" >
+								<tpl:string value="Suggested id" /><text>: </text><html:b><get name="var:country" /></html:b><text>. </text>
+							</set>
+						</when>
+						<otherwise>
+							<!-- no suggestion.. -->
+							<set name="property:msg">
+								<tpl:string value="User id already taken" />
+							</set>
+						</otherwise>
+					</choose>
+
+					<button:set name="back" url="/" />
+					
+					<!-- display input form with message -->
+					<form view="reg.confirm.input" />
+					<exit />
+				</if>
+
+				<!-- == OK: user id is not already taken :
+					- update field in record
+					- store record in session
+					- display confimation message
+				 -->
+				<ds:setField name="user.userID" value="#$userID#" record="#$record#"/>
+				<set name="session:reg_confirm" value="#$record#" />
+
+				<button:set name="back" step="modify" />
+				<button:set name="next" step="finish" />
+
+				<!-- display view -->
+				<display view="reg.confirm">
+					<property name="msg" value="confirm your information"/>
+				</display>			
+			</code>
+		</step>
+
+		<step name="finish">	
+			<transitions>
+				<check fromsteps="input"/>
+				<onerror>
+					<redirect step="input" />
+				</onerror>
+				<back step="input"/>
+				<next page="/" />
+			</transitions>
+			<code>
+				<!-- finish: 
+					- create password
+					- send email to user with his details and password
+					- creates account
+				-->
+				<!-- load post record -->
+				<set name="var:record">
+					<ds:load media="session" ds="reg.input" property="page.record" multiple="no"/>
+				</set>					
+				
+				<!-- if pb with load, display error msg -->
+				<iferror>
+					<button:set name="ok" step="input">
+						<button:param  name="poid" value="#var:poid#" />
+					</button:set>
+					<display view="page.error">
+						<property name="msg" value="#error:msg#"/>
+					</display>
+					<ds:deleteResources record="#$record#"/>
+					<exit result="error"/>
+				</iferror>
+
+				<!-- store it if ok -->
+				<ds:store ds="product.new" media="db" mode="insert" record="#$record#"/>
+
+				<!-- if pb with store, display error msg -->
+				<iferror>
+					<button:set name="ok" step="input">
+						<button:param  name="poid" value="#var:poid#" />
+					</button:set>
+
+					<display view="page.error">
+						<property name="msg" value="#error:msg#"/>
+					</display>
+					<ds:deleteResources record="#$record#"/>
+					<exit result="error"/>
+				</iferror>
+								
+				<!-- get new product ID -->
+				<set name="var:poid">
+					<ds:insert_id media="db"/>
+				</set>
+
+				<!--  redirect to product display -->		
+				<redirect operation="prod_overview">
+					<url_param name="poid" value="#var:poid#" />
+				</redirect>
+			</code>
+		</step>
+		</operation>
+	</application>
+
+</logic>
+<!-- views -->
+
+<!-- data -->
+
+</nxl>

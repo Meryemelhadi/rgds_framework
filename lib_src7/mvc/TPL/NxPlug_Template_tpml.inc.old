@@ -1,0 +1,78 @@
+<?php
+/*
+COPYRIGHT NxFrontier Ltd
+www.nxfrontier.com
+This code may not be copied, modified or redistributed without the written consent of NxFrontier Limited, UK company number 04462961. 
+*/
+
+/*
+ 	transform a csx file into a css file.
+ 	
+ 	Supports the same directive set as HTML templates (tpl) but in the form of css2 directive syntax.
+ 	ex: 
+ 		@property(prop) or @prop
+ 		@if(cond) css_action @elseif(cond) action @else action @endif
+ 		@include(page.othercss.css)
+ 		@set:variable v = ?value?;
+*/
+function nxltrace($msg,$level='compil',$indent=0,$encode=false)
+{
+	if ($level=='error')
+	{
+	}
+}
+
+class NxPlug_Template_tpml extends NxPlug_Template_tpl
+{
+	function NxPlug_Template_tpml(&$props)
+	{
+		parent::__construct($props);
+		$this->pathOffset='';
+		$this->ext='inc';
+		$this->t_ext='xhtml;tpml;tplm';
+		$this->d_ext='inc';
+	}
+	
+	function transformNXL($src)
+	{
+		// dont process resources
+		/*
+		if (isset($GLOBALS['NXL_PROCESS_RESOURCES']) && $GLOBALS['NXL_PROCESS_RESOURCES']!==true)
+ 			return $src;
+ 		*/
+ 		
+		include_once(NX_LIB.'mvc/NXL/NXL_processor.inc');
+
+		$GLOBALS['nxl_indent']=0;
+		$GLOBALS['nxl_pad']='';
+		$GLOBALS['nxl_error_number']=0;
+		
+		// dont process resources
+		$GLOBALS['NXL_PROCESS_RESOURCES']=false;
+				
+		$xml_parser = new NXL_processor($this->props,'PHP');
+		$xml_parser->genSrc($src);
+		$src=$xml_parser->buildOutput();
+		
+		// remove <![CDATA[<?php echo "xxx";  ?">]]>
+/*
+		$src = preg_replace('/<!\[CDATA\[<\?php(.*)\?(\"?)>\]\]>/s', '<?php \\1 ?>', $src); 
+
+		
+*/
+		// $content='.';
+		$content='((.|\n)(?!\]\]))';
+		$src = preg_replace(
+			array('/<!\[CDATA\[<\?php('.$content.'*)\?(\"?)>\]\]>/s',
+				'&amp;amp;'),
+			array('<?php \\1 ?>',
+				'&amp;'), $src); 
+		                   
+// 		nxLog("' code after [$src] '");
+		return $src;
+	}
+
+}
+	
+
+?>

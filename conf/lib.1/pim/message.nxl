@@ -1,0 +1,77 @@
+<?xml version="1.0"?> 
+<data xmlns="http://www.nxfrontier.com/dml/dml">
+	<lists xmlns="http://www.nxfrontier.com/nxl/lists" xmlns:lists="http://www.nxfrontier.com/nxl/lists">
+		<list name="message_state" lang="en">
+			<option value="0">init</option>
+			<option value="1">draft</option>
+			<option value="2">sent</option>
+			<option value="3">read</option>
+			<option value="4">treated</option>
+			<option value="5">archived</option>
+		</list>
+		<list name="message_state" lang="fr">
+			<option value="0">Initialisé</option>
+			<option value="1">Brouillon</option>
+			<option value="2">Envoyé</option>
+			<option value="3">Lu</option>
+			<option value="4">Traité</option>
+			<option value="5">Archivé</option>
+		</list>
+
+		<list name="message_type" lang="fr">
+			<option value="text">texte</option>
+			<option value="task">tache</option>
+			<option value="event">event</option>
+		</list>
+	</lists>
+		
+	<tables component="pim" init="create">
+		<table name="message">
+			<key>
+				<field name="oid" type="oid" value="%{param:oid}" />
+			</key>
+			<key mode="by_user">
+				<or>
+					<field name="to"	type="text-choice" relation="like" value="%{param:userOid}"/>
+					<field name="cc"	type="text-choice" relation="like" value="%{param:userOid}"/>
+					<field name="bcc"	type="text-choice" relation="like" value="%{param:userOid}"	/>
+				</or>
+			</key>
+			<sort mode="by_user">
+				<field name="time" direction="desc" />
+			</sort>
+			
+			<fields>
+				<field name="time" label="time" type="timestamp" default="now" />
+				<field name="oid"	label="object_id" type="oid" isKey="primary" isEdit="no"/>
+
+				<field name="from"	label="group_oid" type="text-choice" isKey="secondary" 
+					list="portal_users"
+					prompt="Select contact..." multiple="false"
+					ds="db:portal.user.all" ds_format="{field:email}" ds_field_value="oid"/>
+
+				<field name="to"	label="to" type="text-choice" 
+					list="portal_users"	prompt="Select contact..." multiple="false"
+					ds="db:portal.user.all" ds_format="{field:email}" ds_field_value="oid"/>
+
+				<field name="cc"	label="cc" type="text-choice" 
+					list="portal_users"	prompt="Select contact..." multiple="true"
+					ds="db:portal.user.all" ds_format="{field:email}" ds_field_value="oid"/>
+
+				<field name="bcc"	label="bcc" type="text-choice" show="hidden" 
+					list="portal_users"	prompt="Select contact..." multiple="true"
+					ds="db:portal.user.all" ds_format="{field:email}" ds_field_value="oid"/>
+
+
+				<field name="subject" label="subject" type="text" size="255" />
+				<field name="body" label="body" type="text" />
+				<field name="html" label="html" type="rich-text" />
+
+				<field name="type" label="type" type="text-choice" list="message_type" default="text" show="hidden" />
+				<field name="encodage"	label="encodage" type="text" show="hidden" default="utf-8"/>
+
+			</fields>
+		</table>
+	</tables>
+
+</data>

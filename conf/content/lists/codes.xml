@@ -1,0 +1,1355 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- !DOCTYPE codes SYSTEM "codes.dtd" -->
+<codes>
+<country id='ctry-59-2' 
+  car_code='AFG'>
+  <name language='english'>Afghanistan</name>
+  <name language='german'>Afghanistan</name>
+  <name language='local'>Doulat i Jumhouri ye Afghanistan</name>
+</country>
+
+<country id='ctry-62-2' 
+  car_code='BS'>
+  <name language='english'>Bahamas</name>
+  <name language='german'>Bahamas</name>
+  <name language='local'>Commonwealth of the Bahamas</name>
+</country>
+
+<country id='ctry-65-2' 
+  car_code='K'>
+  <name language='english'>Cambodia</name>
+  <name language='german'>Kambodscha</name>
+  <name language='local'>Kampuchea</name>
+</country>
+
+<country id='ctry-68-2' 
+  car_code='DK'>
+  <name language='english'>Denmark</name>
+  <name language='german'>Danemark</name>
+  <name language='local'>Kongeriget Danmark</name>
+</country>
+
+<country id='ctry-71-2' 
+  car_code='EC'>
+  <name language='english'>Ecuador</name>
+  <name language='german'>Ecuador</name>
+  <name language='local'>Republica del Ecuador</name>
+</country>
+
+<country id='ctry-74-2' 
+  car_code='FJI'>
+  <name language='english'>Fiji</name>
+  <name language='german'>Fidschi</name>
+  <name language='local'>Matanitu Ko Viti</name>
+</country>
+
+<country id='ctry-77-2' 
+  car_code='G'>
+  <name language='english'>Gabon</name>
+  <name language='german'>Gabun</name>
+  <name language='local'>Republique Gabonaise</name>
+</country>
+
+<country id='ctry-80-2' 
+  car_code='RH'>
+  <name language='english'>Haiti</name>
+  <name language='german'>Haiti</name>
+  <name language='local'>Republique d_Hati</name>
+</country>
+
+<country id='ctry-83-2' 
+  car_code='IS'>
+  <name language='english'>Iceland</name>
+  <name language='german'>Island</name>
+  <name language='local'>Lydveldid Island</name>
+</country>
+
+<country id='ctry-86-2' 
+  car_code='JA'>
+  <name language='english'>Jamaica</name>
+  <name language='german'>Jamaika</name>
+  <name language='local'>Republic of Jamaica</name>
+</country>
+
+<country id='ctry-89-2' 
+  car_code='KAZ'>
+  <name language='english'>Kazakhstan</name>
+  <name language='german'>Kasachstan</name>
+  <name language='local'>Kazakstan</name>
+</country>
+
+<country id='ctry-92-2' 
+  car_code='LAO'>
+  <name language='english'>Laos</name>
+  <name language='german'>Laos</name>
+  <name language='local'>Laotian Democratic Peoples Republic</name>
+</country>
+
+<country id='ctry-95-2' 
+  car_code='MK'>
+  <name language='english'>Macedonia</name>
+  <name language='german'>Mazedonien</name>
+  <name language='local'>Republic of Macedonia</name>
+</country>
+
+<country id='ctry-98-2' 
+  car_code='NAM'>
+  <name language='english'>Namibia</name>
+  <name language='german'>Namibia</name>
+  <name language='local'>South West Africa</name>
+</country>
+
+<country id='ctry-101-2' 
+  car_code='OM'>
+  <name language='english'>Oman</name>
+  <name language='german'>Oman</name>
+  <name language='local'>Saltanat Oman</name>
+</country>
+
+<country id='ctry-104-2' 
+  car_code='PK'>
+  <name language='english'>Pakistan</name>
+  <name language='german'>Pakistan</name>
+  <name language='local'>Islamic Republic of Pakistan</name>
+</country>
+
+<country id='ctry-107-2' 
+  car_code='Q'>
+  <name language='english'>Qatar</name>
+  <name language='german'>Katar</name>
+  <name language='local'>Dawlat Al Qatar</name>
+</country>
+
+<country id='ctry-110-2' 
+  car_code='RO'>
+  <name language='english'>Romania</name>
+  <name language='german'>Rumänien</name>
+  <name language='local'>Republica Socialista Romania</name>
+</country>
+
+<country id='ctry-113-2' 
+  car_code='KN'>
+  <name language='english'>Saint Kitts and Nevis</name>
+  <name language='german'>Saint Kitts und Nevis</name>
+  <name language='local'>Saint Christopher-Nevis-Anguilla</name>
+</country>
+
+<country id='ctry-116-2' 
+  car_code='TAD'>
+  <name language='english'>Tajikistan</name>
+  <name language='german'>Tadschikistan</name>
+  <name language='local'>Tokiston</name>
+</country>
+
+<country id='ctry-119-2' 
+  car_code='EAU'>
+  <name language='english'>Uganda</name>
+  <name language='german'>Uganda</name>
+  <name language='local'>Republic of Uganda</name>
+</country>
+
+<country id='ctry-122-2' 
+  car_code='VU'>
+  <name language='english'>Vanuatu</name>
+  <name language='german'>Vanuatu</name>
+  <name language='local'>Republic of Vanuatu</name>
+</country>
+
+<country id='ctry-125-2' 
+  car_code='WSA'>
+  <name language='english'>Western Sahara</name>
+  <name language='german'>Westsahara</name>
+  <name language='local'>Democratic Arabian Republic of the Sahara</name>
+</country>
+
+<country id='ctry-128-2' 
+  car_code='YE'>
+  <name language='english'>Yemen</name>
+  <name language='german'>Jemen</name>
+  <name language='local'>Republic of Yemen</name>
+</country>
+
+<country id='ctry-131-2' 
+  car_code='ZRE'>
+  <name language='english'>Zaire</name>
+  <name language='german'>Zaire</name>
+  <name language='local'>Republic of Zaire</name>
+</country>
+
+<country id='ctry-59-4' 
+  car_code='AL'>
+  <name language='english'>Albania</name>
+  <name language='german'>Albanien</name>
+  <name language='local'>Republika Poppulore e Shqipris</name>
+</country>
+
+<country id='ctry-62-4' 
+  car_code='BRN'>
+  <name language='english'>Bahrain</name>
+  <name language='german'>Bahrain</name>
+  <name language='local'>Dawlat Al Bahrain</name>
+</country>
+
+<country id='ctry-65-4' 
+  car_code='CAM'>
+  <name language='english'>Cameroon</name>
+  <name language='german'>Kamerun</name>
+  <name language='local'>Republique Unie du Cameroun</name>
+</country>
+
+<country id='ctry-68-4' 
+  car_code='DJI'>
+  <name language='english'>Djibouti</name>
+  <name language='german'>Dschibuti</name>
+  <name language='local'>Republic of Djibouti</name>
+</country>
+
+<country id='ctry-71-4' 
+  car_code='ET'>
+  <name language='english'>Egypt</name>
+  <name language='german'>Ägypten</name>
+  <name language='local'>Jumhuriyah Misr al Arabiyah</name>
+</country>
+
+<country id='ctry-74-4' 
+  car_code='SF'>
+  <name language='english'>Finland</name>
+  <name language='german'>Finnland</name>
+  <name language='local'>Suomen Tasavalta / Republiken Finland</name>
+</country>
+
+<country id='ctry-77-4' 
+  car_code='WAG'>
+  <name language='english'>Gambia</name>
+  <name language='german'>Gambia</name>
+  <name language='local'>Republic of Gambia</name>
+</country>
+
+<country id='ctry-80-4' 
+  car_code='HCA'>
+  <name language='english'>Honduras</name>
+  <name language='german'>Honduras</name>
+  <name language='local'>Republica de Honduras</name>
+</country>
+
+<country id='ctry-83-4' 
+  car_code='IND'>
+  <name language='english'>India</name>
+  <name language='german'>Indien</name>
+  <name language='local'>Bharat</name>
+</country>
+
+<country id='ctry-86-4' 
+  car_code='J'>
+  <name language='english'>Japan</name>
+  <name language='german'>Japan</name>
+  <name language='local'>Nihon-koku (Nippon)</name>
+</country>
+
+<country id='ctry-89-4' 
+  car_code='EAK'>
+  <name language='english'>Kenya</name>
+  <name language='german'>Kenia</name>
+  <name language='local'>Jamhuri ya Kenya</name>
+</country>
+
+<country id='ctry-92-4' 
+  car_code='LV'>
+  <name language='english'>Latvia</name>
+  <name language='german'>Lettland</name>
+  <name language='local'>Republic of Latvia</name>
+</country>
+
+<country id='ctry-95-4' 
+  car_code='RM'>
+  <name language='english'>Madagascar</name>
+  <name language='german'>Madagaskar</name>
+  <name language='local'>Repoblika Demokratika Malagasy</name>
+</country>
+
+<country id='ctry-98-4' 
+  car_code='NAU'>
+  <name language='english'>Nauru</name>
+  <name language='german'>Nauru</name>
+  <name language='local'>Republic of Nauru</name>
+</country>
+
+<country id='ctry-104-4' 
+  car_code='PAL'>
+  <name language='english'>Palau</name>
+  <name language='german'>Palau</name>
+  <name language='local'>Republic of Palau (Mandate of the United States)</name>
+</country>
+
+<country id='ctry-110-4' 
+  car_code='R'>
+  <name language='english'>Russia</name>
+  <name language='german'>Russland</name>
+  <name language='local'>Rossija</name>
+</country>
+
+<country id='ctry-113-4' 
+  car_code='WL'>
+  <name language='english'>Saint Lucia</name>
+  <name language='german'>Saint Lucia</name>
+  <name language='local'>Saint Lucia</name>
+</country>
+
+<country id='ctry-116-4' 
+  car_code='RC'>
+  <name language='english'>Taiwan</name>
+  <name language='german'>Taiwan</name>
+  <name language='local'>Ta Chung-Hua Min-Kuo</name>
+</country>
+
+<country id='ctry-119-4' 
+  car_code='UA'>
+  <name language='english'>Ukraine</name>
+  <name language='german'>Ukraine</name>
+  <name language='local'>Ukraina</name>
+</country>
+
+<country id='ctry-122-4' 
+  car_code='V'>
+  <name language='english'>Holy See</name>
+  <name language='german'>Vatikanstadt</name>
+  <name language='local'>Stato della Citt del Holy Seeo</name>
+</country>
+
+<country id='ctry-125-4' 
+  car_code='WS'>
+  <name language='english'>Western Samoa</name>
+  <name language='german'>Westsamoa</name>
+  <name language='local'>Samoa i Sisifo</name>
+</country>
+
+<country id='ctry-128-4' 
+  car_code='YU'>
+  <name language='english'>Serbia and Montenegro</name>
+  <name language='german'>Jugoslawien</name>
+  <name language='local'>Socijalisticka Fereativna Republika Jugoslaija (Serbia)</name>
+</country>
+
+<country id='ctry-131-4' 
+  car_code='Z'>
+  <name language='english'>Zambia</name>
+  <name language='german'>Sambia</name>
+  <name language='local'>Republic of Zambia</name>
+</country>
+
+<country id='ctry-59-6' 
+  car_code='DZ'>
+  <name language='english'>Algeria</name>
+  <name language='german'>Algerien</name>
+  <name language='local'>El Djemhouria, El Djazaria Demokratia Echaabia</name>
+</country>
+
+<country id='ctry-62-6' 
+  car_code='BD'>
+  <name language='english'>Bangladesh</name>
+  <name language='german'>Bangladesch</name>
+  <name language='local'>Peoples Republic of Bangladesh</name>
+</country>
+
+<country id='ctry-65-6' 
+  car_code='CDN'>
+  <name language='english'>Canada</name>
+  <name language='german'>Kanada</name>
+  <name language='local'>Canada</name>
+</country>
+
+<country id='ctry-68-6' 
+  car_code='WD'>
+  <name language='english'>Dominica</name>
+  <name language='german'>Dominica</name>
+  <name language='local'>Commonwealth of Dominica</name>
+</country>
+
+<country id='ctry-71-6' 
+  car_code='ES'>
+  <name language='english'>El Salvador</name>
+  <name language='german'>El Salvador</name>
+  <name language='local'>Republica de El Salvador</name>
+</country>
+
+<country id='ctry-74-6' 
+  car_code='F'>
+  <name language='english'>France</name>
+  <name language='german'>Frankreich</name>
+  <name language='local'>Republique Franaise</name>
+</country>
+
+<country id='ctry-77-6' 
+  car_code='GE'>
+  <name language='english'>Georgia</name>
+  <name language='german'>Georgien</name>
+  <name language='local'>Sakharthwelos Respublikas</name>
+</country>
+
+<country id='ctry-80-6' 
+  car_code='H'>
+  <name language='english'>Hungary</name>
+  <name language='german'>Ungarn</name>
+  <name language='local'>Magyar Nepkztarsasag</name>
+</country>
+
+<country id='ctry-83-6' 
+  car_code='RI'>
+  <name language='english'>Indonesia</name>
+  <name language='german'>Indonesien</name>
+  <name language='local'>Republik Indonesia</name>
+</country>
+
+<country id='ctry-86-6' 
+  car_code='JOR'>
+  <name language='english'>Jordan</name>
+  <name language='german'>Jordanien</name>
+  <name language='local'>Al-Mamlakah Al-Urdunniyah Al-Hashimiyah</name>
+</country>
+
+<country id='ctry-89-6' 
+  car_code='KGZ'>
+  <name language='english'>Kirghizia</name>
+  <name language='german'>Kirgistan</name>
+  <name language='local'>Kyrgyzstan</name>
+</country>
+
+<country id='ctry-92-6' 
+  car_code='RL'>
+  <name language='english'>Lebanon</name>
+  <name language='german'>Libanon</name>
+  <name language='local'>El Jumhouriya El Lubnaniya</name>
+</country>
+
+<country id='ctry-95-6' 
+  car_code='MW'>
+  <name language='english'>Malawi</name>
+  <name language='german'>Malawi</name>
+  <name language='local'>Mfuko La Malawi</name>
+</country>
+
+<country id='ctry-98-6' 
+  car_code='NEP'>
+  <name language='english'>Nepal</name>
+  <name language='german'>Nepal</name>
+  <name language='local'>Sri Nepala Sarkar</name>
+</country>
+
+<country id='ctry-104-6' 
+  car_code='PA'>
+  <name language='english'>Panama</name>
+  <name language='german'>Panama</name>
+  <name language='local'>Republica de Panam</name>
+</country>
+
+<country id='ctry-110-6' 
+  car_code='RWA'>
+  <name language='english'>Rwanda</name>
+  <name language='german'>Ruanda</name>
+  <name language='local'>Republica y_u Rwanda</name>
+</country>
+
+<country id='ctry-113-6' 
+  car_code='WV'>
+  <name language='english'>Saint Vincent and the Grenadines</name>
+  <name language='german'>Saint Vincent und die Grenadinen</name>
+  <name language='local'>Saint Vincent and the Grenadines</name>
+</country>
+
+<country id='ctry-116-6' 
+  car_code='EAT'>
+  <name language='english'>Tanzania</name>
+  <name language='german'>Tansania</name>
+  <name language='local'>Jamhuri ya Mwungano ya Tanzania</name>
+</country>
+
+<country id='ctry-119-6' 
+  car_code='UAE'>
+  <name language='english'>United Arab Emirates</name>
+  <name language='german'>Vereinigte Arabische Emirate</name>
+  <name language='local'>United Arab Emirates</name>
+</country>
+
+<country id='ctry-122-6' 
+  car_code='YV'>
+  <name language='english'>Venezuela</name>
+  <name language='german'>Venezuela</name>
+  <name language='local'>Rebblica de Venezuela</name>
+</country>
+
+<country id='ctry-131-6' 
+  car_code='ZW'>
+  <name language='english'>Zimbabwe</name>
+  <name language='german'>Simbabwe</name>
+  <name language='local'>Republic of Zimbabwe</name>
+</country>
+
+<country id='ctry-59-8' 
+  car_code='AND'>
+  <name language='english'>Andorra</name>
+  <name language='german'>Andorra</name>
+  <name language='local'>Principat dAndorra / Principaut dAndorre / Principado de Andorra</name>
+</country>
+
+<country id='ctry-62-8' 
+  car_code='BDS'>
+  <name language='english'>Barbados</name>
+  <name language='german'>Barbados</name>
+  <name language='local'>Barbados</name>
+</country>
+
+<country id='ctry-65-8' 
+  car_code='CV'>
+  <name language='english'>Cape Verde</name>
+  <name language='german'>Kap Verde</name>
+  <name language='local'>Ilhas do Cabo Verde</name>
+</country>
+
+<country id='ctry-68-8' 
+  car_code='DOM'>
+  <name language='english'>Dominican Republic</name>
+  <name language='german'>Dominikanische Republik</name>
+  <name language='local'>Republica Dominicana</name>
+</country>
+
+<country id='ctry-71-8' 
+  car_code='GQ'>
+  <name language='english'>Equatorial Guinea</name>
+  <name language='german'>Aequatorialguinea</name>
+  <name language='local'>Republica de Guinea Equatorial</name>
+</country>
+
+<country id='ctry-77-8' 
+  car_code='D'>
+  <name language='english'>Germany</name>
+  <name language='german'>Deutschland</name>
+  <name language='local'>Bundesrepublik Deutschland</name>
+</country>
+
+<country id='ctry-83-8' 
+  car_code='IR'>
+  <name language='english'>Iran</name>
+  <name language='german'>Iran</name>
+  <name language='local'>Jomhori-e-Islami-e-Iran</name>
+</country>
+
+<country id='ctry-89-8' 
+  car_code='KIR'>
+  <name language='english'>Kiribati</name>
+  <name language='german'>Kiribati</name>
+  <name language='local'>Ribaberikin Kiribati</name>
+</country>
+
+<country id='ctry-92-8' 
+  car_code='LS'>
+  <name language='english'>Lesotho</name>
+  <name language='german'>Lesotho</name>
+  <name language='local'>_Muso oa Lesotho</name>
+</country>
+
+<country id='ctry-95-8' 
+  car_code='MAL'>
+  <name language='english'>Malaysia</name>
+  <name language='german'>Malaysia</name>
+  <name language='local'>Persekutuan Tanah Malaysia</name>
+</country>
+
+<country id='ctry-98-8' 
+  car_code='NL'>
+  <name language='english'>Netherlands</name>
+  <name language='german'>Niederlande</name>
+  <name language='local'>Koninkrijk der Nederlanden</name>
+</country>
+
+<country id='ctry-104-8' 
+  car_code='PNG'>
+  <name language='english'>Papua New Guinea</name>
+  <name language='german'>Papua- Neuguinea</name>
+  <name language='local'>Papua Niugini</name>
+</country>
+
+<country id='ctry-113-8' 
+  car_code='RSM'>
+  <name language='english'>San Marino</name>
+  <name language='german'>San Marino</name>
+  <name language='local'>Repubblica di San Marino</name>
+</country>
+
+<country id='ctry-116-8' 
+  car_code='THA'>
+  <name language='english'>Thailand</name>
+  <name language='german'>Thailand</name>
+  <name language='local'>Prathet T_ha</name>
+</country>
+
+<country id='ctry-119-8' 
+  car_code='USA'>
+  <name language='english'>United States</name>
+  <name language='german'>Vereinigte Staaten von Amerika</name>
+  <name language='local'>United States</name>
+</country>
+
+<country id='ctry-122-8' 
+  car_code='VN'>
+  <name language='english'>Vietnam</name>
+  <name language='german'>Vietnam</name>
+  <name language='local'>Cong Hoa Xa Hoi Chu Nghia Viet Namn</name>
+</country>
+
+<country id='ctry-59-10' 
+  car_code='ANG'>
+  <name language='english'>Angola</name>
+  <name language='german'>Angola</name>
+  <name language='local'>Repblica_Popular de Angola</name>
+</country>
+
+<country id='ctry-62-10' 
+  car_code='BY'>
+  <name language='english'>Belarus</name>
+  <name language='german'>Belarus</name>
+  <name language='local'>Belarus</name>
+</country>
+
+<country id='ctry-65-10' 
+  car_code='RCA'>
+  <name language='english'>Central African Republic</name>
+  <name language='german'>Zentral- afrikanische Republik</name>
+  <name language='local'>Republique Centrafricaine</name>
+</country>
+
+<country id='ctry-71-10' 
+  car_code='ER'>
+  <name language='english'>Eritrea</name>
+  <name language='german'>Eritrea</name>
+  <name language='local'>Eritrea</name>
+</country>
+
+<country id='ctry-77-10' 
+  car_code='GH'>
+  <name language='english'>Ghana</name>
+  <name language='german'>Ghana</name>
+  <name language='local'>Republic of Ghana</name>
+</country>
+
+<country id='ctry-83-10' 
+  car_code='IRQ'>
+  <name language='english'>Iraq</name>
+  <name language='german'>Irak</name>
+  <name language='local'>Al-Jumhuriyah al-Iraqiyah</name>
+</country>
+
+<country id='ctry-89-10' 
+  car_code='NOK'>
+  <name language='english'>North Korea</name>
+  <name language='german'>Nord Korea</name>
+  <name language='local'>Choson Minchu-Chui Inmin Knghwa-Guk</name>
+</country>
+
+<country id='ctry-92-10' 
+  car_code='LB'>
+  <name language='english'>Liberia</name>
+  <name language='german'>Liberia</name>
+  <name language='local'>Republic of Liberia</name>
+</country>
+
+<country id='ctry-95-10' 
+  car_code='MV'>
+  <name language='english'>Maldives</name>
+  <name language='german'>Malediven</name>
+  <name language='local'>Dhivehi Raaje Maldanif</name>
+</country>
+
+<country id='ctry-98-10' 
+  car_code='NZ'>
+  <name language='english'>New Zealand</name>
+  <name language='german'>Neuseeland</name>
+  <name language='local'>New Zealand</name>
+</country>
+
+<country id='ctry-104-10' 
+  car_code='PY'>
+  <name language='english'>Paraguay</name>
+  <name language='german'>Paraguay</name>
+  <name language='local'>Republica del Paraguay</name>
+</country>
+
+<country id='ctry-113-10' 
+  car_code='STP'>
+  <name language='english'>Sao Tome and Principe</name>
+  <name language='german'>Sao Tome und Principe</name>
+  <name language='local'>Republica Democratica de Sao Tome a Principe</name>
+</country>
+
+<country id='ctry-116-10' 
+  car_code='RT'>
+  <name language='english'>Togo</name>
+  <name language='german'>Togo</name>
+  <name language='local'>Republique Togolaise</name>
+</country>
+
+<country id='ctry-119-10' 
+  car_code='ROU'>
+  <name language='english'>Uruguay</name>
+  <name language='german'>Uruguay</name>
+  <name language='local'>Republica Oriental del Uruguay</name>
+</country>
+
+<country id='ctry-59-12' 
+  car_code='AG'>
+  <name language='english'>Antigua and Barbuda</name>
+  <name language='german'>Antigua und Barbuda</name>
+  <name language='local'>Antigua and Barbuda</name>
+</country>
+
+<country id='ctry-62-12' 
+  car_code='B'>
+  <name language='english'>Belgium</name>
+  <name language='german'>Belgien</name>
+  <name language='local'>Royaume de Belgique / Koninkrijk Belgien</name>
+</country>
+
+<country id='ctry-65-12' 
+  car_code='TCH'>
+  <name language='english'>Chad</name>
+  <name language='german'>Tschad</name>
+  <name language='local'>Djoumhouryat Tachd</name>
+</country>
+
+<country id='ctry-71-12' 
+  car_code='EW'>
+  <name language='english'>Estonia</name>
+  <name language='german'>Estland</name>
+  <name language='local'>Eesti</name>
+</country>
+
+<country id='ctry-77-12' 
+  car_code='GB'>
+  <name language='english'>United Kingdom</name>
+  <name language='german'>Großbritannien und Nordirland</name>
+  <name language='local'>United Kingdom of United Kingdom</name>
+</country>
+
+<country id='ctry-83-12' 
+  car_code='IRL'>
+  <name language='english'>Ireland</name>
+  <name language='german'>Irland</name>
+  <name language='local'>Poblacht na h_ireann</name>
+</country>
+
+<country id='ctry-89-12' 
+  car_code='ROK'>
+  <name language='english'>South Korea</name>
+  <name language='german'>Korea (Sd)</name>
+  <name language='local'>Dhan-Minkuk</name>
+</country>
+
+<country id='ctry-92-12' 
+  car_code='LAR'>
+  <name language='english'>Libya</name>
+  <name language='german'>Libyen</name>
+  <name language='local'>Al Jamhuriya Al Arabiya Al Libiyya</name>
+</country>
+
+<country id='ctry-95-12' 
+  car_code='RMM'>
+  <name language='english'>Mali</name>
+  <name language='german'>Mali</name>
+  <name language='local'>Republic of Mali</name>
+</country>
+
+<country id='ctry-98-12' 
+  car_code='NIC'>
+  <name language='english'>Nicaragua</name>
+  <name language='german'>Nicaragua</name>
+  <name language='local'>Republica de Nicaragua</name>
+</country>
+
+<country id='ctry-104-12' 
+  car_code='PE'>
+  <name language='english'>Peru</name>
+  <name language='german'>Peru</name>
+  <name language='local'>Republica del Peru</name>
+</country>
+
+<country id='ctry-113-12' 
+  car_code='SA'>
+  <name language='english'>Saudi Arabia</name>
+  <name language='german'>Saudi-Arabien</name>
+  <name language='local'>al-Mamlaka al-_Arabiya as-Sa_udiya</name>
+</country>
+
+<country id='ctry-116-12' 
+  car_code='TO'>
+  <name language='english'>Tonga</name>
+  <name language='german'>Tonga</name>
+  <name language='local'>Kingdom of Tonga</name>
+</country>
+
+<country id='ctry-119-12' 
+  car_code='UZB'>
+  <name language='english'>Uzbekistan</name>
+  <name language='german'>Usbekistan</name>
+  <name language='local'>Uzbekiston</name>
+</country>
+
+<country id='ctry-59-14' 
+  car_code='RA'>
+  <name language='english'>Argentina</name>
+  <name language='german'>Argentinien</name>
+  <name language='local'>Republica Argentina</name>
+</country>
+
+<country id='ctry-62-14' 
+  car_code='BZ'>
+  <name language='english'>Belize</name>
+  <name language='german'>Belize</name>
+  <name language='local'>Belize</name>
+</country>
+
+<country id='ctry-65-14' 
+  car_code='RCH'>
+  <name language='english'>Chile</name>
+  <name language='german'>Chile</name>
+  <name language='local'>Republica de Chile</name>
+</country>
+
+<country id='ctry-71-14' 
+  car_code='ETH'>
+  <name language='english'>Ethiopia</name>
+  <name language='german'>thiopien</name>
+  <name language='local'>Yatyopya</name>
+</country>
+
+<country id='ctry-77-14' 
+  car_code='GR'>
+  <name language='english'>Greece</name>
+  <name language='german'>Griechenland</name>
+  <name language='local'>Elliniki Dimokratia</name>
+</country>
+
+<country id='ctry-83-14' 
+  car_code='IL'>
+  <name language='english'>Israel</name>
+  <name language='german'>Israel</name>
+  <name language='local'>Medinat Yisrael</name>
+</country>
+
+<country id='ctry-89-14' 
+  car_code='KWT'>
+  <name language='english'>Kuwait</name>
+  <name language='german'>Kuwait</name>
+  <name language='local'>Dowlat al Kuwait</name>
+</country>
+
+<country id='ctry-92-14' 
+  car_code='FL'>
+  <name language='english'>Liechtenstein</name>
+  <name language='german'>Liechtenstein</name>
+  <name language='local'>Frstentum Liechtenstein</name>
+</country>
+
+<country id='ctry-95-14' 
+  car_code='M'>
+  <name language='english'>Malta</name>
+  <name language='german'>Malta</name>
+  <name language='local'>Repubblika ta_Malta</name>
+</country>
+
+<country id='ctry-98-14' 
+  car_code='RN'>
+  <name language='english'>Niger</name>
+  <name language='german'>Niger</name>
+  <name language='local'>Republic of Niger</name>
+</country>
+
+<country id='ctry-104-14' 
+  car_code='RP'>
+  <name language='english'>Philippines</name>
+  <name language='german'>Philippinen</name>
+  <name language='local'>Republica de Filipinas / Republika ng Pilipinas</name>
+</country>
+
+<country id='ctry-113-14' 
+  car_code='SN'>
+  <name language='english'>Senegal</name>
+  <name language='german'>Senegal</name>
+  <name language='local'>Republique du Senegal</name>
+</country>
+
+<country id='ctry-116-14' 
+  car_code='TT'>
+  <name language='english'>Trinidad and Tobago</name>
+  <name language='german'>Trinidad und Tobago</name>
+  <name language='local'>Republic of Trinidad and Tobago</name>
+</country>
+
+<country id='ctry-59-16' 
+  car_code='ARM'>
+  <name language='english'>Armenia</name>
+  <name language='german'>Armenien</name>
+  <name language='local'>Hajkh</name>
+</country>
+
+<country id='ctry-62-16' 
+  car_code='BEN'>
+  <name language='english'>Benin</name>
+  <name language='german'>Benin</name>
+  <name language='local'>Republic of Benin</name>
+</country>
+
+<country id='ctry-65-16' 
+  car_code='TJ'>
+  <name language='english'>China</name>
+  <name language='german'>China</name>
+  <name language='local'>Zhonghua Renmin Gongheguo</name>
+</country>
+
+<country id='ctry-77-16' 
+  car_code='WG'>
+  <name language='english'>Grenada</name>
+  <name language='german'>Grenada</name>
+  <name language='local'>State of Grenada</name>
+</country>
+
+<country id='ctry-83-16' 
+  car_code='I'>
+  <name language='english'>Italy</name>
+  <name language='german'>Italien</name>
+  <name language='local'>Repubblica Italiana</name>
+</country>
+
+<country id='ctry-92-16' 
+  car_code='LT'>
+  <name language='english'>Lithuania</name>
+  <name language='german'>Litauen</name>
+  <name language='local'>Lietuva</name>
+</country>
+
+<country id='ctry-95-16' 
+  car_code='MH'>
+  <name language='english'>Marshall Islands</name>
+  <name language='german'>Marshallinseln</name>
+  <name language='local'>Republic of the Marshall Islands</name>
+</country>
+
+<country id='ctry-98-16' 
+  car_code='WAN'>
+  <name language='english'>Nigeria</name>
+  <name language='german'>Nigeria</name>
+  <name language='local'>Federal Republic of Nigeria</name>
+</country>
+
+<country id='ctry-104-16' 
+  car_code='PL'>
+  <name language='english'>Poland</name>
+  <name language='german'>Polen</name>
+  <name language='local'>Polska Rzeczpospolita Ludowa</name>
+</country>
+
+<country id='ctry-113-16' 
+  car_code='SY'>
+  <name language='english'>Seychelles</name>
+  <name language='german'>Seychellen</name>
+  <name language='local'>Republic of Seychelles</name>
+</country>
+
+<country id='ctry-116-16' 
+  car_code='TN'>
+  <name language='english'>Tunisia</name>
+  <name language='german'>Tunesien</name>
+  <name language='local'>Al Djoumhouria Attunusia</name>
+</country>
+
+<country id='ctry-59-18' 
+  car_code='AUS'>
+  <name language='english'>Australia</name>
+  <name language='german'>Australien</name>
+  <name language='local'>Australia</name>
+</country>
+
+<country id='ctry-62-18' 
+  car_code='BHT'>
+  <name language='english'>Bhutan</name>
+  <name language='german'>Bhutan</name>
+  <name language='local'>Drak-yul</name>
+</country>
+
+<country id='ctry-65-18' 
+  car_code='CO'>
+  <name language='english'>Colombia</name>
+  <name language='german'>Kolumbien</name>
+  <name language='local'>Republica de Colombia</name>
+</country>
+
+<country id='ctry-77-18' 
+  car_code='GCA'>
+  <name language='english'>Guatemala</name>
+  <name language='german'>Guatemala</name>
+  <name language='local'>Republica de Guatemala</name>
+</country>
+
+<country id='ctry-92-18' 
+  car_code='L'>
+  <name language='english'>Luxembourg</name>
+  <name language='german'>Luxembourg</name>
+  <name language='local'>Grand-Duch de Luxembourg / Groherzogtum Luxembourg / Grosherzogdem Ltzebuerg</name>
+</country>
+
+<country id='ctry-95-18' 
+  car_code='RIM'>
+  <name language='english'>Mauritania</name>
+  <name language='german'>Mauretanien</name>
+  <name language='local'>Al-Jumhuriyh al-Ilsmiyah al-Muritaniyah</name>
+</country>
+
+<country id='ctry-98-18' 
+  car_code='N'>
+  <name language='english'>Norway</name>
+  <name language='german'>Norwegen</name>
+  <name language='local'>Kongeriket Norge</name>
+</country>
+
+<country id='ctry-104-18' 
+  car_code='P'>
+  <name language='english'>Portugal</name>
+  <name language='german'>Portugal</name>
+  <name language='local'>Republica Portuguesa</name>
+</country>
+
+<country id='ctry-113-18' 
+  car_code='WAL'>
+  <name language='english'>Sierra Leone</name>
+  <name language='german'>Sierra Leone</name>
+  <name language='local'>Republic of Sierra Leone</name>
+</country>
+
+<country id='ctry-116-18' 
+  car_code='TR'>
+  <name language='english'>Turkey</name>
+  <name language='german'>Türkei</name>
+  <name language='local'>Trkiye Cumhuriyeti</name>
+</country>
+
+<country id='ctry-59-20' 
+  car_code='A'>
+  <name language='english'>Austria</name>
+  <name language='german'>Österreich</name>
+  <name language='local'>Republik Österreich</name>
+</country>
+
+<country id='ctry-62-20' 
+  car_code='BOL'>
+  <name language='english'>Bolivia</name>
+  <name language='german'>Bolivien</name>
+  <name language='local'>Republica de Bolivia</name>
+</country>
+
+<country id='ctry-65-20' 
+  car_code='COM'>
+  <name language='english'>Comoros</name>
+  <name language='german'>Komoren</name>
+  <name language='local'>Islamic Federal Republic of the Comoros</name>
+</country>
+
+<country id='ctry-77-20' 
+  car_code='RG'>
+  <name language='english'>Guinea</name>
+  <name language='german'>Guinea</name>
+  <name language='local'>Republique populaire et revolutionaire de Guine</name>
+</country>
+
+<country id='ctry-95-20' 
+  car_code='MS'>
+  <name language='english'>Mauritius</name>
+  <name language='german'>Mauritius</name>
+  <name language='local'>Mauritius</name>
+</country>
+
+<country id='ctry-113-20' 
+  car_code='SGP'>
+  <name language='english'>Singapore</name>
+  <name language='german'>Singapur</name>
+  <name language='local'>Majulah Singapura / Xinjiapo Gonghegno</name>
+</country>
+
+<country id='ctry-116-20' 
+  car_code='TM'>
+  <name language='english'>Turkmenia</name>
+  <name language='german'>Turkmenistan</name>
+  <name language='local'>Trkmenistan</name>
+</country>
+
+<country id='ctry-59-22' 
+  car_code='AZ'>
+  <name language='english'>Azerbaijan</name>
+  <name language='german'>Aserbaidschan</name>
+  <name language='local'>Azrbajan</name>
+</country>
+
+<country id='ctry-62-22' 
+  car_code='BIH'>
+  <name language='english'>Bosnia and Herzegovina</name>
+  <name language='german'>Bosnien- Herzegowina</name>
+  <name language='local'>Republik Bosna i Hercegovina</name>
+</country>
+
+<country id='ctry-65-22' 
+  car_code='RCB'>
+  <name language='english'>Congo</name>
+  <name language='german'>Kongo</name>
+  <name language='local'>Republique Populaire du Congo</name>
+</country>
+
+<country id='ctry-77-22' 
+  car_code='GNB'>
+  <name language='english'>Guinea-Bissau</name>
+  <name language='german'>Guinea-Bissau</name>
+  <name language='local'>Republica da Guin-Bissau</name>
+</country>
+
+<country id='ctry-95-22' 
+  car_code='MEX'>
+  <name language='english'>Mexico</name>
+  <name language='german'>Mexiko</name>
+  <name language='local'>Estados Unidos Maxicanos</name>
+</country>
+
+<country id='ctry-113-22' 
+  car_code='SK'>
+  <name language='english'>Slovakia</name>
+  <name language='german'>Slowakei</name>
+  <name language='local'>Slovensko</name>
+</country>
+
+<country id='ctry-116-22' 
+  car_code='TUV'>
+  <name language='english'>Tuvalu</name>
+  <name language='german'>Tuvalu</name>
+  <name language='local'>Tuvalu</name>
+</country>
+
+<country id='ctry-62-24' 
+  car_code='RB'>
+  <name language='english'>Botswana</name>
+  <name language='german'>Botswana</name>
+  <name language='local'>Republic of Botswana</name>
+</country>
+
+<country id='ctry-65-24' 
+  car_code='CR'>
+  <name language='english'>Costa Rica</name>
+  <name language='german'>Costa Rica</name>
+  <name language='local'>Republica de Costa Rica</name>
+</country>
+
+<country id='ctry-77-24' 
+  car_code='GUY'>
+  <name language='english'>Guyana</name>
+  <name language='german'>Guyana</name>
+  <name language='local'>Cooperative Republic of Guyana</name>
+</country>
+
+<country id='ctry-95-24' 
+  car_code='FSM'>
+  <name language='english'>Micronesia</name>
+  <name language='german'>Mikronesien</name>
+  <name language='local'>Federated States of Micronesia</name>
+</country>
+
+<country id='ctry-113-24' 
+  car_code='SLO'>
+  <name language='english'>Slovenia</name>
+  <name language='german'>Slowenien</name>
+  <name language='local'>Republic of Slovenia</name>
+</country>
+
+<country id='ctry-62-26' 
+  car_code='BR'>
+  <name language='english'>Brazil</name>
+  <name language='german'>Brasilien</name>
+  <name language='local'>Brasil</name>
+</country>
+
+<country id='ctry-65-26' 
+  car_code='CI'>
+  <name language='english'>Cote dIvoire</name>
+  <name language='german'>Cote dIvoire</name>
+  <name language='local'>Republique de Cote dIvoire</name>
+</country>
+
+<country id='ctry-95-26' 
+  car_code='MD'>
+  <name language='english'>Moldavia</name>
+  <name language='german'>Moldawien</name>
+  <name language='local'>Moldova</name>
+</country>
+
+<country id='ctry-113-26' 
+  car_code='SLB'>
+  <name language='english'>Solomon Islands</name>
+  <name language='german'>Salomonen</name>
+  <name language='local'>Solomon Islands</name>
+</country>
+
+<country id='ctry-62-28' 
+  car_code='BRU'>
+  <name language='english'>Brunei Darussalam</name>
+  <name language='german'>Brunei</name>
+  <name language='local'>Brunei</name>
+</country>
+
+<country id='ctry-65-28' 
+  car_code='HR'>
+  <name language='english'>Croatia</name>
+  <name language='german'>Kroatien</name>
+  <name language='local'>Republic of Croatia</name>
+</country>
+
+<country id='ctry-95-28' 
+  car_code='MC'>
+  <name language='english'>Monaco</name>
+  <name language='german'>Monaco</name>
+  <name language='local'>Prinipaut de Monaco</name>
+</country>
+
+<country id='ctry-113-28' 
+  car_code='SP'>
+  <name language='english'>Somalia</name>
+  <name language='german'>Somalia</name>
+  <name language='local'>Al-Jumhouriya As-Somaliya Al-Domocradia</name>
+</country>
+
+<country id='ctry-62-30' 
+  car_code='BG'>
+  <name language='english'>Bulgaria</name>
+  <name language='german'>Bulgarien</name>
+  <name language='local'>Narodna Republika Balgarija</name>
+</country>
+
+<country id='ctry-65-30' 
+  car_code='C'>
+  <name language='english'>Cuba</name>
+  <name language='german'>Kuba</name>
+  <name language='local'>Republica de Cuba</name>
+</country>
+
+<country id='ctry-95-30' 
+  car_code='MNG'>
+  <name language='english'>Mongolia</name>
+  <name language='german'>Mongolei</name>
+  <name language='local'>Bgd Nairamdach Mongol Ard Uls</name>
+</country>
+
+<country id='ctry-113-30' 
+  car_code='RSA'>
+  <name language='english'>South Africa</name>
+  <name language='german'>Südafrika</name>
+  <name language='local'>Republic of South Africa / Republiek van Suid-Afrika</name>
+</country>
+
+<country id='ctry-62-32' 
+  car_code='BF'>
+  <name language='english'>Burkina Faso</name>
+  <name language='german'>Burkina Faso</name>
+  <name language='local'>Republique Dmocratique de Burkina Faso (Haute Volta)</name>
+</country>
+
+<country id='ctry-65-32' 
+  car_code='CY'>
+  <name language='english'>Cyprus</name>
+  <name language='german'>Zypern</name>
+  <name language='local'>Kypriak Demokratia / Kibris Cumhuriyeti</name>
+</country>
+
+<country id='ctry-95-32' 
+  car_code='MA'>
+  <name language='english'>Morocco</name>
+  <name language='german'>Marokko</name>
+  <name language='local'>Al-Mamlakah al-Maghribiyah</name>
+</country>
+
+<country id='ctry-113-32' 
+  car_code='E'>
+  <name language='english'>Spain</name>
+  <name language='german'>Spanien</name>
+  <name language='local'>Estado Espaol</name>
+</country>
+
+<country id='ctry-62-34' 
+  car_code='BI'>
+  <name language='english'>Burundi</name>
+  <name language='german'>Burundi</name>
+  <name language='local'>Republik y_Uburundi</name>
+</country>
+
+<country id='ctry-65-34' 
+  car_code='CZ'>
+  <name language='english'>Czech Republic</name>
+  <name language='german'>Tschechien</name>
+  <name language='local'>Czech Republic</name>
+</country>
+
+<country id='ctry-95-34' 
+  car_code='MOC'>
+  <name language='english'>Mozambique</name>
+  <name language='german'>Mosambik</name>
+  <name language='local'>Republic of Mozambique</name>
+</country>
+
+<country id='ctry-113-34' 
+  car_code='CL'>
+  <name language='english'>Sri Lanka</name>
+  <name language='german'>Sri Lanka</name>
+  <name language='local'>Sri Lanka Prajathantrika Samajawadi Janarajaya</name>
+</country>
+
+<country id='ctry-95-36' 
+  car_code='MYA'>
+  <name language='english'>Myanmar</name>
+  <name language='german'>Myanmar</name>
+  <name language='local'>Pyi-Daung-Su Socialist Thammada Myanmar Naingng-an-Daw (Burma)</name>
+</country>
+
+<country id='ctry-113-36' 
+  car_code='SUD'>
+  <name language='english'>Sudan</name>
+  <name language='german'>Sudan</name>
+  <name language='local'>El Jamhuriyat Es Sudan Al Demokratia</name>
+</country>
+
+<country id='ctry-113-38' 
+  car_code='SME'>
+  <name language='english'>Suriname</name>
+  <name language='german'>Suriname</name>
+  <name language='local'>Republic of Surinam</name>
+</country>
+
+<country id='ctry-113-40' 
+  car_code='SD'>
+  <name language='english'>Swaziland</name>
+  <name language='german'>Swasiland</name>
+  <name language='local'>Kingdom of Swaziland</name>
+</country>
+
+<country id='ctry-113-42' 
+  car_code='S'>
+  <name language='english'>Sweden</name>
+  <name language='german'>Schweden</name>
+  <name language='local'>Konungariket Sverige</name>
+</country>
+
+<country id='ctry-113-44' 
+  car_code='CH'>
+  <name language='english'>Switzerland</name>
+  <name language='german'>Schweiz</name>
+  <name language='local'>Confoederatio Helvetica (Schweiz / Suisse / Svizzera)</name>
+</country>
+
+<country id='ctry-113-46' 
+  car_code='SYR'>
+  <name language='english'>Syria</name>
+  <name language='german'>Syrien</name>
+  <name language='local'>Al Jamhouriya al Arabiya as Souriya</name>
+</country>
+
+</codes>

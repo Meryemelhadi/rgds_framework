@@ -1,0 +1,831 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<data>
+	<tables component="openclinical">
+
+		<!-- account table : information on practice -->
+		<table name="users">
+			<fields>
+				<field name="oid" alias="coid" label="object id" type="oid" isKey="primary" show="hidden" isEdit="no"/>
+				<field name="user-id" label="practice ID" type="login-id" size="30" />
+				<field name="password" label="Password" type="login-password" size="30"  value="%{post-field:password:0}" masked="yes"/>
+				<field name="name" label="practice name" type="text" size="30"  multiLines="no"/>
+				<field name="description" label="User description" type="rich-text" size="10000" />
+				<field name="roles" label="Role" type="text-choice" list="user-roles"  />
+				
+				<group name="contact" label="Contact details">
+					<field name="phone"	label="practice telephone number"	type="telephone" size="20" /> 
+					<field name="email"	label="email"	type="email" />
+				</group>
+
+				<field name="reg-date" label="Registration date" type="date" default="now"/>
+				<field name="checkedEmail"	label="Is checked email"	type="text-choice"  default="0"/> 
+				<field name="reg-status" label="registration status" type="text-choice" default="0"/>
+			</fields>
+		</table>
+
+		<!-- databases -->
+		<table name="images">
+			<fields>
+				<field name="oid" label="object id" type="oid" isKey="primary" show="hidden" isEdit="no"/>
+				<field name="name" label="image name" type="text" size="30" multiLines="no"/>
+				<field name="description" label="image description" type="text" size="3000" multiLines="yes"/>
+				<field name="category" label="Role" type="text-choice" list="image-category"  />
+				<field name="image" label="image" type="image" maxSize="2000000" imageSize="176x176" imageSizes="original" isProp="image"/>
+				<field name="date-creation" label="Date" type="timestamp" default="now" show="hidden"/>
+			</fields>
+		</table>
+
+		<table name="document">
+			<fields>
+				<field name="oid" label="object id" type="oid" isKey="primary" show="hidden" isEdit="no"/>
+
+				<field name="name" label="image name" type="text" size="30" multiLines="no" isProp="doc.name"/>
+				<field name="description" label="image description" type="text" size="3000" multiLines="yes" isProp="doc.desc"/>
+				<field name="category" label="Role" type="text-choice" list="image-category" isProp="doc.category"/>
+				<field name="doc" label="file" type="image" maxSize="2000000" isProp="doc.image"/>
+				<field name="image" label="thumbnail" type="image" maxSize="2000000" imageSize="176x176" imageSizes="original" isProp="image"/>
+				<field name="date-creation" label="Date" type="timestamp" default="now" show="hidden" isProp="doc.date"/>
+				<field name="lang" label="Language" type="text-choice" default="en" />
+			</fields>
+		</table>
+
+		<!-- meta data (language independent) -->
+		<table name="article">
+			<!-- display key -->
+			<key>
+				<field name="name" value="%{property:docID}" />
+			</key>
+			<fields>
+				<!-- article location/type -->
+				<field name="aid" label="article ID" type="oid" isKey="primary" show="hidden" isEdit="no"/>
+
+				<field name="name" label="article name" type="text" size="20" isProp="article.urlName">
+					<help>Short name to be used in navigation bar.</help>
+				</field>
+				<field name="type" label="article type" type="text-choice" multiple="false" isProp="article.type">
+					<help>article type.</help>
+				</field>
+				<field name="lang" label="Language" type="text-choice" default="en" />
+
+				<field name="status" label="article status" list="article_status" type="text-choice" default="0" isProp="article.status"/>		
+				<field name="path" label="Article path" list="paths" type="text-choice" multiple="true" isProp="article.path"/>
+
+				<!-- main data -->
+				<field name="title" label="article title" type="text" size="255" isProp="article.title">
+					<help>Page title that will appear both as a title in your page and in the window banner as well.</help>
+				</field>
+				<field name="abstract" label="article abstract" type="text" size="1000" isProp="article.abstract">
+					<help>Short description to be used in meta data tags and abstract section.</help>
+				</field>
+				<field name="desc-modif" label="description of modification" type="text" size="1000" isProp="article.modif">
+					<help>Description of modification for "new" article section.</help>
+				</field>
+				<field name="image" label="image" type="image" maxSize="200000" 
+						imageSize="176x176" imageSizes="original,176x176" isProp="article.image">
+					<help>Article thumbnail</help>
+				</field>
+
+
+				<!-- keywords -->
+				<group name="kw">
+					<field name="clinical" label="Clinical keywords" type="text-choice" multiple="true" isProp="article.kw.clinical"/>
+					<field name="technical" label="IT keywords" type="text-choice" multiple="true" isProp="article.kw.it"/>
+					<field name="prof_cov" label="Professional coverage" type="text-choice" multiple="true" isProp="article.kw.prof"/>
+					<field name="geo_cov" label="Location coverage" type="text-choice" list="geo_cov" multiple="true" isProp="article.kw.location"/>
+					<field name="other" label="other keywords" type="text" size="255" isProp="article.kw.other" />
+				</group>
+
+				<field name="author" label="Author" type="text-choice" size="100" list="authors" default="" isProp="article.author"/>
+				<field name="date-creation" label="creation date" type="timestamp" default="now" show="hidden" isProp="article.date.creation"/>
+				<field name="date-modification" label="modification date" type="timestamp" default="now" show="hidden" isProp="article.date.modification"/>
+			</fields>
+		</table>
+
+		<!-- article meta data (language dependent) => one record per supported lang -->
+		<!-- 
+		<table name="article_main">
+			<fields>
+				<field name="aid" label="article ID" type="ref-oid"/>
+				<field name="lang" label="Language" type="text-choice" default="en" />
+				<field name="name" label="article page name" type="text" size="20" isProp="page.name">
+					<help>Short name to be used in navigation bar.</help>
+				</field>
+				<field name="title" label="article title" type="text" size="255" isProp="article.title">
+					<help>Page title that will appear both as a title in your page and in the window banner as well.</help>
+				</field>
+				<field name="abstract" label="article abstract" type="text" size="1000" isProp="article.abstract">
+					<help>Short description to be used in meta data tags and abstract section.</help>
+				</field>
+				<field name="desc-modif" label="description of modification" type="text" size="1000" isProp="article.modif">
+					<help>Description of modification for "new" article section.</help>
+				</field>
+				<field name="image" label="image" type="image" maxSize="200000" 
+						imageSize="176x176" imageSizes="original,176x176" isProp="article.image">
+					<help>Article thumbnail</help>
+				</field>
+			</fields>
+		</table>
+		-->
+
+		<!-- article parts metadata -->
+
+		<!-- part header -->
+		<!--
+		<table name="article_part">
+			<fields>
+				<field name="aid" label="article ID" type="ref-oid"/>
+				<field name="paid" label="part ID" type="oid"/>
+				<field name="type" label="part type" type="text-choice" list="part_type" isProp="part.type"/>
+				<field name="group" label="grouping of information in article" type="text-choice" list="article_group" isProp="part.group"/>
+				<field name="index" label="text index in page" type="integer" default="0" isProp="part.index"/>
+			</fields>
+		</table>
+		-->
+
+		<!-- article main parts (roughly equivalent to an article type)-->
+		<table name="simple">
+			<key>
+				<field name="aid" value="%{property:aid}" />
+			</key>
+			<fields>
+				<!-- part header -->
+				<field name="aid" label="article ID" type="ref-oid"/>
+			
+				<field name="text" label="content" type="rich-text" size="10000" isProp="article.content"/>
+			</fields>
+		</table>
+
+		<table name="supplier">
+			<key>
+				<field name="aid" value="%{property:aid}" />
+			</key>
+			<fields>
+				<!-- part header -->
+				<field name="aid" label="article ID" type="ref-oid"/>
+
+				<field name="name" label="company name" type="text" size="50" isProp="supplier.name"/>
+				<field name="links" label="Links" type="rich-text" size="10000" isProp="supplier.links"/>
+
+				<field name="download" label="Downloads" type="rich-text" size="10000" isProp="supplier.downloads"/>
+				<field name="demo" label="Demonstration" type="rich-text" size="10000" isProp="supplier.demo"/>
+				<field name="trials" label="Free trials" type="rich-text" size="10000" isProp="supplier.trials"/>
+
+				<field name="website" label="Web site" type="rich-text" size="10000" multiLines="yes" isProp="supplier.website"/>
+			</fields>
+		</table>
+
+		<table name="ais">
+			<key>
+				<field name="aid" value="%{property:aid}" />
+			</key>
+			<fields>
+				<!-- part header -->
+				<field name="aid" label="article ID" type="ref-oid"/>
+				
+				<field name="name" label="Name" type="text" size="50" isProp="ais.name"/>
+				<field name="full" label="Full name" type="text" size="200" isProp="ais.fullname"/>
+				<field name="dev" label="Developed by" type="rich-text" size="10000" isProp="ais.dev"/>
+				<field name="commiss" label="Commissioned" type="text" isProp="ais.commissioned"/>
+				<field name="status" label="Status" type="text" isProp="ais.status"/>
+				
+				<field name="desc" label="Description" type="rich-text" size="10000" isProp="ais.description"/>
+				<field name="ack" label="Acknowledgements" type="rich-text" size="10000" isProp="ais.ack"/>
+				<field name="url" label="Web site" type="url" isProp="ais.url"/>
+			</fields>
+		</table>
+
+		<table name="app">
+			<key>
+				<field name="aid" value="%{property:aid}" />
+			</key>
+			<fields>
+				<!-- part header -->
+				<field name="aid" label="article ID" type="ref-oid"/>
+				
+				<field name="name" label="Name" type="text" size="50" isProp="app.name"/>
+				<field name="full" label="Full name" type="text" size="200" isProp="app.fullname"/>
+				<field name="dev" label="Developed by" type="rich-text" size="10000" isProp="app.dev"/>
+				<field name="commiss" label="Commissioned" type="text" isProp="app.commissioned"/>
+				<field name="status" label="Status" type="text" isProp="app.status"/>
+				
+				<field name="desc" label="Description" type="rich-text" size="10000" isProp="app.description"/>
+				<field name="ack" label="Acknowledgements" type="rich-text" size="10000" isProp="app.ack"/>
+				<field name="url" label="Web site" type="url" isProp="app.url"/>
+			</fields>
+		</table>
+
+		<table name="demo">
+			<key>
+				<field name="aid" value="%{property:aid}" />
+			</key>
+			<fields>
+				<!-- part header -->
+				<field name="aid" label="article ID" type="ref-oid"/>
+				
+				<field name="name" label="Name" type="text" size="50" isProp="demo.name"/>
+				<field name="full" label="Full name" type="text" size="200" isProp="demo.fullname"/>
+				<field name="dev" label="Developed by" type="rich-text" size="10000" isProp="demo.dev"/>
+				<field name="status" label="Status" type="text" isProp="demo.status"/>
+				<field name="details" label="Demonstration details" type="rich-text" size="10000" isProp="demo.details"/>
+				
+				<field name="desc" label="Description" type="rich-text" size="10000" isProp="demo.description"/>
+				<field name="ack" label="Acknowledgements" type="rich-text" size="10000" isProp="demo.ack"/>
+				<field name="url" label="Web site" type="url" isProp="demo.url"/>
+			</fields>
+		</table>
+
+		<table name="download">
+			<key>
+				<field name="aid" value="%{property:aid}" />
+			</key>
+			<fields>
+				<!-- part header -->
+				<field name="aid" label="article ID" type="ref-oid"/>
+				
+				<field name="name" label="Name" type="text" size="50" isProp="download.name"/>
+				<field name="full" label="Full name" type="text" size="200" isProp="download.fullname"/>
+				<field name="dev" label="Developed by" type="rich-text" size="10000" isProp="download.dev"/>
+				<field name="status" label="Status" type="text" isProp="download.status"/>
+				<field name="details" label="Demonstration details" type="rich-text" size="10000" isProp="download.details"/>
+				
+				<field name="desc" label="Description" type="rich-text" size="10000" isProp="download.description"/>
+				<field name="ack" label="Acknowledgements" type="rich-text" size="10000" isProp="download.ack"/>
+				<field name="url" label="Web site" type="url" isProp="download.url"/>
+			</fields>
+		</table>
+
+		<table name="project">
+			<key>
+				<field name="aid" value="%{property:aid}" />
+			</key>
+			<fields>
+				<!-- part header -->
+				<field name="aid" label="article ID" type="ref-oid"/>
+				
+				<field name="name" label="Name" type="text" size="50" isProp="project.name"/>
+				<field name="full" label="Full name" type="text" size="200" isProp="project.fullname"/>
+				<field name="objective" label="Main objective" type="rich-text" size="10000" isProp="project.objective"/>		
+				<field name="summary" label="Summary" type="rich-text" size="10000" isProp="project.summary"/>
+
+				<field name="startDate" label="Start date" type="date" isProp="project.startDate"/>
+				<field name="endDate" label="End date" type="date" isProp="project.endDate"/>
+
+				<field name="support" label="Support" type="rich-text" size="10000" isProp="project.support"/>
+				<field name="website" label="Web sites" type="rich-text" isProp="project.website"/>
+				<field name="ack" label="Acknowledgements" type="rich-text" size="10000" isProp="demo.ack"/>
+			</fields>
+		</table>
+
+		<table name="gmm">
+			<key>
+				<field name="aid" value="%{property:aid}" />
+			</key>
+			<fields>
+				<!-- part header -->
+				<field name="aid" label="article ID" type="ref-oid"/>
+				
+				<field name="name" label="Name" type="text" size="50" isProp="ais.name"/>
+				<field name="full" label="Full name" type="text" size="200" isProp="ais.fullname"/>
+				<field name="intro" label="Introduced" type="date" isProp="ais.commissioned"/>
+				<field name="status" label="Status" type="text" isProp="ais.status"/>
+				<field name="dev" label="Developed by" type="rich-text" size="10000" isProp="ais.dev"/>
+				<field name="support" label="Support" type="rich-text" size="10000" isProp="project.support"/>
+				<field name="desc" label="Description" type="rich-text" size="10000" isProp="ais.description"/>
+				<field name="current" label="Current status" type="rich-text" size="10000" isProp="ais.description"/>
+
+				<!--  from gmm list -->
+				<field name="tools" label="Tools" type="rich-text" size="10000" isProp="ais.description"/>
+				<field name="in_use" label="In use" type="rich-text" size="10000" isProp="ais.description"/>
+
+				<field name="ack" label="Acknowledgements" type="rich-text" size="10000" isProp="ais.ack"/>
+				<field name="url" label="Web site" type="url" isProp="ais.url"/>
+			</fields>
+		</table>
+
+		<!--  secondary sub parts -->
+		<table name="textbox">
+			<key>
+				<field name="aid" value="%{property:aid}" />
+			</key>
+			<fields>
+				<!-- part header -->
+				<field name="aid" label="article ID" type="ref-oid"/>
+				<field name="paid" label="object id key" type="oid"/>
+				<field name="group" label="grouping of information in article" type="text-choice" list="article_group" isProp="part.group"/>
+				<field name="index" label="text index in page" type="integer" default="0" isProp="part.index"/>
+				
+				<field name="text" label="content" type="rich-text" size="10000" isProp="article.content"/>
+			</fields>
+		</table>
+
+		<table name="bio">
+			<key>
+				<field name="aid" value="%{property:aid}" />
+			</key>
+			<fields>
+				<!-- part header -->
+				<field name="aid" label="article ID" type="ref-oid"/>
+				<field name="paid" label="object id key" type="ref-oid"/>
+				<field name="group" label="grouping of information in article" type="text-choice" list="article_group" isProp="part.group"/>
+				<field name="index" label="text index in page" type="integer" default="0" isProp="part.index"/>
+
+				<field name="name" label="Person name" type="text" size="30" multiLines="no" isProp="bio.name"/>
+				<field name="image" label="image" type="image" maxSize="2000000" imageSize="120x150" imageSizes="original" isProp="bio.image"/>
+				<field name="url" label="Home page" type="url" isProp="bio.url"/>
+				<field name="bio" label="description" type="rich-text" isProp="bio.desc"/>
+				<field name="logos" label="Organisation logos" type="rich-text" isProp="bio.logos"/>
+			</fields>
+		</table>
+
+		<table name="faq">
+			<key>
+				<field name="aid" value="%{property:aid}" />
+			</key>
+			<fields>
+				<!-- part header -->
+				<field name="aid" label="article ID" type="ref-oid"/>
+				<field name="paid" label="object id key" type="ref-oid"/>
+				<field name="group" label="grouping of information in article" type="text-choice" list="article_group" isProp="part.group"/>
+				<field name="index" label="text index in page" type="integer" default="0" isProp="part.index"/>
+
+				<field name="question" label="Question" type="text" size="500" multiLines="no" isProp="faq.question"/>
+				<field name="answer" label="Answer" type="rich-text" isProp="faq.answer"/>
+			</fields>
+		</table>
+
+		<table name="news">
+			<key>
+				<field name="aid" value="%{property:aid}" />
+			</key>
+			<fields>
+				<!-- part header -->
+				<field name="aid" label="article ID" type="ref-oid"/>
+				<field name="paid" label="object id key" type="ref-oid"/>
+				<field name="group" label="grouping of information in article" type="text-choice" list="article_group" isProp="part.group"/>
+				<field name="index" label="text index in page" type="integer" default="0" isProp="part.index"/>
+
+				<field name="date" label="Date" type="date" size="500" multiLines="no" isProp="news.date"/>
+				<field name="title" label="Title" type="text" size="500" multiLines="no" isProp="news.title"/>
+				<field name="text" label="Text" type="rich-text" size="10000" multiLines="yes" isProp="news.text"/>
+			</fields>
+		</table>
+
+		<table name="product">
+			<key>
+				<field name="aid" value="%{property:aid}" />
+			</key>
+			<fields>
+				<!-- part header -->
+				<field name="paid" label="object id key" type="oid"/>
+				<field name="aid" label="article ID" type="ref-oid"/>
+				<field name="group" label="grouping of information in article" type="text-choice" list="article_group" isProp="part.group"/>
+				<field name="index" label="text index in page" type="integer" default="0" isProp="part.index"/>
+
+				<field name="name" label="product name" type="text" isProp="product.name"/>
+				<field name="description" label="product description" type="rich-text" size="10000" isProp="product.desc"/>
+				<field name="url" label="Web site" type="url" isProp="product.url"/>
+			</fields>
+		</table>
+
+		<table name="gmm_application">
+			<key>
+				<field name="aid" value="%{property:aid}" />
+			</key>
+			<fields>
+				<!-- part header -->
+				<field name="aid" label="article ID" type="ref-oid"/>
+				<field name="paid" label="object id key" type="ref-oid"/>
+				<field name="group" label="grouping of information in article" type="text-choice" list="article_group" isProp="part.group"/>
+				<field name="index" label="text index in page" type="integer" default="0" isProp="part.index"/>
+
+				<field name="name" label="product name" type="text" isProp="product.name"/>
+				<field name="title" label="product title" type="text" isProp="product.name"/>
+				<field name="description" label="product description" type="rich-text" size="10000" isProp="product.desc"/>
+				<field name="url" label="Web site" type="url" isProp="product.url"/>
+			</fields>
+		</table>
+
+		<table name="presentation">
+			<key>
+				<field name="aid" value="%{property:aid}" />
+			</key>
+			<fields>
+				<!-- part header -->
+				<field name="aid" label="article ID" type="ref-oid"/>
+				<field name="paid" label="object id key" type="ref-oid"/>
+				<field name="group" label="grouping of information in article" type="text-choice" list="article_group" isProp="part.group"/>
+				<field name="index" label="text index in page" type="integer" default="0" isProp="part.index"/>
+
+				<field name="description" label="description" type="rich-text" size="10000" isProp="presentation.desc"/>
+				<field name="name" label="Presentation name" type="text" isProp="presentation.name"/>
+				<field name="document" label="Document" type="file" maxSize="200000" isProp="presentation.doc"/>
+				<field name="author" label="Author" type="text" isProp="presentation.author"/>
+				<field name="author_url" label="Author url" type="url" isProp="presentation.author_url"/>
+			</fields>
+		</table>
+
+		<table name="link">
+			<key>
+				<field name="aid" value="%{property:aid}"/>
+				<field name="group" value="%{property:group}"/>
+			</key>
+			<fields>
+				<!-- part header -->
+				<field name="aid" label="article ID" type="ref-oid"/>
+				<field name="paid" label="object id key" type="ref-oid"/>
+
+				<field name="group" label="grouping of information in article" type="text-choice" list="article_group" isProp="part.group"/>
+				<field name="index" label="text index in page" type="integer" default="0" isProp="part.index"/>
+
+				<field name="url" label="url" type="url" isProp="link.name"/>
+				<field name="text" label="link text" type="rich-text" size="10000" isProp="link.text"/>
+				<field name="target" label="link target" type="text-choice" list="link_target" isProp="link.target"/>
+			</fields>
+		</table>
+
+		<table name="contact">
+			<key>
+				<field name="name" value="%{property:docID}" />
+			</key>
+			<fields>
+				<!-- part header -->
+				<field name="name" label="article name" type="text" size="20" isProp="article.urlName">
+					<help>Short name to be used in navigation bar.</help>
+				</field>
+				<field name="paid" label="object id key" type="ref-oid"/>
+
+				<field name="group" label="grouping of information in article" type="text-choice" list="article_group" isProp="part.group"/>
+				<field name="index" label="text index in page" type="integer" default="0" isProp="part.index"/>
+
+				<field name="email"		label="email"	type="email" isProp="contact.email"/> 
+				<group name="phone" label="telephone">
+					<field name="phone"	label="phone"	type="telephone" size="20" isProp="contact.phone"> 
+						<help>Please enter international phone number.</help>
+					</field>
+					<field name="fax"		label="fax"	type="telephone" size="20" isProp="contact.fax"> 
+						<help>Please enter international phone number.</help>
+					</field>
+				</group>
+			</fields>
+		</table>
+
+		<table name="location">
+			<fields>
+				<!-- part header -->
+				<field name="aid" label="article ID" type="ref-oid"/>
+				<field name="paid" label="object id key" type="ref-oid"/>
+				<field name="lang" label="Language" type="text-choice" default="en" />
+				<field name="group" label="grouping of information in article" type="text-choice" list="article_group" isProp="part.group"/>
+				<field name="index" label="text index in page" type="integer" default="0" isProp="part.index"/>
+
+				<field name="office" label="Office/dpt name" type="rich-text" multiLines="yes" size="400" isProp="location.office"/>
+				<field name="address" label="address" type="text" size="400" isProp="location.address"/>
+				<field name="city" label="city" type="text" size="50"  isProp="location.city"/>
+				<field name="post-code" label="zip/postal code" type="text" size="10"  isProp="location.zip"/>
+				<field name="state/province" label="state" type="text"  isProp="location.state">
+					<help>Please add the full state or province name for the US or Canada</help>
+				</field>
+				<field name="country" label="country" type="text-choice" default="?UK" isProp="location.country"/>
+			</fields>
+		</table>
+
+		<table name="ref">
+			<fields>
+				<!-- part header -->
+				<field name="aid" label="article ID" type="ref-oid"/>
+				<field name="paid" label="object id key" type="ref-oid"/>
+				<field name="lang" label="Language" type="text-choice" default="en" />
+				<field name="group" label="grouping of information in article" type="text-choice" list="article_group" isProp="part.group"/>
+				<field name="index" label="text index in page" type="integer" default="0" isProp="part.index"/>
+
+				<field name="header" label="header" type="rich-text" isProp="ref.header"/>
+				<field name="links" label="links" type="rich-text" size="10000" isProp="ref.links"/>
+				<field name="desc" label="description" type="rich-text" isProp="ref.desc"/>
+			</fields>
+		</table>
+
+	</tables>
+
+	<!-- portal management -->
+	<views>
+		<!-- data views for registration -->
+		<view name="registration" table="users">
+			<fields>
+				<field name="oid" alias="coid" label="object id" type="oid" isKey="primary" show="hidden" isEdit="no" default="0"/>
+				<field name="user-id" label="user ID" type="login-id" size="30" isProp="user.userID" isRequired="true"/>
+				<field name="gmc" label="GMC Number" type="text" size="20"  multiLines="no" isRequired="true"/>
+				<field name="name" label="practice name" type="text" size="30"  multiLines="no" isRequired="true"/>
+				<field name="description" label="User description" type="rich-text" size="10000" />
+				<field name="image" label="image" type="image" maxSize="200000" 
+						imageSize="176x176" imageSizes="original,176x176" isProp="page.image">
+				</field>
+				
+				<group name="contact" label="Contact details">
+					<field name="phone"	label="practice telephone number"	type="telephone" size="20" /> 
+					<field name="fax"	label="practice fax number" type="telephone" size="20" /> 
+					<field name="email"	label="email"	isRequired="true" type="login-email" />
+				</group>
+
+				<group name="location" label="Location">
+					<field name="address" label="work address" type="text" size="400" rowsMaxBox="2" isRequired="true"/>
+					<field name="city" label="town" type="text" size="50"  isRequired="true"/>
+					<field name="post-code" label="zip/postal code" type="text" size="10"  isRequired="true"/>
+					<field name="county" label="county" type="text" isRequired="true" />
+					<field name="country" label="country" type="text-choice" value="?UK" list="country" isRequired="true" show="hidden" isEdit="no"/>
+					<field name="directions" label="directions" type="rich-text" size="5000" />
+				</group>
+			</fields>
+		</view>
+
+		<!-- user data loaded from DB -->
+		<view name="reg_user_check" table="users">
+			<key>
+				<field name="user-id" value="%{property:user.exist.userID}" />
+			</key>
+			<fields>
+				<field name="user-id" label="user ID" type="login-id" size="30" role="login.id"  isProp="user.userID"/>
+			</fields>
+		</view>
+
+		<!-- Registration dataset with system and password fields -->
+		<view name="reg_update" table="users">
+			<fields>
+				<field name="password" label="Password" type="login-password" size="30" default="%{variable:passwd}" masked="no"/>
+				<field name="reg-date"	  label="Registration date"	 type="date" default="now" isInput="false" />
+				<field name="reg-status"	   label="registration status" type="text-choice" default="1" isInput="false" />
+			</fields>
+		</view>
+
+		<!-- Registration email -->
+		<view name="registration_email" table="users">
+			<fields>
+				<field name="oid" alias="coid" label="object id" type="oid" />
+				<field name="user-id" />
+				<field name="password" label="Password" type="login-password" size="30" masked="no"/>
+				<field name="name" label="practice name" type="text" size="50" />
+				<group name="contact" label="contact">
+					<field name="email"		label="email"	type="login-email"/> 
+				</group>
+			</fields>
+		</view>
+
+		<!-- data views for login -->
+
+		<!-- login pages -->
+		<view name="login" table="users">
+			<fields>
+				<field name="user-id" label="user name" type="login-id" size="30" />
+				<field name="password" label="Password" type="login-password" size="30" />
+			</fields>
+		</view>
+
+		<!-- Update passord -->
+		<!-- form -->
+		<view name="updatePasswordForm" table="users">
+			<fields>
+				<field name="old_password_1" label="current Password" type="login-password" size="30" isRequired="true" isProp="password.current"/>
+				<field name="password" label="New password" type="login-password" size="30" isRequired="true" alias="password"/>
+				<field name="new_password_2" label="New Password (again)" type="login-password" size="30" isRequired="true" isProp="password.new2"/>
+			</fields>
+		</view>
+
+		<!-- read password form DB -->
+		<view name="readPassword" table="users">
+			<key>
+				<field name="oid" alias="coid" value="%{user:user.oid:0}"/>
+			</key>
+			<fields>
+				<field name="oid" alias="coid" label="object id" type="oid" value="%{user:user.oid:0}"/>
+				<field name="password" label="Password" type="login-password" size="30" isProp="password" />
+			</fields>
+		</view>
+
+		<!-- storage -->
+		<view name="updatePassword" table="users">
+			<fields>
+				<field name="oid" alias="coid" label="object id" type="oid" value="%{user:user.oid:0}"/>
+				<field name="password" label="Password" type="login-password" size="30" isProp="password.new" value="%{post-field:password:0}"/>
+			</fields>
+		</view>
+
+		<!-- user data loaded from DB -->
+		<view name="user" table="users">
+			<key>
+				<field name="user-id" value="%{http-field:user-id}" />
+				<field name="password" value="%{post-field:password}" />
+			</key>
+			<fields>
+				<field name="oid" label="object id" type="oid" isProp="user.oid" />
+				<field name="user-id" label="user name" type="text" size="30" role="login.id"  isProp="user.userID"/>
+				<field name="name" label="practice name" type="text" size="50"  isProp="user.name"/>
+				<group name="contact" label="contact">
+					<field name="email"	label="email" type="email" isProp="user.email"/> 
+				</group>
+			</fields>
+		</view>
+
+		<!-- user data loaded from DB (refresh) -->
+		<view name="user_refresh" table="users">
+			<key>
+				<field name="oid" alias="coid" value="%{user:user.oid:0}"/>
+			</key>
+			<fields>
+				<field name="oid" label="object id" type="oid" isProp="user.oid" />
+				<field name="user-id" label="user name" type="text" size="30" role="login.id"  isProp="user.userID"/>
+				<field name="name" label="practice name" type="text" size="50"  isProp="user.name"/>
+			</fields>
+		</view>
+
+		<!-- user data loaded from DB -->
+		<view name="user_exist" table="users">
+			<key>
+				<field name="user-id" value="%{property:user.exist.userID}" />
+			</key>
+			<fields>
+				<field name="user-id" label="user name" type="text" size="30" role="login.id"  isProp="user.userID"/>
+				<field name="name" label="practice name" type="text" size="50"  isProp="user.name"/>
+			</fields>
+		</view>
+
+		<!-- Image DB -->
+		<view name="images.record.new" table="images">
+			<key>
+				<field name="oid" alias="img_id" />
+			</key>
+			<fields>
+				<field name="oid" alias="img_id" label="object id" type="oid" isKey="primary" show="hidden" isEdit="no"/>
+				<field name="name" label="image name" type="text" size="30" multiLines="no"/>
+				<field name="description" label="image description" type="rich-text" size="3000" multiLines="yes"/>
+				<field name="category" label="Category" type="text-choice" list="image-category"  />
+				<field name="image" label="image" type="image" maxSize="2000000" imageSize="176x176" imageSizes="original" isProp="image"/>
+				<field name="date-creation" label="Date" type="timestamp" value="now" show="hidden"/>
+			</fields>
+		</view>
+
+		<view name="images.record" table="images">
+			<key>
+				<field name="oid" alias="img_id" />
+			</key>
+			<fields>
+				<field name="oid" alias="img_id" label="object id" type="oid" isKey="primary" show="hidden" isEdit="no"/>
+				<field name="name" label="image name" type="text" size="30" multiLines="no"/>
+				<field name="description" label="image description" type="rich-text" size="3000" multiLines="yes"/>
+				<field name="category" label="Category" type="text-choice" list="image-category"  />
+				<field name="image" label="image" type="image" maxSize="2000000" imageSize="176x176" imageSizes="original" isProp="image"/>
+			</fields>
+		</view>
+
+		<view name="images.list" table="images">
+			<fields>
+				<field name="oid" alias="img_id" label="object id" type="oid" isKey="primary" show="hidden" isEdit="no"/>
+				<field name="image" label="image" type="image" maxSize="2000000" imageSize="30x40" imageSizes="original" isProp="image"/>
+				<field name="name" label="image name" type="text" size="30" multiLines="no"/>
+				<field name="description" label="image description" type="rich-text" size="3000" multiLines="yes"/>
+				<field name="category" label="Category" type="text-choice" list="image-category"  />
+				<field name="date-creation" label="Date" type="timestamp" default="now" show="hidden"/>
+			</fields>
+		</view>
+
+		<view name="images.dialog.list" table="images">
+			<fields>
+				<field name="oid" alias="img_id" label="object id" type="oid" isKey="primary" show="hidden" isEdit="no"/>
+				<field name="image" label="image" type="image" maxSize="2000000" imageSize="original" imageSizes="original" isProp="image"/>
+				<field name="name" label="image name" type="text" size="30" multiLines="no"/>
+				<field name="description" label="image description" type="rich-text" size="3000" multiLines="yes"/>
+				<field name="category" label="Category" type="text-choice" list="image-category"  />
+				<field name="date-creation" label="Date" type="timestamp" default="now" show="hidden"/>
+			</fields>
+		</view>
+
+
+		<!-- article database -->
+		<view name="articles.record.new" table="article">
+			<key>
+				<field name="aid" alias="doc_id" />
+			</key>
+			<fields>
+				<!-- article location/type -->
+				<field name="aid" label="article ID" type="oid" isKey="primary" show="hidden" isEdit="no"/>
+
+				<field name="name" label="article name" type="text" size="20" isProp="article.urlName">
+					<help>Short name to be used in navigation bar.</help>
+				</field>
+				<field name="type" label="article type" type="text-choice" multiple="false" isProp="article.type">
+					<help>article type.</help>
+				</field>
+				<field name="lang" label="Language" type="text-choice" default="en" />
+
+				<field name="path" label="Article path" list="paths" type="text-choice" multiple="true" isProp="article.path"/>
+
+				<!-- main data -->
+				<field name="title" label="article title" type="text" size="255" isProp="article.title">
+					<help>Page title that will appear both as a title in your page and in the window banner as well.</help>
+				</field>
+				<field name="abstract" label="article abstract" type="text" size="1000" isProp="article.abstract">
+					<help>Short description to be used in meta data tags and abstract section.</help>
+				</field>
+
+				<field name="author" label="Author" type="text-choice" size="100" list="authors" default="" isProp="article.author"/>
+				<field name="date-creation" label="creation date" type="timestamp" default="now" show="hidden" isProp="article.date.creation"/>
+				<field name="date-modification" label="modification date" type="timestamp" default="now" show="hidden" isProp="article.date.modification"/>
+			</fields>
+		</view>
+
+		<view name="articles.record" table="article">
+			<key>
+				<field name="aid" alias="doc_id" />
+			</key>
+			<fields>
+				<field name="aid" label="article ID" type="oid" isKey="primary" show="hidden" isEdit="no"/>
+
+				<field name="name" label="article name" type="text" size="20" isProp="article.urlName">
+					<help>Short name to be used in navigation bar.</help>
+				</field>
+				<field name="type" label="article type" type="text-choice" multiple="false" isProp="article.type">
+					<help>article type.</help>
+				</field>
+				<field name="lang" label="Language" type="text-choice" default="en" />
+
+				<field name="status" label="article status" list="article_status" type="text-choice" default="0" isProp="article.status"/>		
+				<field name="path" label="Article path" list="paths" type="text-choice" multiple="true" isProp="article.path"/>
+
+				<!-- main data -->
+				<field name="title" label="article title" type="text" size="255" isProp="article.title">
+					<help>Page title that will appear both as a title in your page and in the window banner as well.</help>
+				</field>
+				<field name="abstract" label="article abstract" type="text" size="1000" isProp="article.abstract">
+					<help>Short description to be used in meta data tags and abstract section.</help>
+				</field>
+				<field name="desc-modif" label="description of modification" type="text" size="1000" isProp="article.modif">
+					<help>Description of modification for "new" article section.</help>
+				</field>
+				<field name="image" label="image" type="image" maxSize="200000" 
+						imageSize="176x176" imageSizes="original,176x176" isProp="article.image">
+					<help>Article thumbnail</help>
+				</field>
+
+				<!-- keywords -->
+				<group name="kw">
+					<field name="clinical" label="Clinical keywords" type="text-choice" multiple="true" isProp="article.kw.clinical"/>
+					<field name="technical" label="IT keywords" type="text-choice" multiple="true" isProp="article.kw.it"/>
+					<field name="prof_cov" label="Professional coverage" type="text-choice" multiple="true" isProp="article.kw.prof"/>
+					<field name="geo_cov" label="Location coverage" type="text-choice" list="geo_cov" multiple="true" isProp="article.kw.location"/>
+					<field name="other" label="other keywords" type="text" size="255" isProp="article.kw.other" />
+				</group>
+
+				<field name="author" label="Author" type="text-choice" size="100" list="authors" default="" isProp="article.author"/>
+				<field name="date-modification" label="modification date" type="timestamp" default="now" show="hidden" isProp="article.date.modification"/>
+			</fields>
+		</view>
+
+		<view name="articles.list" table="article">
+			<key>
+				<field name="name" value="%{property:docID}" />
+			</key>
+			<fields>
+				<field name="aid" type="ok"/>
+
+				<field name="name" label="article name" type="text" size="20" isProp="article.urlName">
+					<help>Short name to be used in navigation bar.</help>
+				</field>
+				<field name="type" label="article type" type="text-choice" multiple="false" isProp="article.type">
+					<help>article type.</help>
+				</field>
+				<field name="lang" label="Language" type="text-choice" default="en" />
+
+				<field name="status" label="article status" list="article_status" type="text-choice" default="0" isProp="article.status"/>		
+				<field name="path" label="Article path" list="paths" type="text-choice" multiple="true" isProp="article.path"/>
+
+				<!-- main data -->
+				<field name="title" label="article title" type="text" size="255" isProp="article.title">
+					<help>Page title that will appear both as a title in your page and in the window banner as well.</help>
+				</field>
+				<field name="abstract" label="article abstract" type="text" size="1000" isProp="article.abstract">
+					<help>Short description to be used in meta data tags and abstract section.</help>
+				</field>
+				<field name="desc-modif" label="description of modification" type="text" size="1000" isProp="article.modif">
+					<help>Description of modification for "new" article section.</help>
+				</field>
+				<field name="image" label="image" type="image" maxSize="200000" 
+						imageSize="176x176" imageSizes="original,176x176" isProp="article.image">
+					<help>Article thumbnail</help>
+				</field>
+
+
+				<!-- keywords -->
+				<group name="kw">
+					<field name="clinical" label="Clinical keywords" type="text-choice" multiple="true" isProp="article.kw.clinical"/>
+					<field name="technical" label="IT keywords" type="text-choice" multiple="true" isProp="article.kw.it"/>
+					<field name="prof_cov" label="Professional coverage" type="text-choice" multiple="true" isProp="article.kw.prof"/>
+					<field name="geo_cov" label="Location coverage" type="text-choice" list="geo_cov" multiple="true" isProp="article.kw.location"/>
+					<field name="other" label="other keywords" type="text" size="255" isProp="article.kw.other" />
+				</group>
+
+				<field name="author" label="Author" type="text-choice" size="100" list="authors" default="" isProp="article.author"/>
+				<field name="date-creation" label="creation date" type="timestamp" default="now" show="hidden" isProp="article.date.creation"/>
+				<field name="date-modification" label="modification date" type="timestamp" default="now" show="hidden" isProp="article.date.modification"/>
+			</fields>
+		</view>
+
+		</views>
+</data>

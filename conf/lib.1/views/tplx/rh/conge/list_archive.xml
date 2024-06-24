@@ -1,0 +1,49 @@
+<p:page 	
+	xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:p="http://www.presencemedia.ma/views/page"
+>
+
+	<p:resources>
+		<p:resource type="js" path="js/updateConge.js" />
+	</p:resources>
+
+	<p:header>
+		<p:title>{string:"page_title_list"}</p:title>
+		<p:description>{string:"page_message_list"}</p:description>
+		<p:help>{string:"page_message_list_details"}</p:help>
+
+		<p:toolbar>
+			<p:button behaviour="switch-panel" target="pm-id-search-block" iconCls="pm-button-search">{string:'search'}</p:button>
+		</p:toolbar>
+
+		<p:search status="closed" id="pm-id-search-block" record="page.search" label="{string:'search'}">
+			<p:submit behaviour="ajax" class="pm-button-search">{string:"search"}</p:submit>
+		</p:search>
+
+	</p:header>
+
+	<p:body>
+
+ 		<grid:grid records="page.records" xmlns:grid="http://www.presencemedia.ma/views/grid">
+			<grid:events>
+				<grid:hover />
+				<grid:onclick behaviour="ajax" url="{=edit.url}" target="content"/>
+			</grid:events>
+
+			<grid:operations>
+				<grid:operation behaviour="ajax" url="{=view.url}" target="content" iconCls="legend_details details_lnk">{string:"details"}</grid:operation>
+
+				{if:#field.object:demand_state# == 1}
+					{if:#field.object:demand_state# == 1 && #=edit.url#!=''}
+							<grid:operation behaviour="ajax" url="{=edit.url}{record.url_key}" target="content" iconCls="legend_edit edt_lnk">{string:"edit"}</grid:operation>
+					{/if}
+					{if:#=delete.url#!=''}
+							<grid:operation behaviour="confirm" url="{=delete.url}{record.url_key}" target="content" iconCls="delete_lnk legend_delete">{string:"delete"}</grid:operation>
+					{/if}
+				{/if}
+
+			</grid:operations>
+		</grid:grid>
+
+	</p:body>
+</p:page>

@@ -1,0 +1,410 @@
+<?php
+/*
+COPYRIGHT NxFrontier Ltd
+www.nxfrontier.com
+This code may not be copied, modified or redistributed without the written consent of NxFrontier Limited, UK company number 04462961. 
+*/
+
+// doc data source: read a collection of docs from a static content html file and
+// returns it as record collection with fields:
+// "doc.href", "doc.key", "doc.title" and "doc.text"
+
+require_once(NX_LIB.'ds/NxDS_Source.inc');
+
+class NxDS_TplSource extends NxDS_Source
+{
+	function NxDS_TplSource(&$props,$path='docs/')
+	{
+		parent::__construct($props);
+		
+		$this->docRecs=array();
+		$this->fs=$this->getPlugIn('FileSys');
+		$this->path = $path;
+	}
+	
+	// load docs from html (<a> tags) and returns it as a record.
+    function & getRecords($view,&$errorCB)
+	{
+		$this->error =& $errorCB;
+		
+		// get actual view
+		$view = $this->getProperty($view.'.ds',$view);
+		
+		// get property path
+		$path = $this->path.strtr($view,'.','/');
+		
+		if (!isset($this->docRecs[$path]))
+			$this->docRecs[$path] =& $this->loadDoc($path);
+			
+		return $this->docRecs[$path];
+	}
+
+	function & getRecordCount($view,&$errorCB)
+	{		
+		return 1;
+	}
+	
+	// add/modify records with view name
+	function putRecords(&$records,$view, &$errorCB,$dbOp=null)
+	{	
+		return false;
+	}
+	
+	// load a collection of docs and returns it as a record collection with 
+	// doc.href, doc.key, doc.title, doc.text fields.
+	function &loadDoc($path)
+	{
+		// get or build executable
+		$exe =& $this->buildExe($path);
+		
+		// execute it and get back an array of doc properties
+		return $this->execute($exe);
+	}	
+
+	function & execute($exe)
+	{
+		require_once(NX_LIB."NxData_ArrayRecords.inc");
+		include($exe);
+		return new NxData_ArrayRecords($doc);
+	}
+
+	function &buildExe($path)
+	{
+		// get paths
+		$srcPath = $this->getSrcPath($path);
+		$exePath = $this->getExePath($path);
+
+		// up to date ?
+		if (is_file($exePath))
+			// deployed once
+			if (NX_CHECK_CONTENT=='once')
+				return $exePath;
+			// build refresh
+			else if (NX_CHECK_CONTENT=='build' &&
+					is_file($srcPath) &&
+					($ftimeSrc = @filemtime($srcPath)) && 
+					($ftimeExe = @filemtime($exePath)) && 
+					($ftimeExe-$ftimeSrc)>0 && 
+					!isset($_GET["nocache"]))
+				return $exePath;
+					
+		// no => build it as an array of properties (php object)
+		
+		// create array as a string and save it
+		$src = & $this->getArrayStr($srcPath);
+		if ($src)
+		{
+			// save it as a php file
+			$this->saveExe($src,$exePath);
+		}
+					
+		return $exePath;
+	}	
+
+	function getSrcPath($path)
+	{
+		global $NX_LANG;
+		global $NX_DEFT_LANG;
+
+		if (is_file($f=NX_CONTENT.$path.'_'.$NX_LANG.'.html') ||
+			is_file($f=NX_CONTENT.$path.'_'.$NX_DEFT_LANG.'.html') ||
+			is_file($f=NX_CONTENT.$path.'.html') ||
+			is_file($f=NX_DIS_CONTENT.$path.'_'.$NX_DEFT_LANG.'.html') ||
+			is_file($f=NX_DIS_CONTENT.$path.'_'.$NX_DEFT_LANG.'.html') ||
+			is_file($f=NX_DIS_CONTENT."{$path}.html"))
+			return $f;
+			
+		$this->error->addError('cant find content source: $path');
+		return null;
+	}
+
+	function getExePath($path)
+	{
+		global $NX_LANG;
+		global $NX_DEFT_LANG;	
+		return NX_CONTENT_COMP."{$path}_{$NX_LANG}.html.php";
+	}
+	
+	function & getArrayStr($srcPath)
+	{
+		// read document as a document array
+		$doc =& $this->parseDoc($srcPath);
+
+		// serialise the doc
+		if (count($doc)>0)
+		{
+			$s = '<?php $doc=array(';
+			// require_once(NX_LIB."NxData_ArrayRecords.inc");
+			// $res =& new NxData_ArrayRecords($this->doc);
+			foreach ($doc as $p=>$v)
+			{
+				$s .= "'{$p}'=>'$v',";
+			}
+			$s .= ');?>';
+			return $s;
+		}
+		else
+		{
+			$this->error->addError('empty document:'.$srcPath);
+			return null;
+		}
+	}
+	
+	function saveExe($src,$exePath)
+	{
+		// check if output directory exist
+		if (!is_dir($d=dirname($exePath)))
+			if ($this->fs->createTree($d)==null)
+			{
+				$this->error->addError('cant create directory :'.$d);
+				return false;
+			}
+			
+		// transform it and write to file
+		if ($fp = fopen($exePath,'w'))
+		{
+			// parse and copy to file
+			fputs($fp,$src);
+			fclose($fp);
+			
+			nxLog("compiled content to $exePath","DS:XDOCS",NX_COMPILE_EVENT);
+			return true;
+		}
+		else 
+		{
+			$this->error->addError('cant save content executable :'.$exePath);
+			return false;
+		}
+	}
+	
+	function &parseDoc($path)
+	{
+		$src = $this->file_get_contents($path);	
+		if ($src===0)
+			return false;
+
+		$this->doc=array();
+		// extract head and returns body	
+		$patterns = array(
+			// remove simple quotes
+			"/'/",
+		
+			// ====  transform macros into php =====
+		
+			// run time variables
+			'/{(@)?(?:prop(?:erty):|=)([^}|:=]+)(?:([|=])([^}]*))?}/e',
+			
+			// system properties {@user:user.companyName|not loggged}
+			'/{(@)?(user|page|site):([^}|:=]+)(?:[:]([^}|=]+))?(?:[|=]([^}]+))?}/e',
+
+			// localised string
+			'/{(@)?(?:string:|_)"([^"]*)"(?:[:]"?([^"}]+)"?)?}/e',
+			
+			// === then split up the doc into fields ===
+			'%<title>(.*)</title>%esi',
+			'%<meta name="([^"]+)" content="([^"]+)">%esi',
+			'%href="([^."]+)[.]htm[l]?"%esi',
+			'%src="[.][.]/images/([^"]+)"%esi',
+			'%<body([^>]*)>(.*)<.body>%esi',
+			);
+			
+		$replace = array(
+			'&acute;',
+			'$this->mapProp("$2","$3","$4","$1",false)',
+			'$this->mapSystemProp("$2","$3","$4","$1",false)',	
+			'$this->mapString("$2","$3","$1",false)',
+
+			'$this->getTitle("$1")',
+			'$this->getMeta("$1","$2")',
+			'$this->getHref("$1")',
+			'$this->getImage("$1")',
+			'$this->getBody("$1","$2")',
+			'$'
+			);
+
+		// extract head, title and body code
+		$res = preg_replace($patterns, $replace,$src);
+		
+		return $this->doc;
+	}
+	
+	/**
+	 * @return code
+	 * @param prop property name
+	 * @param dft default value
+	 * @param static is executed at build time or runtime
+	 * @param inPHP results to copy inside PHP section or html
+	 * @desc remap a property from TPL to php
+	 */
+	function mapProp($p,$isDeft,$dft,$static,$inPHP)
+	{
+		nxLog("map property:[$p], ".($static?"static":"runtime"),"DS:XDOC");
+		//$dft = addslashes($dft);
+		$prop = trim($p);
+		
+		// mask properties starting with db (protecting db params)
+		if (strstr($prop, 'db.')===0)
+			return '';
+
+		if ($static)
+		{
+			if ($isDeft=='=')
+			{
+				$v=$this->expression($dft,$static,true);
+				$this->setProperty($prop,$v);
+				nxLog("setting up property:[$prop]=[$v]","DS:XDOC");
+				return '';
+			}
+			elseif ($isDeft=='|')
+			{
+				$v=$this->expression($dft,$static,true);
+				$res=$this->getProperty($prop,$v);
+			}
+			else
+				$res=$this->getProperty($prop,'');
+		}
+		else
+		{
+			// remove " delimiters
+			$dft=rtrim(ltrim($dft,'"'),'"');
+			
+			$res='\'.#$#this->getProperty("'.$prop.'","'.$dft.'").\'';
+		}
+
+		nxLog("map property:[$s] res=[$res]","DS:XDOC");
+		return $res;
+	}
+
+	function mapSystemProp($selector,$prop,$dft,$staticChar,$inPHP)
+	{
+		$dft = addslashes($dft);
+		$prop = trim($prop);
+		
+		$varN='_NX_'.$selector;
+		if ($staticChar=='@')
+		{
+			$res=$GLOBALS[$varN]->props->getProperty($prop,$dft);
+		}
+		else
+		{
+			$res='\'.#$#GLOBALS[\''.$varN.'\']->getProperty("'.$prop.'","'.$dft.'").\'';
+		}
+
+		nxLog("map property:{$varN}::{$prop},".($staticChar=="@"?"static":"runtime")." res=$res"	,"TPL:mapProc");
+			
+		return $res;
+	}
+	
+	function expression($e,$static,$inPHP=false)
+	{
+		return $e;
+	}
+	
+	function mapString($str,$pack,$static,$inPHP)
+	{
+		if ($static=="@")
+		{
+			return $this->getString($str,null,$pack);
+		}
+		else
+		{
+			return '\'.#$#this->getString("'.$str.'",null,"'.$pack.'").\'';
+		}
+	}
+	
+	function getTitle($s)
+	{
+		nxLog("HTML content , got title:[$s]","STATIC_HTML");
+		$s=str_replace("\'","'",$s);
+		$this->setDocProp('title',$s);
+		return '';
+	}
+	
+	function getHref($id)
+	{
+		nxLog("HTML content , link to doc id :[$id]","STATIC_HTML");
+		return 'href="?docID='.$id.'"';
+	}
+
+	function getMeta($n,$v)
+	{
+		nxLog("HTML content , got meta:[$n]=[$v]","STATIC_HTML");
+		$v=str_replace("\'","'",$v);
+		$this->setDocProp('meta.'.$n,$v);
+		return '';
+	}
+	
+	function getBody($attr,$s)
+	{
+		nxLog("HTML content , got body:[$s]","STATIC_HTML");
+		$s=str_replace("\'","'",$s);
+		$this->setDocProp('content',$s);
+		return '';
+	}
+
+	function getImage($name)
+	{
+		nxLog("HTML content , deploying image:[$name]","STATIC_HTML");
+		$src=NX_CONTENT."images/{$name}";
+		$dest=NX_CONTENT_IMAGES.$name;
+		$dest_url=NX_CONTENT_IMAGES_URL.$name;
+		$this->copyRes($src,$dest);
+		return 'src="'.$dest_url.'"';
+	}
+	
+	// search for an image in deployemt directory
+	function copyRes($src,$dest)
+	{
+		// prefix for resources in skin
+		// $res="res/";
+
+		if (is_file($dest))
+		{
+			if (NX_CHECK_TPL!='compile')
+				return $dest;
+		}
+		
+		nxLog("Trying content image file: {$src}",'STATIC_CONTENT');
+		if (is_file($src))
+		{
+			// optimistic: assume dir existence
+			if ($this->fs->copy($src, $dest))
+			{
+				nxLog("deployed resource from $src to $dest","NxPlug_Template",NX_COMPILE_EVENT);
+				return $dest;
+			}
+				
+			// failed: check directory
+			if (!is_dir($d=dirname($dest)))
+			{
+				// create dir
+				if ($this->fs->createTree($d))
+				{
+					// try again to copy the file
+					if ($this->fs->copy($src,$dest))
+					{
+						nxLog("imported content image from $src to $dest","STATIC_CONTENT",NX_COMPILE_EVENT);
+						return $dest;
+					}
+				}
+			}
+
+			// can't copy file => log and run view from source
+			nxError("can't copy file:$src to $dest.","STATIC_CONTENT");
+			return $src;
+		}
+		
+		return false;
+	}
+		
+	function setDocProp($p,$v)
+	{
+		// nxLog("HTML content , doc[$p]=$v","STATIC_HTML");
+		$v=str_replace('#$#','$',$v);
+
+		$this->doc["page.$p"]=$v;
+		return '';
+	}
+}
+
+?>

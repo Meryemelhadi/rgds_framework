@@ -1,0 +1,191 @@
+<?xml version="1.0"?> 
+<!-- 
+	
+	NXL Taglib 
+
+	description: tag lib for generating ExtJS tree
+
+-->
+<xo:taglib uri="http://www.presencemedia.ma/views/grid" 
+	xmlns:xo="http://www.nxfrontier.com/xo/core"
+	xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+	xmlns:this="http://www.nxfrontier.com/xo/this"
+	xmlns:nxl="http://www.nxfrontier.com/nxl/nxl"
+	xmlns:tpl="http://www.nxfrontier.com/tpl/tpml"
+	xmlns:format="http://www.nxfrontier.com/nxl/format"
+	xmlns:grid="http://www.presencemedia.ma/views/grid"
+	xmlns="http://www.w3.org/1999/xhtml"
+	>
+
+<xo:tag name="grid">
+	<xo:param name="records" value="page.records"/>
+	<xo:param name="class" value="pm-grille"/>
+	<xsl:param name="operations" select="operations/operation"/>
+
+	{records:<xsl:value-of select="$records" />}
+	<table  class="#{$class}#" border="0" cellpadding="0" cellspacing="0">
+		{record}
+		<xo:apply_templates select="header">
+			<this:header operations="#{$operations}#"/>
+		</xo:apply_templates>
+		
+		<tr class="x-grid-row row_{record.even_odd}" onmouseover="onHover(this);return false;" onmouseout="onOut(this);return false;"
+		onclick="ajax_navigate(event,'{=view.url}{record.url_key}','content')">
+			<xo:apply_templates select="row/cols">
+				<this:cols>
+					<this:field />
+				</this:cols>
+			</xo:apply_templates>
+			
+			<xsl:apply-templates select="operations" />
+		</tr>
+		{/record}
+	</table>
+	{/records}
+
+	<xo:apply_templates select="when-empty">
+		<this:when-empty>{string:"empty_list"}</this:when-empty>
+	</xo:apply_templates>
+
+
+	<xo:apply_templates select="footer">
+		<this:footer>
+			<this:pagination />
+			<this:legend>
+				<xsl:with-param name="operations" select="$operations"/>
+			</this:legend>
+		</this:footer>
+	</xo:apply_templates>
+
+</xo:tag>
+
+<xo:tag name="header">
+	<xo:param name="operations" select="../operations/operation" />
+
+	{if:record.is_first}
+	<tr>
+		{fields}
+		<th>{field.label}</th>
+		{/fields}
+		<xsl:if test="$operations"><th width="80"></th></xsl:if>		
+	</tr>
+	{/if}
+</xo:tag>
+
+<xo:tag name="footer">
+	<div class="pm-legend-wrapper">	
+		<xsl:value-of select="$_content_" />
+	</div>
+</xo:tag>
+
+<xo:tag name="when-empty" 	xmlns="http://www.w3.org/1999/xhtml">
+	{no_record}
+		<div class="pm-msg-wrapper">
+			<span class="pm-msg-grid-empty"><xsl:value-of select="$_content_" /></span>
+		</div>
+	{/no_record}
+</xo:tag>
+
+<xo:tag name="cols">
+	{fields}
+	<td><xsl:value-of select="$_content_" /></td>
+	{/fields}
+</xo:tag>
+
+<xo:tag name="field">
+	{field<xsl:if test="@format">.<xsl:value-of select="@format" /></xsl:if>}
+</xo:tag>
+
+<xo:tag name="fields">
+	{fields}<xsl:value-of select="$_content_" />{/fields}
+</xo:tag>
+
+<xo:tag name="pagination">
+<!-- Pagination -->
+{if:pages.several_pages}
+	<div class="pm-pagination">
+	{pages:previous}
+		<a href="javascript:void(0);" onclick="ajax_navigate(event,'{page.url}{=filterKey}','content')">&#171;</a>
+	{/pages}
+
+	{pages:all}
+		{if:page.is_current}
+			<span class="current">{page.index}</span>
+		{else}
+			<a href="javascript:void(0);" onclick="ajax_navigate(event,'{page.url}{=filterKey}','content')">{page.index}</a>
+		{/if}
+	{/pages}
+
+	{pages:next}
+		<a href="javascript:void(0);" onclick="ajax_navigate(event,'{page.url}{=filterKey}','content')">&#187;</a>
+	{/pages}
+	</div>
+{/if}
+<!-- / Pagination -->
+</xo:tag>
+
+<xo:tag name="legend">
+	<xsl:param name="operations" select="../../operations/operation" />
+
+	<xsl:if test="$operations">
+		<div class="pm-legends-wrapper">
+			<xsl:for-each select="$operations">
+				<span class="pm-legend-item #{@class}# #{@iconCls}#"><xsl:value-of select="text()" /></span>
+			</xsl:for-each>
+		</div>
+	</xsl:if>
+</xo:tag>
+
+<xo:tag name="operations">
+	<td class="operations">			
+		<xsl:value-of select="$_content_" />
+	</td>
+</xo:tag>
+
+<xo:tag name="operation">
+	<xo:param name="href">javascript:void(0);</xo:param>
+	<xo:param name="url" select="$href"/>
+	<xo:param name="behaviour">navigate</xo:param>
+	<xo:param name="target">content</xo:param>
+	<xo:param name="iconCls" select="$class" />
+	<xo:param name="label" select="$_content_"/>
+
+	<xsl:choose>
+		<xsl:when test="$behaviour='ajax'">
+			<a href="javascript:void(0);" class="pm-button-icon #{$iconCls}#" title="" onclick="ajax_navigate(event,'#{$url}#{record.url_key}','#{$target}#')">
+				<span class="x-hidden"><xsl:value-of select="$label" /></span>
+			</a>
+		</xsl:when>
+
+		<xsl:when test="$behaviour='confirm_ajax'">
+			<xo:param name="dlg_title" />
+			<xo:param name="dlg_message" />
+			<xo:param name="ok" />
+			<script>
+				window.dlg_deleteConfig{record.index} = { title : "{string:'dlg_delete_title'}", message : "{string:'dlg_delete_content'}", viewMode : "okCancel", url : "{=delete.url}{record.url_key}", target : "content", labels : { ok : "{string:'dlg_ok'}", cancel : "{string:'dlg_cancel'}" } };
+			</script>
+			<a href="javascript:void(0);" class="delete_lnk" title="{string:'delete'}" onclick="PMModalbox.display(dlg_deleteConfig{record.index}, event)">
+				<span class="x-hidden">{string:"delete"}</span>
+			</a>
+		</xsl:when>
+
+		<xsl:when test="$behaviour='switch-panel'">
+		</xsl:when>
+		
+		<xsl:when test="$behaviour='navigate'">
+			<a href="#{$url}#{record.url_key}" class="pm-button-icon #{$iconCls}#" title="">
+				<span class="x-hidden"><xsl:value-of select="$label" /></span>
+			</a>
+		</xsl:when>
+
+		<xsl:otherwise>
+			<a href="#{$url}#{record.url_key}" class="pm-button-icon #{$iconCls}#" title="">
+				<span class="x-hidden"><xsl:value-of select="$label" /></span>
+			</a>
+		</xsl:otherwise>
+	</xsl:choose>
+	
+</xo:tag>
+
+
+</xo:taglib>

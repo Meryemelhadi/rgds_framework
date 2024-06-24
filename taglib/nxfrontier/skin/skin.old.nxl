@@ -1,0 +1,265 @@
+<?xml version="1.0"?> 
+<xo:taglib  uri="http://www.nxfrontier.com/skin/skin"
+	xmlns="http://www.w3.org/TR/REC-html40"
+	xmlns:skin="http://www.nxfrontier.com/skin/skin"
+	xmlns:xo="http://www.nxfrontier.com/xo/core"
+	xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+	xmlns:tpl="http://www.nxfrontier.com/tpl/tpml"
+	xmlns:html="http://www.w3.org/1999/xhtml"
+>
+	<xo:tag name="_skin">
+		<xo:load_config preload="#xo:xpath(@preload)#"/>
+
+		<xsl:if test="@skin_preload">
+			<tpl:include file="#xo:param(@skin_preload,'default')#" suffix="nxl"/>
+		</xsl:if>
+	</xo:tag>
+
+	<xo:tag name="skin" content='yes' skin="default" inherit="">
+		<xsl:variable name="skin_path" trace="yes">
+			<xsl:choose>
+				<xsl:when test="@skin_path"><xsl:value-of select="@skin_path" /></xsl:when>
+				<xsl:otherwise><xsl:value-of select="@skin" /><xsl:text>;default</xsl:text></xsl:otherwise>
+			</xsl:choose>
+		</xsl:variable>
+
+		<xsl:variable name="skin" trace="yes">
+			<xsl:choose>
+				<xsl:when test="@skin!=''"><xsl:value-of select="@skin" /></xsl:when>
+				<xsl:when test="@default!=''"><xsl:value-of select="@default" /></xsl:when>
+				<xsl:otherwise><xsl:text>;default</xsl:text></xsl:otherwise>
+			</xsl:choose>
+		</xsl:variable>
+
+		<xsl:if test="@inherit">
+			<include file="#xo::xpath(@inherit)#" skin="#xo:path($skin)#"/>
+		</xsl:if>
+
+		<tpl:views path="/" skin="#xo:xpath(@skin)#" trace="yes">
+
+				<xsl:value-of select="$_content_" />
+
+		<!-- create envelope views -->
+		<!-- xsl:for-each select="/envelopes/envelope">
+			<tpl:view name="#xo:xpath(@name)#_edit" trace="yes">
+				<skin:envelope_view name="#xo:xpath(@name)#" skin="#xo:xpath($skin)#" from="#xo:xpath(@from)#" mode="edit" skin_path="#xo:xpath($skin_path)#" />
+			</tpl:view>
+			<tpl:view name="#xo:xpath(@name)#_display" trace="yes">
+				<skin:envelope_view name="#xo:xpath(@name)#" skin="#xo:xpath($skin)#" from="#xo:xpath(@from)#" mode="display" skin_path="#xo:xpath($skin_path)#" />
+			</tpl:view>
+			<tpl:view name="#xo:xpath(@name)#_public" trace="yes">
+				<skin:envelope_view name="#xo:xpath(@name)#" skin="#xo:xpath($skin)#" from="#xo:xpath(@from)#" mode="public" skin_path="#xo:xpath($skin_path)#" />
+			</tpl:view>
+			<tpl:view name="#xo:xpath(@name)#" trace="yes">
+				<skin:envelope_view name="#xo:xpath(@name)#" skin="#xo:xpath($skin)#" from="#xo:xpath(@from)#" mode="public" skin_path="#xo:xpath($skin_path)#" />
+			</tpl:view>
+		</xsl:for-each -->
+
+		<!-- create menu views -->
+		<xsl:for-each select="/cms/menus/menu">
+			<tpl:view name="cms/menus/#xo:xpath(@name)#" path="/">
+				<xsl:choose>
+					<xsl:when test="@from">
+						<tpl:include file="cms/menus/#xo:xpath(@from)#.html" parser="html" xpath="/" 
+							skin_path="#xo:xpath($skin_path)#"/>		
+					</xsl:when>
+					<xsl:otherwise>
+						<tpl:include file="cms/menus/#xo:xpath(@name)#.html" parser="html" xpath="/html/body" 
+							skin_path="#xo:xpath($skin_path)#"/>		
+					</xsl:otherwise>
+				</xsl:choose>				
+			</tpl:view>
+		</xsl:for-each>
+
+		<!-- create menu views -->
+		<xsl:for-each select="/forms/form">
+			<tpl:view name="forms/#xo:xpath(@name)#" path="/">
+				<xsl:choose>
+					<xsl:when test="@from">
+						<tpl:include file="forms/#xo:xpath(@from)#.html" parser="html" xpath="/" 
+							skin_path="#xo:xpath($skin_path)#"/>		
+					</xsl:when>
+					<xsl:otherwise>
+						<tpl:include file="forms/#xo:xpath(@name)#.html" parser="html" xpath="/html/body" 
+							skin_path="#xo:xpath($skin_path)#"/>		
+					</xsl:otherwise>
+				</xsl:choose>				
+			</tpl:view>
+		</xsl:for-each>
+
+		<!-- create envelope wrappers -->
+		<xsl:for-each select="/cms/wrappers/wrapper">
+			<tpl:view name="cms/wrapper/#xo:xpath(@name)#" path="/">
+				<xsl:choose>
+					<xsl:when test="@from">
+						<tpl:include file="cms/wrappers/#xo:xpath(@from)#.html" parser="html" xpath="/" 
+							skin_path="#xo:xpath($skin_path)#"/>		
+					</xsl:when>
+					<xsl:otherwise>
+						<tpl:include file="cms/wrappers/#xo:xpath(@name)#.html" parser="html" xpath="/html/body" 
+							skin_path="#xo:xpath($skin_path)#"/>		
+					</xsl:otherwise>
+				</xsl:choose>				
+			</tpl:view>
+		</xsl:for-each>
+
+		<!-- create widget views -->
+		<xsl:for-each select="/widgets">
+			<xsl:variable name="from_dir">
+				<xsl:choose>
+					<xsl:when test="@from"><xsl:value-of select="@from" /></xsl:when>
+					<xsl:when test="@dir"><xsl:value-of select="@dir" /></xsl:when>
+					<xsl:otherwise><xsl:text>widgets</xsl:text></xsl:otherwise>
+				</xsl:choose>
+			</xsl:variable>  
+
+			<xsl:variable name="to_dir">
+				<xsl:choose>
+					<xsl:when test="@to"><xsl:value-of select="@to" /></xsl:when>
+					<xsl:when test="@dir"><xsl:value-of select="@dir" /></xsl:when>
+					<xsl:otherwise><xsl:text>widgets</xsl:text></xsl:otherwise>
+				</xsl:choose>
+			</xsl:variable>  
+
+			<xsl:for-each select="widget">
+				<xsl:variable name="file">
+					<xsl:choose>
+						<xsl:when test="@from"><xsl:value-of select="@from" /></xsl:when>
+						<xsl:otherwise><xsl:value-of select="@name" /></xsl:otherwise>
+					</xsl:choose>
+				</xsl:variable>
+			
+				<xsl:variable name="xpath">
+					<xsl:choose>
+						<xsl:when test="@xpath"><xsl:value-of select="@xpath" /></xsl:when>
+						<xsl:otherwise><xsl:text>/html/body</xsl:text></xsl:otherwise>
+					</xsl:choose>
+				</xsl:variable>
+			
+				<tpl:view name="#xo:xpath($to_dir)#/#xo:xpath(@name)#" path="/" trace="#xo:xpath(@trace)#">
+					<tpl:include file="#xo:xpath($from_dir)#/#xo:xpath($file)#.html" 
+						parser="html" xpath="#xo:xpath($xpath)#" skin_path="#xo:xpath($skin_path)#"/>		
+				</tpl:view>
+			</xsl:for-each>
+		</xsl:for-each>
+
+		<!-- create part views -->
+		<!-- todo: generate display, edit/simple, edit/multiple -->
+		<xsl:for-each select="/parts/part">
+			<tpl:view name="parts/#xo:xpath(@name)#">
+				<skin:part_view name="#xo:xpath(@name)#" edit="no" multiple="#xo:xpath(@multiple)#" 
+					from="#xo:xpath(@from)#" skin_path="#xo:xpath($skin_path)#" />
+			</tpl:view>
+
+			<tpl:view name="parts/#xo:xpath(@name)#_display">
+				<skin:part_view name="#xo:xpath(@name)#" edit="no" multiple="#xo:xpath(@multiple)#" 
+					from="#xo:xpath(@from)#" skin_path="#xo:xpath($skin_path)#" />
+			</tpl:view>
+
+			<tpl:view name="parts/#xo:xpath(@name)#_edit">
+				<skin:part_view name="#xo:xpath(@name)#" edit="yes" multiple="#xo:xpath(@multiple)#" 
+					from="#xo:xpath(@from)#" skin_path="#xo:xpath($skin_path)#" />
+			</tpl:view>
+		</xsl:for-each>
+			
+		</tpl:views>
+	</xo:tag>
+
+	<xo:tag name="envelopes" trace="no">
+		<xsl:value-of select="$_content_" />
+	</xo:tag>
+	
+	<xo:tag name="envelope" trace="no">
+		<xsl:variable name="skin_path" trace="yes">
+			<xsl:choose>
+				<xsl:when test="../../@skin_path"><xsl:value-of select="../../@skin_path" /></xsl:when>
+				<xsl:otherwise><xsl:value-of select="../../@skin" /><xsl:text>;default</xsl:text></xsl:otherwise>
+			</xsl:choose>
+		</xsl:variable>
+
+		<xsl:variable name="skin" trace="yes">
+			<xsl:choose>
+				<xsl:when test="../../@skin!=''"><xsl:value-of select="../../@skin" /></xsl:when>
+				<xsl:when test="../../@default!=''"><xsl:value-of select="../../@default" /></xsl:when>
+				<xsl:otherwise><xsl:text>;default</xsl:text></xsl:otherwise>
+			</xsl:choose>
+		</xsl:variable>
+
+		<!-- create envelope views -->
+		<tpl:view name="#xo:xpath(@name)#_edit" trace="yes">
+			<skin:envelope_view name="#xo:xpath(@name)#" skin="#xo:xpath($skin)#" from="#xo:xpath(@from)#" mode="edit" skin_path="#xo:xpath($skin_path)#" />
+		</tpl:view>
+		<tpl:view name="#xo:xpath(@name)#_display" trace="yes">
+			<skin:envelope_view name="#xo:xpath(@name)#" skin="#xo:xpath($skin)#" from="#xo:xpath(@from)#" mode="display" skin_path="#xo:xpath($skin_path)#" />
+		</tpl:view>
+		<tpl:view name="#xo:xpath(@name)#_public" trace="yes">
+			<skin:envelope_view name="#xo:xpath(@name)#" skin="#xo:xpath($skin)#" from="#xo:xpath(@from)#" mode="public" skin_path="#xo:xpath($skin_path)#" />
+		</tpl:view>
+		<tpl:view name="#xo:xpath(@name)#" trace="yes">
+			<skin:envelope_view name="#xo:xpath(@name)#" skin="#xo:xpath($skin)#" from="#xo:xpath(@from)#" mode="public" skin_path="#xo:xpath($skin_path)#" />
+		</tpl:view>
+
+	</xo:tag>
+
+	<xo:tag name="widgets" trace="no" />
+	<xo:tag name="widget" trace="no" />
+	<xo:tag name="parts" trace="no" />
+	<xo:tag name="part" trace="no" />
+	<xo:tag name="forms" trace="no" />
+	<xo:tag name="form" trace="no" />
+	<xo:tag name="resources" trace="no" />	
+	<xo:tag name="tag_default" trace="no" />
+
+	<!-- utils -->
+
+<!-- part view: select edit (w/ buttons) or display (w/o buttons) -->
+<xo:tag name="envelope_view" trace="yes">
+	<!-- where to find the part template -->
+	<xsl:variable name="fpath">
+		<xsl:choose>
+			<xsl:when test="@from!=''"><xsl:value-of select="@from" /></xsl:when>
+			<xsl:otherwise><xsl:value-of select="@name" /></xsl:otherwise>
+		</xsl:choose>		
+	</xsl:variable>
+
+	<tpl:include file="page_#xo:xpath($fpath)#.html" parser="html" xpath="/" skin_path="#xo:xpath(@skin_path)#" skin="#xo:xpath(@skin)#" />		
+</xo:tag>
+
+<!-- part view: select edit (w/ buttons) or display (w/o buttons) -->
+<xo:tag name="part_view" trace="yes">
+
+	<!-- where to find the part template -->
+	<xsl:variable name="fpath">
+		<xsl:choose>
+			<xsl:when test="@from!=''"><xsl:value-of select="@from" /></xsl:when>
+			<xsl:otherwise><xsl:value-of select="@name" /></xsl:otherwise>
+		</xsl:choose>		
+	</xsl:variable>
+
+	<!-- buttons -->
+	<xsl:variable name="edit_buttons">
+		<xsl:if test="@edit='yes'">
+			<xsl:choose>
+				<xsl:when test="@multiple='yes'">
+					<div align="left">
+						<tpl:button name="edit.#xo:param(@name)#" type="console" params="#record.url_key#">[edit]</tpl:button> |
+						<tpl:button name="delete.#xo:param(@name)#" type="console" params="#record.url_key#">[delete]</tpl:button>
+						<html:br/>
+					</div>
+				</xsl:when>
+				<xsl:otherwise>
+					<div align="left">
+						<tpl:button name="edit.#xo:param(@name)#" type="console" params="#record.url_key#">[edit]</tpl:button> |
+						<html:br/>
+					</div>
+				</xsl:otherwise>
+			</xsl:choose>
+		</xsl:if>
+	</xsl:variable>
+
+	<xsl:variable name="records"><xsl:value-of select="@name" /><xsl:text>.records</xsl:text></xsl:variable>
+
+	<tpl:include file="parts/#xo:xpath($fpath)#.html" parser="html" xpath="/html/body" skin_path="#xo:xpath(@skin_path)#"/>		
+</xo:tag>
+
+</xo:taglib>

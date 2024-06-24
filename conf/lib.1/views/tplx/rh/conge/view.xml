@@ -1,0 +1,29 @@
+<p:page 	
+	xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:p="http://www.presencemedia.ma/views/page"
+	xmlns:form="http://www.presencemedia.ma/views/form"
+	xmlns:record="http://www.presencemedia.ma/views/record"
+>
+	<record:record record="page.record">
+		<p:header>
+			<p:title>{string:"page_title_edit"}</p:title>
+			<p:description>{string:"page_message_view"}</p:description>
+			<p:help>{string:"page_message_view_details"}</p:help>
+
+			<p:toolbar>
+				<p:button name="list" behaviour="ajax" url="{=list.url}" iconCls="pm-button-cancel">{string:"back"}</p:button>
+				<p:button name="edit" behaviour="ajax" params="{record.url_key}" >{string:"edit"}</p:button>
+				<p:button name="delete" behaviour="delete" params="{record.url_key}" >{string:"delete"}</p:button>
+				<p:button name="accept" behaviour="ajax" params="{record.url_key}" >{string:"accept"}</p:button>
+				<p:button name="disable" behaviour="ajax" params="{record.url_key}">{string:"disable"}</p:button>
+				<p:button name="gen_word" behaviour="open" params="{record.url_key}" iconCls="pm-button-word">{string:"gen_word"}</p:button>
+			</p:toolbar>
+
+		</p:header>
+
+		<p:body>
+			<record:fields />
+		</p:body>
+
+	</record:record>
+</p:page>

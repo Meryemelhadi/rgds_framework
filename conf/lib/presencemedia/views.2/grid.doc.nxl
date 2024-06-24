@@ -1,0 +1,80 @@
+<!--! {require:js/updateConge.js:skin} -->
+<p:page 	
+	xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:p="http://www.presencemedia.ma/views/page"
+>
+
+	<p:header>
+		<p:title>{string:"page_title_list"}</p:title>
+		<p:description>{string:"page_message_list"}</p:description>
+		<p:help>{string:"page_message_list_details"}</p:help>
+
+		<p:toolbar>
+			<p:button behaviour="ajax" url="{=add.url}" iconCls="pm-button-add">{string:"add"}</p:button>
+			<p:button behaviour="switch-panel" target="pm-id-search-block" iconCls="pm-button-search">{string:'search'}</p:button>
+		</p:toolbar>
+
+		<p:search status="closed" id="pm-id-search-block" record="page.search" label="{string:'search'}">
+			<p:submit behaviour="ajax" class="pm-button-search">{string:"search"}</p:submit>
+		</p:search>
+
+	</p:header>
+
+	<p:body>
+
+ 		<grid:grid records="page.records" xmlns:grid="http://www.presencemedia.ma/views/grid">
+
+ 			<grid:header>
+				<grid:fields>
+					<grid:field format="label"/>
+				</grid:fields>
+			</grid:grid_header>
+
+			<grid:row>			
+				<grid:cols>
+					<grid:field />
+				</grid:cols>
+
+				<grid:events>
+					<grid:hover />
+					<grid:onclick behaviour="ajax" url="{=edit.url}" target="content"/>
+				</grid:events>
+
+				<grid:operations>
+					<grid:operation behaviour="ajax" url="{=view.url}" target="content" iconCls="legend_details details_lnk">{string:"details"}</grid:operation>
+					<grid:operation behaviour="ajax" url="{=edit.url}" target="content" iconCls="legend_edit edt_lnk">{string:"edit"}</grid:operation>
+					<grid:operation behaviour="confirm" url="{=delete.url}" target="content" iconCls="delete_lnk legend_delete">{string:"delete"}</grid:operation>
+				</grid:operations>
+			</grid:row>
+
+			<grid:when-empty>{string:"empty_list"}</grid:when-empty>
+
+			<grid:footer>
+				<grid:pagination />
+				<grid:legend />
+			</grid:footer>
+
+		</grid:grid>
+
+ 		<grid:grid records="page.records" xmlns:grid="http://www.presencemedia.ma/views/grid">
+			<grid:row>
+				<grid:operations>
+					<grid:operation behaviour="ajax" url="{=view.url}" target="content" iconCls="legend_details details_lnk">{string:"details"}</grid:operation>
+
+			{get_field:demand_state}
+			<?php if ($_nx_field->value == 1) { ?>
+			{if:#=edit.url#!=''}
+					<grid:operation behaviour="ajax" url="{=edit.url}" target="content" iconCls="legend_edit edt_lnk">{string:"edit"}</grid:operation>
+			{/if}
+			{if:#=delete.url#!=''}
+					<grid:operation behaviour="confirm" url="{=delete.url}" target="content" iconCls="delete_lnk legend_delete">{string:"delete"}</grid:operation>
+			{/if}
+			<?php } ?>
+			{/get_field}
+
+				</grid:operations>
+			</grid:row>
+		</grid:grid>
+
+	</p:body>
+</p:page>

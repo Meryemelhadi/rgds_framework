@@ -1,0 +1,67 @@
+<!-- PAGE : CARE INDEX  -->
+<script type="text/javascript" id="/recruitment3/crm.js">
+MyAppLoader.addComponent(
+{
+id:'app_crm',
+
+states:	
+{
+	// parent State for all config apps
+	'main.crm': 
+	{
+		url: "/crm",
+
+		gotoState:'main.crm.hp',
+
+		views: 
+		{		
+			'page@main':
+			{
+				templateUrl:'/crud/main.htm',
+			},
+
+				'layout@.':
+				{
+					templateUrl:'/crud/layout_with_left.htm',
+				},	
+
+					'left@.':
+					{
+						templateUrl:'/nav/left/crm.htm', // reuse left panel
+					},	
+
+					'content@.':
+					{
+					}
+		}
+	}
+},
+
+init:function(MyAppLoader) 
+{
+}
+});
+</script>
+
+<script type="text/ng-template" id="/nav/left/crm.htm">
+	<nav-left:nav>
+		<nav-left:header title="Nom Section"></nav-left:header>
+
+		<nav-left:body>
+			<nav-left:bar>
+				<nav-left:menu>
+					<nav-left:link state="main.crm.hp" params="">Accueil CRM</nav-left:link>
+				</nav-left:menu>
+		</nav-left:body>
+	</nav-left:nav>
+</script>
+
+<!-- ======= WIDGETS ======== -->
+
+<script type="text/javascript">	
+	MyAppLoader.mapState('app_hp','main.crm');
+</script>
+
+
+<!-- MODULES (ajouter ici) -->
+{include:recruitment3.modules.crm.app_hp@recruitment3}

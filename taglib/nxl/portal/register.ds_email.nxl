@@ -1,0 +1,32 @@
+<?xml version="1.0"?> 
+<!-- configuration datasource (ds) for email:
+	data source allows to have different email properties related to various servers, depending on the mode
+	(dev and live)
+-->
+<conf:resources path="ds" 	xmlns:conf="http://www.nxfrontier.com/nxl/conf">
+	<conf:resource name="register_email" mode="dev">
+		<conf:property name="register_email.from" value="franck@nxfrontier.com" />
+		<conf:property name="register_email.bcc" value="pecr_reg@nxfrontier.com" />
+		<conf:property name="register_email.log" value="true" type="boolean" />
+
+		<conf:property name="register_email.smtp.servers">
+			<conf:array>
+				<conf:properties>
+					<conf:property name="host" value="outgoing.wyrecompute.com" />
+				</conf:properties>
+			</conf:array>
+		</conf:property>
+	</conf:resource>
+
+	<conf:resource name="register_email" mode="pecr">
+		<conf:property name="register_email.from" value="noreply@pecr.com" />
+		<conf:property name="register_email.bcc" value="registration@pecr.com" />
+		<conf:property name="register_email.log" value="false" type="boolean" />
+
+		<conf:property name="register_email.smtp.servers">
+				<conf:properties>
+					<conf:property name="host" value="outgoing.wyrecompute.com" />
+				</conf:properties>
+		</conf:property>
+	</conf:resource>
+</conf:resources>

@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<nxl:nxl version="1.0"
+	xmlns:nxl="http://www.nxfrontier.com/nxl/nxl"
+	xmlns="http://www.w3.org/TR/REC-html40"
+	xmlns:xo="http://www.nxfrontier.com/xo/core"	>
+
+<!-- 
+	Generate PHP reference tree (navigation structure) from XML description 
+	=======================================================================
+
+	NB. this tree is populated with articles (tree leaves) by application "nav.js_tree"
+	called by "oc_nav.php" page.
+-->
+<xo:taglib uri="http://www.nxfrontier.com/tree/ul">
+	<xo:tag name="tree" trace="yes">
+		<ul>
+			<li class="level_#xo::xpath($_level_)#">
+				<div>root</div>
+				<ul><xsl:value-of select="$_content_" /></ul>
+			</li>
+		</ul>		
+	</xo:tag>
+
+	<xo:tag name="node">
+		<li class="level_#xo::xpath($_level_)#">
+			<div><xsl:value-of select="@id" /></div>
+			<xsl:if test="node">
+				<ul>
+					<xsl:value-of select="$_content_" />
+				</ul>		
+			</xsl:if>
+		</li>
+	</xo:tag>
+
+</xo:taglib>
+
+</nxl>

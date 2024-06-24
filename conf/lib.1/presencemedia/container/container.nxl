@@ -1,0 +1,158 @@
+<?xml version="1.0"?> 
+<!-- 
+	
+	NXL Taglib 
+
+	description: tag lib for generating ExtJS tree
+
+-->
+<xo:taglib uri="http://www.presencemedia.ma/container/container" 
+	xmlns:xo="http://www.nxfrontier.com/xo/core"
+	xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+	xmlns:this="http://www.nxfrontier.com/xo/this"
+	xmlns:nxl="http://www.nxfrontier.com/nxl/nxl"
+	xmlns:tpl="http://www.nxfrontier.com/tpl/tpml"
+	xmlns:format="http://www.nxfrontier.com/nxl/format"
+	>
+
+<xo:tag name="date">
+	<xo:param name="format" value="%A %d %B %Y" />
+
+	<?php 
+		include_once(NX_LIB.'date/NxDate_tools.php');
+		$dt = new NxDate_tools();
+		echo preg_replace('/^([a-z])([a-z]+)/e',"strtoupper('$1').'$2'",$dt->strftime('%A %d %B %Y',time()));
+	?>
+</xo:tag>
+
+<xo:tag name="nav_tree">
+	<xo:param name="active" value="1" />
+	<this:clean_separators>
+		{
+			activeItem:1,
+			items: [
+			<xsl:value-of select="$_content_" />
+			] /* /nav_tree */
+		} /* /nav_tree */
+	</this:clean_separators>
+</xo:tag>
+
+<xo:tag name="nav_section">
+	<xo:param name="title" />
+	<xo:param name="icon-class" select="@iconCls" />
+	<xo:param name="permission" />
+	<xo:param name="xtype" value="nx_nav_panel"/>
+
+	<this:permission permission="#{$permission}#">
+	{
+		title:'<xsl:value-of select="$title" />',
+		iconCls:'<xsl:value-of select="$icon-class" />',
+		xtype:'<xsl:value-of select="$xtype" />',
+		items:
+		[
+			<xsl:value-of select="$_content_" />
+		] /* /nav_section */
+	} /* /nav_section */ 
+	,
+	</this:permission>
+</xo:tag>
+
+<xo:tag name="nav_branch">
+	<xo:param name="text" />
+	<xo:param name="title" value="#{$text}#"/>
+	<xo:param name="url" />
+	<xo:param name="class" value="folder"/>
+	<xo:param name="icon-class" select="@iconCls" />
+	<xo:param name="permission" />
+
+	<this:permission permission="#{$permission}#">
+	{
+		text: '<xsl:value-of select="$title" />',
+		url:'<xsl:value-of select="$url" />',
+		cls:'<xsl:value-of select="$class" />',
+		iconCls:'<xsl:value-of select="$icon-class" />',
+		singleClickExpand:true,
+		children:
+		[
+			<xsl:value-of select="$_content_" />
+		]
+	} /* /branch */
+	,
+	</this:permission>
+</xo:tag>
+
+<xo:tag name="nav_link">
+	<xo:param name="title"		select="@text"/>
+	<xo:param name="app-title"	value="#{$title}#"/>
+	<xo:param name="qtip-title" select="@qtipTitle"/>
+	<xo:param name="qtip-text"	select="@qtip"/>
+	<xo:param name="url" />
+	<xo:param name="icon-class" select="@iconCls" />
+	{
+		text: '<xsl:value-of select="$title" />',
+		title: '<xsl:value-of select="$app-title" />',
+		url:'<xsl:value-of select="$url" />',
+		qtipTitle:'<xsl:value-of select="$qtip-title" />',
+		qtip:'<xsl:value-of select="$qtip-text" />', 
+		iconCls:'<xsl:value-of select="$icon-class" />',
+		leaf: true
+	}
+	,
+</xo:tag>
+
+<xo:tag name="permission">
+	<xo:param name="permission" />
+	<xsl:choose>
+		<xsl:when test="$permission!=''">
+<tpl:code>
+		if (<xsl:value-of select="$permission" />)
+		{
+			ob_start();
+</tpl:code>	
+		<xsl:value-of select="$_content_" />
+<tpl:code>	
+		$__buf=ob_get_contents();
+		ob_end_clean();
+		echo $__buf;
+		}
+</tpl:code>	
+		</xsl:when>
+		<xsl:otherwise>
+			<xsl:value-of select="$_content_" />
+		</xsl:otherwise>
+	</xsl:choose>
+</xo:tag>
+
+<xo:tag name="clean_separators">
+	
+	<?php ob_start(); ?>
+
+		<xsl:value-of select="$_content_" />
+	
+	<tpl:code>	
+		$__buf=ob_get_contents();
+		ob_end_clean();
+		echo preg_replace(
+			array('/\\[(\s*,+)+/sm','/(,+\s*)+\\]/sm'),
+			array('[',']'), $__buf);
+	</tpl:code>	
+
+</xo:tag>
+
+<xo:tag name="compress">
+	
+	<?php ob_start(); ?>
+
+		<xsl:value-of select="$_content_" />
+	
+	<tpl:code>	
+		$__buf=ob_get_contents();
+		ob_end_clean();
+		echo preg_replace(
+			array('/[ \t]+/'),
+			array(' '), $__buf);
+	</tpl:code>	
+
+</xo:tag>
+
+</xo:taglib>

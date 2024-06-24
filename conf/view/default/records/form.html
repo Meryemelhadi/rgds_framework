@@ -1,0 +1,17 @@
+{records}{record} 
+   <table border="0" cellspacing="0" cellpadding="0">
+	<tr><td>&nbsp;</td></tr>
+    <tr><td align="center"><table>
+          {fields} 
+          <tr> 
+            <td valign="top" class="searchFormLabel">{field.label} {if: is_form and field.required}&nbsp;<span class="required">*</span>{/if}</td>
+            <td valign="top">{field}{if:is_form and field.is_help}&nbsp;<img onClick='helpPlease(this,"{field.help}","{field.label}")' src="../res/images/help.gif" width="16" height="16">{/if}</td>
+          </tr>
+          {/fields}
+        </table></td></tr>
+	 <tr><td>&nbsp;</td></tr>
+   </table>
+		<!-- end form -->
+		</div>
+	    <table width="100%"><tr><td width="50%">{button:cancel}</td><td width="50%">{submit}</td></tr></table>
+{/record} {/records}

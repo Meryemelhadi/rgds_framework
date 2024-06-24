@@ -1,0 +1,217 @@
+<html>
+<head>
+<title>DHTMLCentral.com - Free Dynamic HTML Scripts - slideMenu2 Demo</title>
+<meta name="Author" content="Thomas Brattli (webmaster@dhtmlcentral.com)">
+<META NAME="Generator" CONTENT="Designer:Thomas Brattli (www.bratta.com)">
+<meta name="KeyWords" content="DHTML, HTML, Dynamic HTML, Javascript, Cascading Style Sheets, Cross-browser, Cross browser, Javascripts, DOM, Scripts, Free Scripts">
+<meta name="Description" content="Dynamic HTML Central - The ultimate place to find DHTML scripts, demos, tutorials and help.">
+<style type="text/css">
+div.clSlideMenu0{ /* All slideMenu2 DIV elements */
+	position:absolute;
+	font-family:verdana,arial,helvetica;
+	font-size:10px;
+	overflow:hidden;
+	height:22;
+	background-color:red;
+}
+div.clSlideMenu1{ /* All slideMenu2 DIV elements */
+	position:absolute;
+	font-family:arial,helvetica;
+	font-size:10px;
+	overflow:hidden;
+	height:22;
+	background-color:black;
+}
+div.clSlideMenu2{ /* All slideMenu2 DIV elements */
+	position:absolute;
+	font-family:arial,helvetica;
+	font-size:10px;
+	overflow:hidden;
+	height:22;
+	background-color:green;
+}
+div.clSlideMenu3{ /* All slideMenu2 DIV elements */
+	position:absolute;
+	font-family:arial,helvetica;
+	font-size:10px;
+	overflow:hidden;
+	height:22;
+	background-color:silver;
+}
+div.clSlideMenu4{ /* All slideMenu2 DIV elements */
+	position:absolute;
+	font-family:arial,helvetica;
+	font-size:10px;
+	overflow:hidden;
+	height:22;
+	background-color:navy;
+}
+a.clA0{ /* All top level links */
+	color:silver;
+	font-size:12px;
+	text-decoration:none;
+	font-weight:bold;
+}
+a.clA1{ /* All sub level links */
+	color:white;
+	font-size:11px;
+	font-weight:bold;
+	text-decoration:none;
+}
+a.clA2{ /* All sub2 level links */
+	color:navy;
+	text-decoration:none;
+}
+a.clA3{ /* All sub3 level links */
+	color:black;
+	text-decoration:none;
+}
+a.clA4{ /* All sub4 level links */
+	color:green;
+	text-decoration:none;
+}
+span.clArrow{
+	font-family:webdings;
+}
+
+
+/* NEEDED STYLES */
+div.slideMenuBG{position:absolute; left:0; top:0; z-index:1}
+div.slideMenuText{position:absolute; left:2; top:2; text-align:left; z-index:200}
+#slideMenucont{position:absolute; height:600; width:120; visibility:hidden;}
+</style>
+
+
+<script language="JavaScript" src="slidemenu.js" type="text/javascript">
+/**********************************************************************************
+SlideMenu 2.0
+*   Copyright (C) 2002 Thomas Brattli
+*   This script was released at DHTMLCentral.com
+*   Visit for more great scripts!
+*   This may be used and changed freely as long as this msg is intact!
+*   We will also appreciate any links you could give us.
+*
+*   Made by Thomas Brattli
+*
+*Script date: 08/05/2002 (keep this date to check versions)
+*********************************************************************************/
+</script>
+</head><body marginleft="0"  bgcolor="white" marginheight="0">
+<script>
+slideMenu = new createSlideMenu("slideMenu")
+
+//Variables to set:
+slideMenu.menuy=10 //The top placement of the menu.
+slideMenu.menux=10 //The left placement of the menu
+slideMenu.useImages = 0 //Are you using images or not?
+slideMenu.pxspeed=16 //The pixel speed of the animation
+slideMenu.timspeed=25 //The timer speed of the animation
+slideMenu.inset =0 //How much the selected elements should pop to the left
+slideMenu.arrow="clArrow"
+
+//Needed dummy classes
+slideMenu.bgClass =	"slideMenuBG"
+slideMenu.txtClass = "slideMenuText"
+
+//Level properties - ALL properties have to be spesified in level 0
+//This works the same way as the CM4 script (if you have seen it)
+slideMenu.level[0] = new slideMenu_makeLevel(
+	left = 0,
+	width = 140,
+	height = 30,
+	between = 5,
+	className = "clSlideMenu0",
+	classNameA = "clA0",
+	regImage = "",
+	roundImg = "",
+	roundImg2 = "",
+	subImg = "",
+	subRound= "")
+	
+slideMenu.level[1] = new slideMenu_makeLevel(10,100,25,2,"clSlideMenu1","clA1","level1_regular.gif","level1_round2.gif","level1_round.gif","level1_sub.gif", "level1_sub_round.gif")
+slideMenu.level[2] = new slideMenu_makeLevel(20,100,22,2,"clSlideMenu2","clA2","level2_regular.gif","level2_round2.gif","level2_round.gif", "level2_sub.gif", "level2_sub_round.gif")
+slideMenu.level[3] = new slideMenu_makeLevel(30,100,20,2,"clSlideMenu3","clA3","level3_regular.gif","level3_round2.gif","level3_round.gif","level3_sub.gif","level3_sub_round.gif")
+slideMenu.level[4] = new slideMenu_makeLevel(40,100,16,2,"clSlideMenu4","clA4","level4_regular.gif", "level4_round2.gif","level4_round.gif","level4_sub.gif", "level4_sub_round.gif")
+
+//Image preload --- leave this
+for(var i=0;i<slideMenu.level;i++){
+	var l = slideMenu.level[i]
+	new preLoadBackgrounds(l.regImage,l.roundImg,l.roundImg2,l.subImg,l.subRound)
+}
+
+//Menu 1
+slideMenu.makeMenu('top','Scripts')
+	slideMenu.makeMenu('sub','sub_0','')
+	  slideMenu.makeMenu('sub2','sub2_1','')
+	  	slideMenu.makeMenu('sub3','sub3_0')
+	  	slideMenu.makeMenu('sub3','sub3_1')
+	  		slideMenu.makeMenu('sub4','sub4_0')
+	  		slideMenu.makeMenu('sub4','sub4_1')
+	  		slideMenu.makeMenu('sub4','sub4_2')
+	  	slideMenu.makeMenu('sub3','sub3_3')
+	  		slideMenu.makeMenu('sub4','sub4_0')
+	  		slideMenu.makeMenu('sub4','sub4_1')
+	  		slideMenu.makeMenu('sub4','sub4_2')
+	  slideMenu.makeMenu('sub2','sub2_2')
+	  slideMenu.makeMenu('sub2','sub2_3')
+	  slideMenu.makeMenu('sub2','sub2_4')
+	  	slideMenu.makeMenu('sub3','sub3_0')
+	  	slideMenu.makeMenu('sub3','sub3_1')
+
+	slideMenu.makeMenu('sub','sub_1','')
+	slideMenu.makeMenu('sub','sub_2','')
+
+	slideMenu.makeMenu('sub','sub_3','')
+	slideMenu.makeMenu('sub','Categories')
+	  slideMenu.makeMenu('sub2','Menu scripts','/script/search.asp?category=menu')
+	  slideMenu.makeMenu('sub2','Text scripts','/script/search.asp?category=text')
+	  slideMenu.makeMenu('sub2','Animation scripts','/script/search.asp?category=animation')
+	  slideMenu.makeMenu('sub2','Other scripts','')   
+	  	slideMenu.makeMenu('sub3','Menu scripts','/script/search.asp?category=menu')
+	  	slideMenu.makeMenu('sub3','Text scripts','/script/search.asp?category=text')
+	  	slideMenu.makeMenu('sub3','Other scripts','/script/search.asp?category=other')   
+slideMenu.makeMenu('top','News')
+
+	slideMenu.makeMenu('sub','New scripts','/script/search.asp?new=1')
+	slideMenu.makeMenu('sub','All scripts','/script/index.asp')
+	slideMenu.makeMenu('sub','Categories')
+
+slideMenu.makeMenu('top','Scripts')
+	slideMenu.makeMenu('sub','New scripts','/script/search.asp?new=1')
+	slideMenu.makeMenu('sub','All scripts','/script/index.asp')
+	slideMenu.makeMenu('sub','Categories')
+slideMenu.makeMenu('top','Scripts')
+	slideMenu.makeMenu('sub','New scripts','')
+	  slideMenu.makeMenu('sub2','Menu scripts','/script/search.asp?category=menu')
+	  slideMenu.makeMenu('sub2','Text scripts','/script/search.asp?category=text')
+	  slideMenu.makeMenu('sub2','Animation scripts','/script/search.asp?category=animation')
+	  slideMenu.makeMenu('sub2','Other scripts','')   
+	slideMenu.makeMenu('sub','All scripts','')
+	  slideMenu.makeMenu('sub2','Menu scripts','/script/search.asp?category=menu')
+	  slideMenu.makeMenu('sub2','Text scripts','/script/search.asp?category=text')
+	  slideMenu.makeMenu('sub2','Animation scripts','/script/search.asp?category=animation')
+	  slideMenu.makeMenu('sub2','Other scripts','')   
+	slideMenu.makeMenu('sub','Categories')
+	  slideMenu.makeMenu('sub2','Menu scripts','/script/search.asp?category=menu')
+	  slideMenu.makeMenu('sub2','Text scripts','/script/search.asp?category=text')
+	  slideMenu.makeMenu('sub2','Animation scripts','/script/search.asp?category=animation')
+	  slideMenu.makeMenu('sub2','Other scripts','')   
+	  	slideMenu.makeMenu('sub3','Menu scripts','/script/search.asp?category=menu')
+	  	slideMenu.makeMenu('sub3','Text scripts','/script/search.asp?category=text')
+			slideMenu.makeMenu('sub3','Animation scripts','/script/search.asp?category=animation')
+	  	slideMenu.makeMenu('sub3','Other scripts','/script/search.asp?category=other')   
+slideMenu.makeMenu('top','News')
+	slideMenu.makeMenu('sub','New scripts','/script/search.asp?new=1')
+	slideMenu.makeMenu('sub','All scripts','/script/index.asp')
+	slideMenu.makeMenu('sub','Categories')
+slideMenu.makeMenu('top','Scripts')
+	slideMenu.makeMenu('sub','New scripts','/script/search.asp?new=1')
+	slideMenu.makeMenu('sub','All scripts','/script/index.asp')
+	slideMenu.makeMenu('sub','Categories')
+
+slideMenu.init()		
+
+</script>
+
+</body>
+</html>

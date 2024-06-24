@@ -1,0 +1,144 @@
+<html>
+<head>
+<title>DHTMLCentral.com - Free Dynamic HTML Scripts - slideMenu2 Demo</title>
+<meta name="Author" content="Thomas Brattli (webmaster@dhtmlcentral.com)">
+<META NAME="Generator" CONTENT="Designer:Thomas Brattli (www.bratta.com)">
+<meta name="KeyWords" content="DHTML, HTML, Dynamic HTML, Javascript, Cascading Style Sheets, Cross-browser, Cross browser, Javascripts, DOM, Scripts, Free Scripts">
+<meta name="Description" content="Dynamic HTML Central - The ultimate place to find DHTML scripts, demos, tutorials and help.">
+<style type="text/css">
+
+/* NEEDED STYLES */
+div.slideMenuBG{position:absolute; left:0; top:0; z-index:1}
+div.slideMenuText{position:absolute; left:2; top:2; z-index:200}
+#slideMenucont{position:absolute;	height:600; width:200; visibility:hidden;}
+
+div.clSlideMenu2{ /* All slideMenu2 DIV elements */
+	position:absolute;
+	font-family:verdana,arial,helvetica;
+	font-size:10px;
+	overflow:hidden;
+	width:150;
+	height:22;
+	background-color:silver;
+	layer-background-color:silver;
+}
+#slideMenu2cont{position:absolute;	height:800; width:600; clip:rect(0,800,600,0); visibility:hidden;}
+a.clAmenu2{ /* All sub4 level links */
+	color:green;
+	text-decoration:none;
+}
+span.clArrow{
+	font-family:webdings;
+}
+</style>
+
+
+<script language="JavaScript" src="slidemenu.js" type="text/javascript">
+/**********************************************************************************
+SlideMenu 2.0
+*   Copyright (C) 2002 Thomas Brattli
+*   This script was released at DHTMLCentral.com
+*   Visit for more great scripts!
+*   This may be used and changed freely as long as this msg is intact!
+*   We will also appreciate any links you could give us.
+*
+*   Made by Thomas Brattli
+*
+*Script date: 08/05/2002 (keep this date to check versions)
+*********************************************************************************/
+</script>
+</head><body marginleft="0"  bgcolor="white" marginheight="0">
+<script>
+
+/* NEXT MENU */
+slideMenu2 = new createSlideMenu("slideMenu2")
+
+//Variables to set:
+slideMenu2.menuy=50 //The top placement of the menu.
+slideMenu2.menux=300 //The left placement of the menu
+slideMenu2.useImages = 0 //Are you using images or not?
+slideMenu2.pxspeed=16 //The pixel speed of the animation
+slideMenu2.timspeed=25 //The timer speed of the animation
+slideMenu2.inset = 10 //How much the selected elements should pop to the left
+slideMenu2.arrow="clArrow"
+
+//Needed dummy classes
+slideMenu2.bgClass =	"slideMenuBG"
+slideMenu2.txtClass = "slideMenuText"
+
+//Level properties - ALL properties have to be spesified in level 0
+//This works the same way as the CM4 script (if you have seen it)
+slideMenu2.level[0] = new slideMenu_makeLevel(
+	left = 0,
+	width = 300,
+	height = 21,
+	between = 5,
+	className = "clSlideMenu2",
+	classNameA = "clAmenu2",
+	regImage = "level0_regular.gif",
+	roundImg = "level0_round.gif",
+	roundImg2 = "",
+	subImg = "",
+	subRound= "")
+	
+slideMenu2.level[1] = new slideMenu_makeLevel(20)
+slideMenu2.level[2] = new slideMenu_makeLevel(40)
+slideMenu2.level[3] = new slideMenu_makeLevel(60)
+slideMenu2.level[4] = new slideMenu_makeLevel(80)
+slideMenu2.level[5] = new slideMenu_makeLevel(100)
+slideMenu2.level[6] = new slideMenu_makeLevel(120)
+slideMenu2.level[7] = new slideMenu_makeLevel(140)
+slideMenu2.level[8] = new slideMenu_makeLevel(160)
+
+//Image preload --- leave this
+for(var i=0;i<slideMenu2.level;i++){
+	var l = slideMenu2.level[i]
+	new preLoadBackgrounds(l.regImage,l.roundImg,l.roundImg2,l.subImg,l.subRound)
+}
+
+//Menu 1
+slideMenu2.makeMenu('top','Scripts')
+	slideMenu2.makeMenu('sub','sub_0','')
+	  slideMenu2.makeMenu('sub2','sub2_1','')
+	  	slideMenu2.makeMenu('sub3','sub3_0')
+	  	slideMenu2.makeMenu('sub3','sub3_1')
+	  		slideMenu2.makeMenu('sub4','sub4_0')
+	  		slideMenu2.makeMenu('sub4','sub4_2')
+	  	slideMenu2.makeMenu('sub3','sub3_3')
+	  		slideMenu2.makeMenu('sub4','sub4_0')
+	  			slideMenu2.makeMenu('sub5','sub5_0')
+	  			slideMenu2.makeMenu('sub5','sub5_2')
+	  				slideMenu2.makeMenu('sub6','sub6_2')
+	  				slideMenu2.makeMenu('sub6','sub6_0')
+	  				slideMenu2.makeMenu('sub6','sub6_2')
+	  					slideMenu2.makeMenu('sub7','sub7_2')
+								slideMenu2.makeMenu('sub8','sub8_2')
+	  						slideMenu2.makeMenu('sub8','sub8_0')
+	  					slideMenu2.makeMenu('sub7','sub7_0')
+	  			slideMenu2.makeMenu('sub5','sub5_0')
+	  			slideMenu2.makeMenu('sub5','sub5_1')
+	  			slideMenu2.makeMenu('sub5','sub5_2')
+	  		slideMenu2.makeMenu('sub4','sub4_1')
+	  		slideMenu2.makeMenu('sub4','sub4_2')
+	  slideMenu2.makeMenu('sub2','sub2_2')
+	  slideMenu2.makeMenu('sub2','sub2_4')
+	  	slideMenu2.makeMenu('sub3','sub3_0')
+	  	slideMenu2.makeMenu('sub3','sub3_1')
+
+	slideMenu2.makeMenu('sub','sub_1','')
+	slideMenu2.makeMenu('sub','sub_2','')
+
+	slideMenu2.makeMenu('sub','sub_3','')
+	slideMenu2.makeMenu('sub','Categories')
+	  slideMenu2.makeMenu('sub2','Menu scripts')
+	  slideMenu2.makeMenu('sub2','Animation scripts')
+	  slideMenu2.makeMenu('sub2','Other scripts','')   
+	  	slideMenu2.makeMenu('sub3','Menu scripts')
+	  	slideMenu2.makeMenu('sub3','Text scripts')
+
+
+slideMenu2.init()		
+</script>
+
+</body>
+</html>

@@ -1,0 +1,574 @@
+<maps>
+	<!-- =============== PRIMARY TYPES ============= -->
+
+	<!-- TEXT -->
+	<field type="text">
+		<sql>
+			<field type="text" default=""/>
+		</sql>
+		<server>
+			<field type="text" 
+				onSubmitCheck="checkText('%3\$s',%1\$s.%2\$s,%4\$s)" />
+		</server>
+	</field>
+
+
+	<!-- TEXT -->
+	<field type="expression">
+		<sql>
+			<field type="expression" default="" is_transient="yes"/>
+		</sql>
+		<server>
+			<field type="expression" is_transient="yes"
+				onSubmitCheck="checkText('%3\$s',%1\$s.%2\$s,%4\$s)" />
+		</server>
+	</field>
+	
+	<field type="line">
+		<sql>
+			<field type="text" default="" multiLines="no"/>
+		</sql>
+		<server>
+			<field type="text" multiLines="no" size="100" maxlength="500"
+				onSubmitCheck="checkText('%3\$s',%1\$s.%2\$s,%4\$s)" />
+		</server>
+	</field>
+	
+	<field type="group">
+		<sql>
+			<field type="group" default="" is_transient="yes"/>
+		</sql>
+		<server>
+			<field type="group" is_transient="yes" />
+		</server>
+	</field>
+
+
+	<!-- TEXT -->
+	<field type="fulltext">
+		<sql>
+			<field type="fulltext" default=""/>
+		</sql>
+		<server>
+			<field type="text" 
+				onSubmitCheck="checkText('%3\$s',%1\$s.%2\$s,%4\$s)" />
+		</server>
+	</field>
+	
+	<!-- DATE -->
+	<field type="date">
+		<sql>
+			<field type="date"/>
+		</sql>
+
+		<server>
+			<field type="date"
+				onSubmitCheck="checkDate('%3\$s',%1\$s.%2\$s_day,%1\$s.%2\$s_month,%1\$s.%2\$s_year,%4\$s)" />
+		</server>
+	</field>
+	
+	<!-- relation expressed as text-choice, and value expressed as text-choice -->
+	<field type="text-choice-relation">
+		<sql>
+			<field type="text" />
+		</sql>
+		<server>
+			<field type="text-choice-relation"
+				control="select" 
+				onSubmitCheck="checkSelect('%3\$s',%1\$s.%2\$s,%4\$s)" />
+		</server>
+	</field>
+
+	<!-- integer -->
+	<field type="int">
+		<sql>
+			<field type="integer" default="0"/>
+		</sql>
+
+		<server>
+			<field type="text" onInput="keypress_number(event)" size="8" maxLength="10" multiLines="false"/>
+		</server>
+	</field>
+
+	<field type="integer">
+		<sql>
+			<field type="integer" default="0"/>
+		</sql>
+
+		<server>
+			<field type="text" onInput="keypress_number(event)" size="8" maxLength="10" multiLines="false"/>
+		</server>
+	</field>
+
+	<!-- float -->
+	<field type="float">
+		<sql>
+			<field type="float" default="0.0"/>
+		</sql>
+
+		<server>
+			<field type="text" size="15" onSubmitCheck="checkText('%3\$s',%1\$s.%2\$s,%4\$s)"/>
+		</server>
+	</field>
+
+	<!-- currency -->
+	<field type="currency">
+		<sql>
+			<field type="text" size="15" />
+		</sql>
+		<server>
+			<field type="text" size="15" onSubmitCheck="checkText('%3\$s',%1\$s.%2\$s,%4\$s)"/>
+		</server>
+	</field>
+
+
+	<!-- RICH TEXT -->
+	<field type="rich-text">
+		<sql>
+			<field type="text"/>
+		</sql>
+
+		<server>
+			<field type="rich-text" control="rich_text" onSubmitCheck="checkRichText('%3\$s','%2\$s',%4\$s,%1\$s.%2\$s)"/>
+		</server>
+	</field>
+
+	<!-- HTML TEXT -->
+	<field type="html">
+		<sql>
+			<field type="text"/>
+		</sql>
+
+		<server>
+			<field type="html" />
+		</server>
+	</field>
+
+	<!-- PARAM LIST : xx=vv&zz=ttt -->
+	<field type="params">
+		<sql>
+			<field type="text"/>
+		</sql>
+
+		<server>
+			<field type="params" control="params"/>
+		</server>
+	</field>
+	
+	<!-- FILE -->
+	<field type="file">
+		<sql>
+			<field type="file"/>
+		</sql>
+
+		<server>
+			<field type="file" isFile="true" />
+		</server>
+	</field>
+
+	<!-- FILE GED -->
+	<field type="fileGed">
+		<sql>
+			<field type="file"/>
+		</sql>
+
+		<server>
+			<field type="fileGed" isFile="true" />
+		</server>
+	</field>
+
+	<!-- IMAGE -->
+	<field type="image">
+		<sql>
+			<field type="file" onDelete="true"/>
+		</sql>
+
+		<server>
+			<field type="image" isFile="true" onDelete="true"/>
+		</server>
+	</field>
+
+	<!-- VIDEO : ref to external videos (Youtube or dailymotion) -->
+	<field type="line">
+		<sql>
+			<field type="text" default="" multiLines="no"/>
+		</sql>
+		<server>
+			<field type="text" multiLines="no"
+				onSubmitCheck="checkText('%3\$s',%1\$s.%2\$s,%4\$s)" />
+		</server>
+	</field>
+
+	<field type="video">
+		<sql>
+			<field type="text" default="" multiLines="no"/>
+		</sql>
+
+		<server>
+			<field type="video" multiLines="no" size="200" maxLength="5000"/>
+		</server>
+	</field>
+
+	<!-- REFERENCE TO IMAGE -->
+	<field type="ref-image">
+		<sql>
+			<field type="ref-oid"/>
+		</sql>
+		<server>
+			<field type="text" onInput="keypress_number(event)" size="8" maxLength="10" multiLines="false"/>
+		</server>
+	</field>
+	
+	<!-- IMAGE URL -->
+	<field type="image-url">
+		<sql>
+			<field type="text" size="255"/>
+		</sql>
+		<server>
+			<field type="image-url" size="22" multiLines="no" maxLength="255" 
+				onClick="getImageField(this)" 
+				onSubmitCheck="checkText('%3\$s',%1\$s.%2\$s,%4\$s)" />			
+		</server>
+	</field>
+
+
+	<!-- TIMESTAMP -->
+	<field type="timestamp">
+		<sql>
+			<field type="DATETIME"/>
+		</sql>
+
+		<server>
+			<field type="datetime"/>
+		</server>
+	</field>
+
+	<field type="datetime">
+		<sql>
+			<field type="DATETIME"/>
+		</sql>
+
+		<server>
+			<field type="datetime"/>
+		</server>
+	</field>
+	
+	<!-- deprecated -->
+	<field type="unique-id">
+		<sql>
+			<field type="unique-id" autoGenerate="increment"/>
+		</sql>
+		<server>
+			<field type="text" onInput="keypress_number(event)" size="8" maxLength="10" multiLines="false"/>
+		</server>
+	</field>
+
+	<!-- OBJECT UNIQUE ID -->
+	<field type="oid">
+		<sql>
+			<field type="oid"  key="primary" show="hidden" isEdit="no" default="0"/>
+		</sql>
+		<server>
+			<field type="text"  isKey="primary" show="hidden" isEdit="no" onInput="keypress_number(event)" size="8" maxLength="10" multiLines="false"/>
+		</server>
+	</field>
+
+	<!-- OBJECT UNIQUE ID (automatic Counter) -->
+	<field type="oid-key">
+		<sql>
+			<field type="oid-key" value="%{field:oid-cnt}" insertValue="%{sql:LAST_INSERT_ID()+1}"/>
+		</sql>
+		<server>
+			<field type="text" show="hidden" isEdit="no"/>
+		</server>
+	</field>
+	<field type="oid-cnt">
+		<sql>
+			<field type="oid-cnt" isKey="primary"/>
+		</sql>
+		<server>
+			<field type="text" isKey="primary" show="hidden" isEdit="no"/>
+		</server>
+	</field>
+
+	<!-- REFERENCE TO OBJECT UNIQUE ID -->
+	<field type="ref-oid">
+		<sql>
+			<field type="ref-oid"/>
+		</sql>
+		<server>
+			<field type="text" onInput="keypress_number(event)" size="8" maxLength="10" multiLines="false"/>
+		</server>
+	</field>
+
+	<!-- =============== DERIVED TYPES ==================== -->
+
+	<!-- LOGIN ID: NB. add a tag marking this field as the login id. -->
+	<field type="login-id">
+		<sql>
+			<field type="text" size="20"/>
+		</sql>
+		<server>
+			<field type="text" size="20" role="login.id" 
+				onSubmitCheck="checkText('%3\$s',%1\$s.%2\$s,%4\$s)" 
+				control="transform" controlOptions="lowercase" />
+		</server>
+	</field>
+
+	<!-- password -->
+	<field type="login-password">
+		<sql>
+			<field type="text" size="30"/>
+		</sql>
+		<server>
+			<field type="password" role="login.password" size="30" sizeGen="8" onSubmitCheck="checkText('%3\$s',%1\$s.%2\$s,%4\$s)" />
+		</server>
+	</field>
+
+	<!-- password -->
+	<field type="login-perms">
+		<sql>
+			<field type="text" size="200"/>
+		</sql>
+		<server>
+			<field type="text-choice" role="login.perms" size="200" default="group:user"/>
+		</server>
+	</field>
+	
+	<!-- text ID  -->
+	<field type="text-id" isKey="true">
+		<sql>
+			<field type="text-id" size="30" />
+		</sql>
+		<server>
+			<field type="text" size="30"
+				onSubmitCheck="checkText('%3\$s',%1\$s.%2\$s,%4\$s)" 
+				control="transform" controlOptions="lowercase" />
+		</server>
+	</field>
+
+	<!-- login email : email with a tag for user registration/contact/etc. -->
+	<field type="login-email">
+		<sql>
+			<field type="text" size="100"/>
+		</sql>
+		<server>
+			<field type="text" role="login.email" size="100" multiLines="false" onSubmitCheck="checkReg('%3\$s',%1\$s.%2\$s,%4\$s,'^[0-9a-zA-Z_.-]+@[0-9a-zA-Z_.-]+\.[0-9a-zA-Z_.-]+','wrong email syntax')"/>
+		</server>
+	</field>
+
+	<!-- password -->
+	<field type="password">
+		<sql>
+			<field type="text" size="30"/>
+		</sql>
+		<server>
+			<field type="password"  size="30"
+				onSubmitCheck="checkText('%3\$s',%1\$s.%2\$s,%4\$s)" />
+		</server>
+	</field>
+
+	<!-- md5 password challenge -->
+	<field type="md5-challenge">
+		<sql>
+			<field type="text" size="32"/>
+		</sql>
+		<server>
+			<field type="text"  size="30"	onSubmitCheck="encodePassword(this)" />
+		</server>
+	</field>
+
+	<!-- url -->
+	<field type="url">
+		<sql>
+			<field type="text" size="600"/>
+		</sql>
+		<server>
+			<field type="url" size="600" multiLines="no"
+				onSubmitCheck="checkText('%3\$s',%1\$s.%2\$s,%4\$s)" />
+		</server>
+	</field>
+
+	<!-- email -->
+	<field type="email">
+		<sql>
+			<field type="text" size="100"/>
+		</sql>
+		<server>
+			<field type="text" size="100" multiLines="false" onSubmitCheck="checkReg('%3\$s',%1\$s.%2\$s,%4\$s,'^[0-9a-zA-Z_.-]+@[0-9a-zA-Z_.-]+\.[0-9a-zA-Z_.-]+','wrong email syntax')"/>
+		</server>
+	</field>
+
+	<!-- telephone -->
+	<field type="telephone">
+		<sql>
+			<field type="text" size="20"/>
+		</sql>
+		<server>
+			<field type="phone" size="20" control="local_phone"
+				onSubmitCheck="checkTelephone('%3\$s',%1\$s.%2\$s,%4\$s)" />
+		</server>
+	</field>
+	<field type="int-telephone">
+		<sql>
+			<field type="text" size="20"/>
+		</sql>
+		<server>
+			<field type="phone" size="20" 
+				onSubmitCheck="checkTelephone('%3\$s',%1\$s.%2\$s,%4\$s)" 
+				control="int_phone" />
+		</server>
+	</field>
+
+	<!-- text choice select -->
+	<field type="text-choice">
+		<sql>
+			<field type="text-choice" />
+		</sql>
+		<server>
+			<field type="text-choice"
+				control="select" 
+				onSubmitCheck="checkSelect('%3\$s',(%1\$s.%2\$s||%1\$s['%2\$s[]']),%4\$s)" />
+		</server>
+	</field>
+
+	<!-- text choice select -->
+	<field type="text-choice-table">
+		<sql>
+			<field type="text-choice-table" />
+		</sql>
+		<server>
+			<field type="text-choice-table"
+				control="select" 
+				onSubmitCheck="checkSelect('%3\$s',(%1\$s.%2\$s||%1\$s['%2\$s[]']),%4\$s)" />
+		</server>
+	</field>
+
+	<field type="boolean">
+		<sql>
+			<field type="text-choice" list="yes-no" size="4"/>
+		</sql>
+		<server>
+			<field type="text-choice"
+				control="radio" list="yes-no"
+				onSubmitCheck="checkSelect('%3\$s',%1\$s.%2\$s,%4\$s)" />
+		</server>
+	</field>
+
+	<!-- text choice tree -->
+    <field type="checkbox-tree">
+        <sql>
+            <field type="text-choice" multiple="true" />
+        </sql>
+        <server>
+            <field type="text-choice" multiple="true" 
+                control="checkbox" controlLayout="tree" 
+                onSubmitCheck="checkCheckBoxTree('%3\$s',%1\$s,'%2\$s',%4\$s)" />
+        </server>
+    </field>
+    
+    <field type="checkbox">
+        <sql>
+            <field type="text-choice" multiple="true" />
+        </sql>
+        <server>
+            <field type="text-choice" multiple="true" 
+                control="checkbox" 
+                onSubmitCheck="checkCheckBoxTree('%3\$s',%1\$s,'%2\$s',%4\$s)" />
+        </server>
+    </field>
+	
+	<!-- text choice tree -->
+	<field type="checkbox-rows">
+		<sql>
+			<field type="text-choice" multiple="true" />
+		</sql>
+		<server>
+			<field type="text-choice" multiple="true" 
+				control="checkbox" controlLayout="rows" 
+				onSubmitCheck="checkCheckBoxTree('%3\$s',%1\$s,'%2\$s',%4\$s)" />
+		</server>
+	</field>
+
+	<!-- text choice tree -->
+	<field type="checkbox-columns">
+		<sql>
+			<field type="text-choice" multiple="true" />
+		</sql>
+		<server>
+			<field type="text-choice" multiple="true" 
+				control="checkbox" controlLayout="columns" 
+				onSubmitCheck="checkCheckBoxTree('%3\$s',%1\$s,'%2\$s',%4\$s)" />
+		</server>
+	</field>
+
+	<!-- text choice with radio buttons (one choice only) -->
+	<field type="radio-tree">
+		<sql>
+			<field type="text-choice" multiple="true" />
+		</sql>
+		<server>
+			<field type="text-choice" multiple="false" 
+				control="checkbox" controlLayout="tree" 
+				onSubmitCheck="checkCheckBoxTree('%3\$s',%1\$s,'%2\$s',%4\$s)" />
+		</server>
+	</field>
+	
+	<field type="radio-rows">
+		<sql>
+			<field type="text-choice" multiple="true" />
+		</sql>
+		<server>
+			<field type="text-choice" multiple="false" 
+				control="checkbox" controlLayout="rows" 
+				onSubmitCheck="checkCheckBoxTree('%3\$s',%1\$s,'%2\$s',%4\$s)" />
+		</server>
+	</field>
+
+	<field type="radio-columns">
+		<sql>
+			<field type="text-choice" multiple="true" />
+		</sql>
+		<server>
+			<field type="text-choice" multiple="false" 
+				control="checkbox" controlLayout="columns" 
+				onSubmitCheck="checkCheckBoxTree('%3\$s',%1\$s,'%2\$s',%4\$s)" />
+		</server>
+	</field>
+		
+	
+	<!-- text choice select -->
+	<field type="select">
+		<sql>
+			<field type="text-choice" />
+		</sql>
+		<server>
+			<field type="text-choice"
+				control="select" 
+				onSubmitCheck="checkSelect('%3\$s',%1\$s.%2\$s,%4\$s)" />
+		</server>
+	</field>
+
+		<!-- text choice select -->
+	<!-- where operator (op= and|or) -->
+	<field type="where_op">
+		<sql>
+			<field type="where_op" op="and" is_transient="yes"/>
+		</sql>
+		<server>
+			<field type="where_op" op="and" is_transient="yes"/>
+		</server>
+	</field>
+	
+	
+	<!-- record (for sub forms) -->
+	<field type="records">
+		<sql>
+			<field type="records" default="" is_transient="yes"/>
+		</sql>
+		<server>
+			<field type="records" is_transient="yes" />
+		</server>
+	</field>
+
+</maps>

@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<nxl 
+	version = "1.0" 
+	xmlns   = "http://www.nxfrontier.com/nxl/nxl" 
+	package = "rh">	
+		
+	<data xmlns="http://www.nxfrontier.com/dml/dml">
+		<views>
+			<!-- =========================================================== -->
+			<!-- Jours f&eacute;ri&eacute;s en intersection avec une demande de cong&eacute; -->
+			<!-- =========================================================== -->
+			<view name="rh.jours_feries" table="directory_holiday">			
+				<key>
+					<or>
+						<and>
+							<field name="start_date" label="start_date" type="date" relation="GE" value="%{property:start_date}" />
+							<field name="start_date" label="end_date" type="date" relation="LE" value="%{property:end_date}" />
+						</and>
+						<and>
+							<field name="end_date" label="start_date" type="date" relation="GE" value="%{property:start_date}" />
+							<field name="end_date" label="end_date" type="date" relation="LE" value="%{property:end_date}" />
+						</and>
+						<and>
+							<field name="start_date" label="start_date" type="date" relation="LE" value="%{property:start_date}" />
+							<field name="end_date" label="end_date" type="date" relation="GE" value="%{property:end_date}" />
+						</and>
+					</or>
+				</key>
+				<fields>
+					<field name="oid" label="oid" type="oid" isKey="primary" show="hidden" isEdit="no" />
+					<field name="start_date" label="start_date" type="date" default="now" />
+					<field name="end_date" label="end_date" type="date" default="now" />
+					<field name="holiday_name" label="holiday_name" type="text" size="20" />
+				</fields>
+			</view>
+
+			<view name="rh.jours_feries.by_oid" table="directory_holiday">
+				<key>
+					<field name="oid" type="oid" value="%{param:oid}"/>
+				</key>
+				<fields>
+					<field name="oid" label="object_id" type="oid" isKey="primary" show="hidden" isEdit="no" />
+					<field name="start_date" label="start_date" type="date" isEdit="no" format="short"/>
+					<field name="end_date" label="end_date" type="date" isEdit="no" format="short"/>
+					<field name="holiday_type" label="holiday_type" type="text-choice" list="directory.lists.holiday_type" control="select" isEdit="no"/>	
+					<field name="holiday_name" label="holiday_name" type="line" size="200" isEdit="no"/>
+				</fields>
+			</view>
+	
+		</views>
+	</data>
+
+</nxl>

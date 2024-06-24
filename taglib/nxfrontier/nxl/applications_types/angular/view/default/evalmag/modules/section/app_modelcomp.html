@@ -1,0 +1,103 @@
+<script type="text/javascript" id="/app_modelcomp.js">
+MyAppLoader.addComponent(
+{
+id:'app_modelcomp',
+
+parentState : 'main.section',
+
+states:	
+{
+	// informations page offre de soins		
+	'modelcomp': 
+	{
+		url: "/modelcomp?&pageId",
+		scope: {
+			app:'modelcomp@evalmag',
+			type:'modelcomp',
+			title:'Titre liste',
+
+			add_state:'add', // etat pour ajout
+
+			menu:[
+				{label:'Export Excel',target:'_blank',op:'export_excel',withSearch:true}
+			],
+		},
+
+		views: 
+		{
+			'content@^':
+			{
+				templateUrl:'/crud/list.htm',
+			}
+		}
+	},
+
+	'modelcomp.add' :
+	{
+		url: "/add/",
+		scope: {
+			title:'Titre ajout',
+
+			form: 
+			{
+				tabs:[
+					{	title:"Element" ,
+						groups:[
+							{ fields:'*'}
+						]
+					}
+				]
+			},
+
+			menu:[
+			]
+		},
+		views: 
+		{
+			'content@^^':
+			{
+				templateUrl:'/crud/crud_add_item_desc.htm',
+			}
+		}
+	},
+
+	'modelcomp.item' :
+	{
+		url: "/item/:itemId/",
+		scope: {
+			title:'Titre edit',
+
+			form: 
+			{
+				tabs:[
+					{	title:"Element" ,
+						groups:[
+							{ fields:'*'}
+						]
+					}
+				]
+			},
+			
+			menu:[
+				{label:'Supprimer', onclick:'deleteItem()', 
+					clsIcon:'glyphicon glyphicon-remove-circle'}
+			]
+		},
+
+		views: 
+		{
+			'content@^^':
+			{
+				templateUrl:'/crud/crud_item_desc.htm',
+			}
+		}
+	}
+},
+
+init:function(loader) {
+
+	var app = loader.app;
+}
+
+});
+</script>

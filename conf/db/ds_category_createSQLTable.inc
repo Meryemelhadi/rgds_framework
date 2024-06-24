@@ -1,0 +1,1 @@
+<?php $properties["query"]="CREATE TABLE IF NOT EXISTS _ds_category(_oid INT AUTO_INCREMENT NOT NULL,_soid INT,_treeid VARCHAR(30),_fullpath VARCHAR(250),_path TEXT,_name VARCHAR(100),_itemid VARCHAR(200),_full_name VARCHAR(250),_selprompt VARCHAR(250),_index VARCHAR(200),_perms TEXT,_lang TEXT,_mode TEXT,PRIMARY KEY(_oid))"; ?>

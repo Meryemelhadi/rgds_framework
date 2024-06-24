@@ -1,0 +1,1 @@
+<?php $properties["query"]="DROP TABLE IF EXISTS _ds_category";?>

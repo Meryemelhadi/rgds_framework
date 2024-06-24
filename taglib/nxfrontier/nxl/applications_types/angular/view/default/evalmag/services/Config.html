@@ -1,0 +1,112 @@
+<!-- HTTP SERVER REQUESTS -->
+<script type="text/javascript" id="/services/Config.js" append_to="js/livret/components.js">
+
+// HTTP SERVICE
+MyAppLoader.addComponent({
+	id:'Config',
+
+	injections: ['angularNotify'],
+
+	init:function(loader) 
+	{
+		var app = loader.app;
+
+		// site service
+		app.service('Config',['$localStorage','$rootScope','$state','$stateParams','AppTools',function($localStorage,$rootScope,$state,$stateParams,AppTools)
+		{
+			// allow using config tools from templates
+			$rootScope.config = this;
+			this.tools = AppTools;
+			this.package = '<?php echo $package; ?>',
+			
+			this.user = {
+				entity : '<?php echo $userEntity ?>',
+				oid :  '<?php echo $user->getProperty('oid') ?>',
+				name:'{user:first_name} {user:last_name}'
+			};
+			this.user.eoid = this.user.entity;
+
+			this.homeUrl = '#{var:homeUrl}';
+
+			this.moduleURL = function(moduleName,generic,app) {
+				var gen='';
+				if(angular.isDefined(generic))
+					gen = '&generic='+generic; //use specific app
+
+				if(angular.isDefined(app))
+					gen = '&app='+app; //use specific app
+					
+				return '/'+this.package+'/api/config.php?type='+moduleName+gen+'&';
+			}
+
+			this.configURL = function(type,app,pack) {
+				var pack='';
+				if(angular.isDefined(pack) && pack)
+					pack = '&package='+pack; //use specific app
+				
+				return '/'+this.package+'/api/app_config.php?for='+app+'&type='+type+'&'+pack;
+			}
+
+			this.appUrl = function(op) {
+				return this.catalogURL+"nxo="+op;
+			}
+
+			this.widgetUrl = function(page,pack,pageParams) {
+				var url = '/'+this.package+'/api/widgets.php?page='+page;
+				var pack='';
+				if(angular.isDefined(pack) && pack)
+					url += '&package='+pack; //use specific app
+
+				if(pageParams) {
+					pageParams.forEach(
+						function(p) {
+							url += '&'+p+'='+$stateParams[p];
+						}
+					);
+				}
+
+				return url;
+			}
+
+			// load state scope (constants)
+			this.loadStateScope = function(scope,state,isApp) {
+				var stateConf;
+
+				if(!state)
+					stateConf = $state.current;
+				else
+					stateConf = $state.get(state);
+
+				if(!stateConf.scope)
+					return false;
+
+				angular.forEach(stateConf.scope, function(v,k) {
+					scope[k] = v;
+				});
+
+				this.setNavInfo(scope.nav,isApp,stateConf.name);
+			}
+
+			this.setNavInfo = function(nav,isApp,stateName) {
+				if(nav===null)
+					return;
+
+				if(nav)
+					$rootScope.curNav = nav;
+				else if(isApp && stateName)
+					$rootScope.curNav = {app:stateName.split('.').pop()};					
+				else if($rootScope.curNav) 
+				{
+					if($rootScope.curNav.app && stateName && stateName.search('.'+$rootScope.curNav.app)>0)
+						; // child state, no change
+					else
+						$rootScope.curNav = {app:'-'};
+				}
+			}
+
+			this.appConfig = <?php echo json_encode($config); ?>;
+		}]);
+	}
+});
+
+</script>

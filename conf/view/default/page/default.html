@@ -1,0 +1,1 @@
+{@include:enveloppe/page:skin and device}

@@ -1,0 +1,48 @@
+<?xml version="1.0"?> 
+<nxl version="1.0"
+	xmlns="http://www.nxfrontier.com/nxl/nxl">
+
+<include file="register.strings.nxl"  />
+<include file="register.ds_email.nxl" />
+<include file="register.logic.nxl"    />
+<include file="register.data.nxl"     />
+
+<!-- pages -->
+<pages xmlns="http://www.nxfrontier.com/nxl/page">
+	<page	name="register" protected="no" 
+			path="/" 
+			cache="no" 
+			lang="en"	
+			skin="public" 
+			strings="user_register"
+		>
+		<exec logic="portal.register" strings="user_register">
+			<!-- properties -->
+
+			<property name="password.length" value="8" />
+			<property name="login.url" value="'/login.php'" />
+
+			<!-- email properties -->
+
+			<data name="register.email" value="register_email" media="config"/>
+			<view name="email.text" value="email.registration_text" />			
+			<view name="email.html" value="email.registration_html" />			
+			
+			<!-- DATA -->
+
+			<data name="reg.input" value="account.reg_input" media="db"/>
+			<data name="reg.confirm" value="account.reg_input" media="db"/>
+			<data name="reg.checkid" value="account.user_check" media="db"/>
+			<data name="reg.update_pwd" value="account.reg_update" media="db"/>
+			
+			<!-- VIEWS -->
+
+			<view name="reg.input" value="register.msg_record_edit" />	
+			<view name="reg.confirm" value="register.msg_record_display" />			
+			<view name="reg.confirm.input" value="register.msg_record_edit" />			
+			<view name="input.error" value="register.msg_record_edit" />			
+			<view name="reg.finish" value="register.message" />
+		</exec>
+	</page>
+</pages>
+</nxl>

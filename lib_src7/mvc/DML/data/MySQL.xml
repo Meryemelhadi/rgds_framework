@@ -1,0 +1,122 @@
+<?xml version="1.0"?>
+
+<driver name="mySQL">
+	<maps>
+		<field type="text">
+			<sql type="TEXT" default="NULL"/>
+		</field>
+
+		<field type="fulltext">
+			<sql type="TEXT" default="NULL" fulltext="yes"/>
+		</field>
+
+		<!-- dummy sql field -->
+		<field type="group">
+			<sql type="TEXT" default="NULL" />
+		</field>
+		<field type="expression">
+			<sql type="TEXT" default="NULL" />
+		</field>
+
+		<!-- dummy sql field -->
+		<field type="where_op">
+			<sql type="TEXT" default="NULL" />
+		</field>
+
+		<!-- dummy sql field -->
+		<field type="records">
+			<sql type="TEXT" default="NULL" />
+		</field>
+		
+		<field type="chars">
+			<sql type="VARCHAR" default="NULL"/>
+		</field>
+
+		<field type="text-id">
+			<sql is_size="yes" type="VARCHAR" is_null="no"/>
+		</field>
+
+		<field type="digits">
+			<sql type="TEXT" default="NULL"/>
+		</field>
+
+		<field type="currency">
+			<sql type="DECIMAL(10,2) UNSIGNED" default="NULL"/>
+		</field>
+
+		<field type="telephone">
+			<sql type="VARCHAR(20)" default="NULL"/>
+		</field>
+
+		<field type="file">
+			<sql type="TEXT" default="NULL"/>
+		</field>
+
+		<field type="image">
+			<sql type="TEXT" default="NULL"/>
+		</field>
+
+		<field type="yes-no">
+			<sql type="VARCHAR(6)" default="NULL"/>
+		</field>
+
+		<field type="text-choice">
+			<sql type="TEXT" default="NULL"/>
+		</field>
+
+		<field type="text-choice-table">
+			<sql type="TEXT" default="NULL"/>
+		</field>
+
+		<field type="email">
+			<sql type="VARCHAR(100)" default="NULL"/>
+		</field>
+
+		<field type="integer-choice">
+			<sql type="VARCHAR(6)" default="NULL"/>
+		</field>
+
+		<field type="date">
+			<sql type="DATE" default="NOW()"/>
+		</field>
+
+		<field type="float">
+			<sql type="FLOAT" default="0.0"/>
+		</field>
+
+		<field type="DATETIME">
+			<sql type="DATETIME" default="NOW()"/>
+		</field>
+
+		<field type="unique-id">
+			<sql type="INT AUTO_INCREMENT NOT NULL" default="NULL"/>
+		</field>
+
+		<field type="integer">
+			<sql type="INT" default="NULL"/>
+		</field>
+
+		<field type="int">
+			<sql type="INT" default="NULL"/>
+		</field>
+
+		<!-- obsolete ? -->
+		<field type="oid-key">
+			<sql type="INT AUTO_INCREMENT NOT NULL" default="NULL"/>
+			<!-- sql type="INT" default="_cnt_oid"/ -->
+		</field>
+
+		<!-- obsolete ? -->
+		<field type="oid-cnt">
+			<sql type="INT AUTO_INCREMENT NOT NULL" default="NULL"/>
+		</field>
+
+		<field type="oid">
+			<sql type="INT AUTO_INCREMENT NOT NULL" default="NULL"/>
+		</field>
+
+		<field type="ref-oid">
+			<sql type="INT" default="NULL"/>
+		</field>
+	</maps>
+</driver>

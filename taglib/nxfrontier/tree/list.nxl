@@ -1,0 +1,80 @@
+<?xml version="1.0"?> 
+<nxl version="1.0"
+	xmlns="http://www.w3.org/TR/REC-html40"
+	xmlns:nxl="http://www.nxfrontier.com/nxl/nxl" 
+	xmlns:xo="http://www.nxfrontier.com/xo/core"
+	xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+	xmlns:format="http://www.nxfrontier.com/nxl/format"
+	xmlns:tree_list="http://www.nxfrontier.com/tree/list"
+>
+<!-- 
+	Generate navigation tree list from XML description 
+	==================================================
+	- generate list of values to be used in html forms
+
+	NB. to be used on a tree made from <tree><node> structure as in nav/tree taglib
+-->
+
+<xo:taglib uri="http://www.nxfrontier.com/tree/list">
+
+	<xo:tag name="tree">
+		<xsl:param name="tree" select="."/>
+		<xsl:param name="nav" select="$tree/@nav"/>
+
+		<xsl:variable name="name">
+			<xsl:choose>
+				<xsl:when test="$tree/@name"><xsl:value-of select="$tree/@name"/></xsl:when>
+				<xsl:otherwise><xsl:value-of select="$tree/@id"/></xsl:otherwise>
+			</xsl:choose>
+		</xsl:variable>
+
+		<nxl:output file="#const:NX_CONF#content/lists/#xo:xpath($nav)#.values" method="text">
+			<xo:text><!-- site map  (do not edit, automatically generated from NXL) -->		
+</xo:text>	 
+			<xsl:value-of select="'?'" /><xsl:text>=</xsl:text><xsl:value-of select="$name" /><xsl:text>
+</xsl:text>
+			<tree_list:node>
+				<xsl:with-param name="path" select="'?'"/>
+				<xsl:with-param name="prompt" select="''"/>
+				<xsl:with-param name="nodes" select="$tree/node"/>
+			</tree_list:node>
+		</nxl:output>
+	</xo:tag>
+
+	<xo:tag name="node">
+		<xsl:param name="path" />
+		<xsl:param name="prompt" />
+		<xsl:param name="nodes" />
+
+		<xsl:variable name="fullprompt">
+			<xsl:if test="$prompt!=''">
+				<xsl:value-of select="$prompt" /><xsl:text>&gt;</xsl:text>
+			</xsl:if>
+		</xsl:variable>
+		
+		<xsl:for-each select="$nodes">
+			<xsl:variable name="pathChild">
+				<xsl:value-of select="$path" /><xsl:text>-</xsl:text><format:toIdentifier><xsl:value-of select="@id" /></format:toIdentifier>
+			 </xsl:variable>
+
+			<xsl:variable name="promptChild">
+				<xsl:value-of select="$fullprompt" />
+				<xsl:choose>
+					<xsl:when test="@name"><xsl:value-of select="@name"/></xsl:when>
+					<xsl:otherwise><xsl:value-of select="@id"/></xsl:otherwise>
+				</xsl:choose>
+			 </xsl:variable>
+			 
+			<xsl:value-of select="$pathChild" /><xsl:text>=</xsl:text><xsl:value-of select="$promptChild" /><xsl:text>
+</xsl:text>
+			<tree_list:node>
+				<xsl:with-param name="path" select="$pathChild"/>
+				<xsl:with-param name="prompt" select="$promptChild"/>
+				<xsl:with-param name="nodes" select="node"/>
+			</tree_list:node>
+			
+		</xsl:for-each>
+	</xo:tag>
+</xo:taglib>
+
+</nxl>

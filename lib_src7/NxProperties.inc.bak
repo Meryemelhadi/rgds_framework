@@ -1,0 +1,926 @@
+<?php
+/*
+COPYRIGHT NxFrontier Ltd
+www.nxfrontier.com
+This code may not be copied, modified or redistributed without the written consent of NxFrontier Limited, UK company number 04462961. 
+*/
+
+require(NX_LIB."data/fields/lists/NxChoiceList2.inc");
+
+/*
+ class NxProperties
+ description: main class for all applications. Provides API core features: 
+  - cascading properties, 
+  - application load
+  - display view load
+  - "choicelists" (select form field content)
+  - I8N strings
+  - load plugin
+  - load resources
+  - get DB handler
+  
+  TODO: split the class by features? 
+*/
+
+class NxProperties
+{
+	var $props;
+	var $parent;
+	var $root;
+	var $stringList=array();
+
+	function __construct($props, &$parent)
+	{
+		$this->props  = $props;
+		$this->parent = & $parent;
+
+		// root is the top property set (page/site level)
+		if ($this->parent==null)
+			$this->root= & $this;
+		elseif(isset($this->parent->root))
+			$this->root =& $this->parent->root;
+		else
+		{
+			/*
+			ob_start(); 
+				debug_print_backtrace(); 
+				var_dump ($parent);
+			$trace = ob_get_contents(); 
+			ob_end_clean();
+			
+			nxError('NxProperties ERROR : parent is not correct : '.$trace);
+			*/
+			nxError('NxProperties ERROR : parent is not correct : ');
+		}
+
+		if (!isset($this->props))
+			$this->props = array();		
+	}
+
+	// returns property set. If flatten, adds up parent properties
+	function &getProperties($flatten=false)
+	{
+		return $this->props;
+	}
+
+	// returns property set. If flatten, adds up parent properties
+	function attachTo(&$from)
+	{
+		$this->props  = & $from->props;
+		$this->parent = & $from->parent;
+	}
+
+	/**
+	* @return true
+	* @param array $others
+	* @desc add properties from associative array to current property set.
+	*/
+	function addProperties($others)
+	{
+		if (is_array($others))
+			$arr=$others;
+		elseif (method_exists($others,'getProperties'))
+			$arr=$others->getProperties();
+		else
+			return false;
+			
+		$this->props = $arr+$this->props;
+		return true;
+	}
+	
+	function & getProperty($name,$deft=null,$cascade=true)
+	{
+		if(isset($this->props) && isset($this->props[$name]))
+			return $this->props[$name];
+		else if ($cascade && isset($this->parent) && method_exists($this->parent,'getProperty'))
+			return $this->parent->getProperty($name,$deft,true);
+		else
+			return $deft;
+	}
+	
+	// set a property, if root requested, set it to the root of the chain (usually site level), 
+	// otherwise to the current level (higer priority, but might be transient). If replace requested,
+	// the property is searched in the tree and replaced at the level it is already defined.
+	function setProperty($name,$value)
+	{
+		return $this->props[$name] = $value;
+	}
+	
+	// set a property, if root requested, set it to the root of the chain (usually site level), 
+	// otherwise to the current level (higer priority, but might be transient). If replace requested,
+	// the property is searched in the tree and replaced at the level it is already defined.
+	function setRootProperty($name,$value,$toRoot=true,$replace=false)
+	{
+		// try to replace property if exists
+		if ($replace && $this->replaceProperty($name,$value,true,false))
+			return;
+
+		// if failed, set it either at current level or root level
+		if ($toRoot===true)
+			return $this->root->props[$name] =& $value;
+		else
+			return $this->props[$name] = $value;
+	}
+
+	// look for a property and replace it when found in the chain.
+	// if not found, set it to root of the chain when "force" is true.
+	function replaceProperty($name,$value,$cascade=true, $force=true)
+	{
+		if(isset($this->props) && isset($this->props[$name]))
+			$this->props[$name]=$value;
+		else if ($cascade && isset($this->parent))
+			return $this->parent->replaceProperty($name,$value);
+		else if ($force)
+			$this->props[$name]=$value;
+		else
+			return false;
+			
+		return true;
+	}
+	
+	function getConfFile($type,$name,$package='') 
+	{
+		if (isset($GLOBALS['NX_conf_file_'][$package][$type][$name]))
+			return $GLOBALS['NX_conf_file_'][$package][$type][$name];
+
+		// get package
+		if (!$package)
+		{
+			if (!isset($this->package))
+				$this->package=$this->getProperty('nx.package','');
+				
+			$package=$this->package;
+		}
+
+		if ($type)
+			$n=$type.'/'.$name;
+		else
+			$n=$name;
+
+		$n=ltrim($n,'/');
+			
+		if ($package)
+		{
+			if (				
+				is_file($f=GENERIS_ROOT."packages/{$package}/conf/{$n}") ||
+				is_file($f=GENERIS_ROOT."packages/{$package}/{$n}") ||
+				is_file($f=NX_CONF."packages/{$package}/{$n}") ||
+				is_file($f=NX_XLIB."packages/{$package}/{$n}") ||
+				
+				is_file($f=GENERIS_ROOT."nx/conf/packages/{$package}/conf/{$n}") ||
+				is_file($f=NX_DIS."conf/packages/{$package}/{$n}")
+			)
+				return $GLOBALS['NX_conf_file_'][$package][$type][$name]=$f;						
+		}
+
+
+		if (
+            is_file($f=NX_CONF.$n) ||
+			is_file($f=NX_XLIB.$n) ||
+			is_file($f=NX_DIS."conf/{$n}")
+           )
+			return $GLOBALS['NX_conf_file_'][$package][$type][$name]=$f;			
+			
+		// nxLog("Loaded resource:[$path]",'NX_PROP');
+
+		return null;
+	}
+	
+	// load a property set from the "conf" directory
+	// when found, parse it and cache it under the "gen" dir.
+	// if merge=true, add properties to current set.
+	// returns the array if success or null
+	function loadResource($pathR,&$errorCB,$add=true)
+	{
+		global $NX_LANG;
+		$path = NX_GEN.strtr($pathR,'.','/')."_{$NX_LANG}.inc";		
+		if (NX_CHECK_CONTENT=='once' && is_file($path))
+		{
+			//load descriptor in  "$properties" array
+			$properties=array();
+			include($path);
+		}
+		else
+		{
+			// compile resource
+			$ds =& $this->getPlugIn('props','NxDS_','ds');
+			
+			// get array
+			$error=new NxErrorCB();
+			$properties = $ds->getData($pathR, $error);
+				
+			if (!$properties)
+			{		
+				$errorCB->addError("unknown resource:{$path}");
+				return null;
+			}
+		}
+				
+		if ($add)
+			$this->props = $properties+$this->props;
+		
+		nxLog("Loaded resource:[$path]",'NX_PROP');
+		
+		return $properties;		
+	}
+
+	function loadClass($clName,$package=null) 
+	{
+		$className=strtr($clName,'.','_');
+		if (class_exists($className))
+			return $className;
+
+		$aname=explode('.',$clName);
+		$type=array_shift($aname);
+		$name=implode('/',$aname);
+
+		if ($f = $this->getConfFile($type,$name.'.inc',$package))
+			include_once($f);
+		else
+		{
+			nxError("Properties::cant find file for class $className");
+			return false;
+		}
+		if (class_exists($className))
+			return $className;
+
+		return false;
+	}
+
+	// obsolete..
+	function getStyle($element=null,$className=null,$deft="")
+	{
+		$prop="style";
+		if($element!=null)
+			$prop .= ":".$element;
+		
+		if ($className!=null)
+			$prop .= ".".$className;
+			
+		$style = $this->getProperty($prop,null);
+		if ($style != null)
+			return " style=\"$style\"";
+		else
+			return $deft;
+	}
+	
+	// get choice list for text-choice field
+	function getChoiceList($list,$lang=null,$dir='lists',$ds='',$dfmt='',$prompt='')
+	{
+		if (!isset($this->root->stringList[$list]))
+		{
+			// package redirection useful ?
+			$this->root->stringList[$list] = new NxChoiceList2($this,$list,$dir,$ds,$lang,$prompt,$dfmt);			
+		}
+		return $this->root->stringList[$list];
+	}
+	
+	function timer() {
+		global $siteDesc;
+
+		if (isset($siteDesc->_timer))
+			return $siteDesc->_timer;
+
+		include_once('timer/NxTime_Timer.inc');		
+		return $siteDesc->_timer = new NxTime_Timer();
+	}
+
+	// return true if no branch perm or intersection(user perms,tree perms) 
+	function checkPerm($perms,$credits=null)
+	{
+		$perms=trim(preg_replace('/[;|, ]+/',',',$perms),',');
+		if ($perms==''||$perms=='default'||$perms=='?')
+			return true;
+
+		// get user
+		$user = &$GLOBALS['_NX_user'];
+		if (!$credits)
+			$credits=$user->getProperty('credits');
+
+		if (!$credits)
+		{
+			$group = $user->getProperty('group','');
+            if(!$group || $group=='?')
+                $group = $user->getProperty('groups','');
+            if(!$group || $group=='?')
+                $group = $user->getProperty('parent_group_rh','');
+            if(!$group || $group=='?')
+                $group = $user->getProperty('mgc_parent_group_RH','');
+            
+			$uoid = $user->getProperty('user.oid'); 
+
+			// get DB service
+			$error=new NxErrorCB();
+			$db = & $GLOBALS['_NX_site']->getDB($error);
+
+			// check if user is a group manager, ie. validator
+			$res=$db->queryWithData(
+			<<<EOH
+				SELECT _group_credits 
+				FROM _directory_group 
+				WHERE _group_chief='$uoid' or _group_chief LIKE '%|$uoid|%'
+EOH
+			);
+			if ($res!=false)
+			{
+				$group_object = $res;
+				$credits='?-manager|';    
+			}
+			else
+				$credits='';    
+
+			// get group credit
+			$res=$db->queryWithData("SELECT _oid,_group_credits FROM _directory_group WHERE _oid='$group'");
+			if ($res)
+			{
+				foreach($res as $g)
+                    if($g['_group_credits'])
+					    $credits .= $g['_group_credits'].'|';
+			}
+
+			$credits.=$user->getProperty('user_credits','');
+			$a_credits=explode('|',trim($credits,'|'));
+			$credits=implode('|',array_unique($a_credits));
+			$user->setProperty('credits',$credits);
+		}
+			
+		$acl=explode(',',trim(preg_replace('/[;|, ]+/',',',$perms),','));
+		$auser=explode(',',trim(preg_replace('/[;|, ]+/',',',$credits),','));
+		$auser[]='?-user-'.$user->getProperty('oid');
+		if(count(array_intersect($acl,$auser))>0)
+			return true;
+			
+		return false;
+	}
+
+	// check if user entities match
+	function checkEntity($entity) {
+		if(!count(array_intersect(explode('|',trim($entity,'|')),explode('|',trim($GLOBALS['_NX_user']->getProperty('entity'),'|')))))
+			return false;
+            
+        return true;
+	}
+	
+	// add a credit for a user
+	function addCredit($credit)
+	{
+		$user = &$GLOBALS['_NX_user'];
+		if (!$credits)
+			$credits=$user->getProperty('credits','');
+
+		$a_credits=explode('|',trim($credits,'|'));
+		$credits=implode('|',array_unique($a_credits)).'|'.$credit;
+		$user->setProperty('credits',$credits);
+	}
+
+	/** reload string package for reseting macros */
+	function reloadStrings($package=null)
+	{
+		if ($package)
+		{
+			if (isset($this->root->stringList[$package]))
+				unset($this->root->stringList);
+		}
+		else
+			$this->root->stringList=array();
+			
+		NxChoiceList2::reload($package);
+	}
+	
+	/** get I8N string */
+	function getString($str,$lang=null,$bundle=null,$default=null,$alt_str=null)
+	{
+		if ($bundle==null)
+			$bundle=$this->getProperty('page.strings','strings');
+			
+		if (!isset($this->root->stringList[$bundle]))
+		{
+			// bundle redirection useful ?
+			$this->root->stringList[$bundle] = $this->getChoiceList($bundle,$lang,'strings'/*content directory*/);			
+		}
+		
+		return $this->root->stringList[$bundle]->getString($str,$default,$alt_str);
+	}
+
+	// display format descriptor for text-choices 
+	function getFormat($fmtID,$fmt=null)
+	{			
+		if (!isset($GLOBALS['DATA_ENUM_fmt'][$fmtID]))
+		{
+			// package redirection useful ?
+			$lang=null;
+			if($fmt)
+				$GLOBALS['DATA_ENUM_fmt'][$fmtID] = new NxChoiceListBase($this,$fmtID,'formats',$lang,'',$fmt);
+			else
+				$GLOBALS['DATA_ENUM_fmt'][$fmtID] = $this->getChoiceList($fmtID,$lang,'formats');
+		}
+		
+		return $GLOBALS['DATA_ENUM_fmt'][$fmtID];
+	}
+	
+	// for DB?
+	function & getParam($name,$dft=null)
+	{
+		if (isset($_REQUEST[$name])) {
+			return $_REQUEST[$name];
+		}
+		if (isset($_SESSION[$name])) {
+			return $_SESSION[$name];
+		}
+		return $dft;
+	}
+	
+	function & setParam($name,&$v)
+	{
+		$_SESSION[$name]=&$v;
+	}
+	
+	// fetch a property and process its value as a qualified value 
+	function getQProperty($name,$qdeft=null,$cascade=true)
+	{
+		$qv = $this->getProperty($name,null,$cascade);
+		if ($qv !== null)
+			return $this->getQValue($qv);
+		else if ($qdeft != null)
+			return $this->getQValue($qdeft);
+		else 
+			return null;
+	}
+
+	function & getQValue($qv)
+	{
+		if ($qv === null)
+			return null;
+		
+		if (!@preg_match('/^\%\{([[:alnum:]-]+):([^:]+)(:([^}:]*)(:([^}:]+))?)?\}$/', $qv,$regs))
+			return $qv;
+			
+		$media = strtolower($regs[1]);
+		$name  = $regs[2];
+		$dft   = $regs[4];
+		$storage = $regs[6];
+			
+		// translate name to field format
+		$fname = strtr($name, array('-' => '_',' '=>'_','.'=>'_', '/'=>'_')); 
+		$v = $dft;
+
+		//echo "$qv ,media=$media,name=$name, deft=".$regs[4].", count regs=".count($regs).",storage=".$storage;
+			
+		switch($media)
+		{
+			case "param": // get or session
+				$v = $this->getParam($name,$dft);
+				break;
+			case "param-field": // get or session
+				$v = $this->getParam($fname,$dft);
+				break;
+			case "get":
+				if (isset($_GET[$name]))
+					$v = $_GET[$name];
+				break;
+			case "session":
+				if (isset($_SESSION[$name]))
+					$v = $_SESSION[$name];
+				break;
+			case "property":
+				$v = $this->getProperty($name,$dft,true);
+				break;
+			case "user":
+				global $_NX_user;
+				if (isset($_NX_user))
+					$v = $_NX_user->getProperty($name,$dft,true);
+				break;
+			case "site":
+				if (isset($_NX_user))
+					$v = $_NX_user->getProperty($name,$dft,true);
+				break;
+			case "permission":
+			case "permissions":
+				$v = $_NX_user->checkPerm($name);
+				break;
+			case "constant":
+				return constant($name);
+			case "post":
+				if (isset($_POST[$name]))
+					$v = $_POST[$name];
+				break;
+			case "get-field":
+				if (isset($_GET[$fname]))
+					$v = $_GET[$fname];
+				break;
+			case "post-field":
+				if (isset($_POST[$fname]))
+					$v = $_POST[$fname];
+				break;
+			case "cookie":
+				$cookie=$this->getPlugIn("Cookie");
+				$v = $cookie->getCookie($name,$dft);
+				break;
+			case "http":
+				if (isset($_REQUEST[$name])) $v = $_REQUEST[$name];
+				break;
+			case "http-field":
+				if (isset($_REQUEST[$fname])) $v = $_REQUEST[$fname];
+				break;
+			case "variable":
+				if (isset($GLOBALS[$name]))
+					$v = $GLOBALS[$name];
+				break;
+			case "user-or-get":
+				global $_NX_user;
+				if (isset($_NX_user) && ($vu = $_NX_user->getProperty($name,null,true))!=null)
+					$v = $vu;
+				else if (isset($_GET[$name]))
+					$v = $_GET[$name];
+				break;
+			case "any":
+			case "all":
+			case "*":
+				if ($_REQUEST[$name])
+					$v = $_REQUEST[$name];
+				else if ($_SESSION[$name]) 
+					$v = $_SESSION[$name];
+				else 
+					$v = $this->getProperty($name,$dft,true);
+				break;
+			case "literal":
+				return $name;
+			default:
+				break;
+		}
+
+		if ($storage != "")
+		{
+			//echo "storage";
+			switch($storage)
+			{
+				case "param":
+					$this->setParam($name,$v);
+					break;			
+				case "session":
+					$_SESSION[$name] = $v;
+					break;
+				case "cookie":
+					$cookie=$this->getPlugIn("Cookie");
+					$cookie->setCookie($name,$v);
+					break;
+				case "variable":
+					$GLOBALS[$name]=$v;
+					break;	
+				case "user":
+					global $_NX_user;
+					if (isset($_NX_user))
+						$_NX_user->setProperty($name,$v);
+						// to do : save it back to user property bag
+					break;
+				default:				
+					break;
+			}
+		}
+		
+		//echo "result=$v<br>";
+		return $v;
+	}
+
+	// application loading.
+	function loadApplication($name,$props,$aspect=null)
+	{
+		if ($props===null)
+			$props=array();
+			
+		// get actual logic path "path@package"
+		$_name = explode('@',$name=$this->getProperty($name.'.logic',str_replace('/','.',$name)));
+		if(count($_name)>1)
+		{
+			$name=$_name[0];
+			$package=$this->setProperty('nx.package',$_name[1]);
+			$packPath="packages/{$package}/";
+		}
+		elseif($package=$this->getProperty('nx.package'))
+		{
+			$packPath="packages/{$package}/";
+		}
+		else
+		{
+			$package='root';
+			$packPath='';
+		}
+		
+		// get path
+		// $path = str_replace('.','/',$name).'.php';
+
+		// search file
+		if ($f = $this->getConfFile('logic',str_replace('.','/',$name).'.php',$package))
+//		if (is_file($f=NX_CONF."{$package}logic/".str_replace('.','/',$name).'.php'))
+//		if (is_file($f=NX_GEN."{$package}logic/".str_replace('.','/',$name).'.php'))
+			$success = include_once($f); 
+		else
+		{
+			// try finding the application in package or in root
+			$builder = & $this->getPlugIn('build','NXL_','mvc/NXL');
+			if (!($f=$builder->build($name,$packPath)) || !include_once($f))
+			{
+				$msg="can't find application [{$name}@{$package}], please check your configuration";
+				nxError($msg);
+				$this->runView('page.error',array('msg'=>$msg));
+				return null;
+			}
+		}
+
+		$className=strtr($name,'.-','__');
+		$props['view'] = $name; // prefix for properties used by this logic module. obsolete?
+		
+		if (class_exists($className))
+			return new $className($props,$this,$aspect);
+		else
+			return null;
+	}
+	
+	function runLogic($module,$props=null,$aspect=null)
+	{
+		if (($page = $this->loadApplication($module,$props,$aspect))&&(!isset($page->aspect) || $page->aspect->onBeforeRun($module,$page))){
+			$r=$page->run();
+			
+			if (isset($page->aspect))
+				$page->aspect->onRun($module,$page);
+				
+			return $r;
+		}
+		return null;
+	}
+	
+	function & runCachedLogic($module,$props=null,$propName=null,$aspect=null)
+	{
+		if ($page = &$this->loadApplication($module,$props,$aspect))
+		{
+			ob_start();
+				$page->run();
+				$ret = ob_get_contents();
+			ob_end_clean();
+		}
+		else
+			$ret="[Error: unknown application $module]";
+			
+		if ($propName != null)
+			$this->setProperty($propName,$ret);
+			
+		return $ret;
+	}
+	
+	/**
+	 * @return void
+	 * @param props array of properties for the page
+	 * @desc manage page parameters such as caching, language etc.
+	 */
+	function runPage($props)
+	{
+		// if (!isset($props['page.cache.timeout']))
+		if (!defined('NX_HTTP_Cache')|| !NX_HTTP_Cache)
+		{
+			$this->_runPage($props);
+			return;
+		}
+
+		// else manage caching
+		require_once(NX_LIB."cache/NxCache_Page.inc");
+
+		// merge properties
+		$this->props=$props+$this->props;
+		
+		$pageCache = new NxCache_Page($this);
+		if ($pageCache->loadCache()===false)
+		{
+			$this->_runPage($props);
+			$pageCache->endCache();
+		}
+	}
+	
+	function _runPage($props)
+	{
+		if (!isset($props['page.logic']))
+			$this->runView('page.view',$props);
+		else
+		{
+			$page = $this->loadApplication($props['page.logic'], $props);
+			if ($page)
+			{
+				$page->run();
+			}
+		}		
+	}
+
+	function getFS() {
+		if (!$this->root->fs)
+		{
+			require_once(NX_LIB.'plugins/NxPlug_FileSys.inc');
+			$this->root->fs = new NxPlug_FileSys($this);
+		}
+
+		return $this->root->fs;
+	}
+
+	// returns the db driver 
+	function &getDB(&$errorCB,$connexion='default')
+	{
+		if (!isset($this->root->db))
+		{
+            $this->root->db=array();
+        }
+            
+        if (!isset($this->root->db[$connexion]))
+        {
+			require_once(NX_LIB."ds/db/NxDB_Database.inc");
+			$this->root->db[$connexion] = new NxDB_Database($this,$errorCB,$connexion);
+			if ($errorCB->isError())
+				return false;
+        }
+
+		return $this->root->db[$connexion];
+	}
+	
+	function & getPlugIn($name,$prefix='NxPlug_',$loc='plugins',$shared=true,$instance=false)
+	{
+		$fullName = $prefix.$name;
+		$instanceName=$fullName;
+		if ($instance)
+			$instanceName.='_'.$instance;
+
+		if (!class_exists($fullName))
+		{
+			if ($loc!='') $loc.='/';
+			if (is_file($f=NX_LIB."{$loc}{$fullName}.inc"))
+				require_once($f);
+			else
+				return null;
+		}
+
+		// singleton (shared instance)?
+		if (!$shared)
+			return  new $fullName($this);
+			
+		if (!isset($this->$instanceName))
+		{				
+			$this->$instanceName = new $fullName($this,$instance);
+		}
+
+		return $this->$instanceName;
+	}
+
+	// run a view "name". The view output goes to the property "propName"
+	// of either the "props" property set of "this". If no property is defined,
+	// direct output to the http stream.
+	function & runView($name, $props=null, $propName=null, $baseProp="", $device="auto",$skin="auto")
+	{
+		
+		// merge properties
+		if ($props)
+			$this->props = $props+$this->props;
+			
+		// get view mapping
+		$actualView = $this->getProperty("$name.view",null,true);
+		if ($actualView==null)
+			$actualView = $this->getProperty($name,$name,true);
+		
+		// if mapped to an array, execute all views in the array and redirect results to properties (except "page")
+		if (is_array($actualView))
+		{
+			foreach ($actualView as $vprop => $vname)
+			{
+				if ($vprop=="page")
+					$vprop=null;
+				$ret=$this->runView($vname,null,$vprop,$baseProp,$device,$skin);
+			}
+		}
+		else
+		{
+			// if mapped to a view name, execute view
+			$ui='NxApp_View_'.strtoupper($this->getProperty('view.type','XHTML'));
+			require_once(NX_LIB."view/$ui.inc");
+			$view = new $ui($actualView,$props,$this,$baseProp);
+			
+			if ($propName != null)
+			{
+				// content zone
+				ob_start();
+					$view->run($device,$skin,false);
+					$this->setProperty($propName,$ret=ob_get_contents());
+				ob_end_clean();
+			}
+			else
+			{
+				// page enveloppe: add content type and charset
+				$ret = $view->run($device,$skin,true);
+			}
+		}
+
+		return $ret;
+	}
+
+	// navigation management
+	function getUrlParams()
+	{
+		return $_SERVER['QUERY_STRING'];
+	}
+	
+	// manage "from page"
+	function setReturnPage($url=null,$override=true){
+		if (!isset($_SESSION["from_page"]) || $override)
+		{
+			if ($url==null)
+				$url=$_SERVER["REQUEST_URI"];
+				
+			$this->props['from_page']=$_SESSION['from_page']=$url;
+			$this->props['to_page']=$_SESSION['to_page']=$url;
+		}
+		return $url;
+	}
+	
+	function getReturnPage($deft){
+		return $this->getProperty('page.from_page',$deft);
+	}
+	
+	function getUrl()
+	{
+		return $_SERVER["REQUEST_URI"];
+	}
+
+	function &getRecDesc($view, &$errorCB,$props=null)
+	{
+		if ($props===null)
+			$props=&$this;
+
+		// get database view (set of fields to display)		
+		$dbview = $this->getProperty($view.'.db',null);
+		
+		// for compatibility with previous versions
+		if (!isset($dbview))
+			$dbview = $this->getProperty('db.'.$view,null);
+
+		if ($dbview == null)
+		{
+			$dbview=$view;
+			// return $errorCB->fatal("can't read rec desc: [$view]",__FILE__,__LINE__);
+		}
+
+		// manage package
+		$_name = explode('@',$dbview);
+		if(count($_name)>1)
+		{
+			$this->setProperty('nx.package',$package=$_name[1]);
+			$dbview=$_name[0];
+		}
+		else
+			$package=$this->getProperty('nx.package','');
+
+		$properties = array();
+		$f=$this->getConfFile('data',$dbview."_fprops.inc",$package);
+		if(!$f && isset($this->parent))
+		{
+			$package=$this->parent->getProperty('nx.package','');
+            $f=$this->getConfFile('data',$dbview."_fprops.inc",$package);
+		}
+		
+		// get record desc
+		if ($f)
+		{
+			if (isset($GLOBALS['NX_recDesc_'][$f]))
+			{
+				$properties = $GLOBALS['NX_recDesc_'][$f];
+				$sucess = true;
+			}
+			else
+				$sucess=include($f);
+						
+			if ($sucess!==false)
+			{	
+				// TODO: copy or reference ?
+				$GLOBALS['NX_recDesc_'][$f] = $properties;
+				$fprops = & $properties["fprops"];
+				$rprops =  @$properties["rprops"];
+                $rprops['package']=$package;
+                $rprops['path']=$f;
+				
+				require_once(NX_LIB."NxData_Record.inc");
+
+				$recDesc = new NxData_RecordDesc($rprops,$fprops,$properties["falias"],
+												 $props,$properties["frole"]);
+				return $recDesc;
+			}
+		}
+
+		NxError("failed opening data descriptor ($dbview)");
+		$errorCB->addError("failed opening data descriptor ($dbview)");
+		return null;
+	}
+
+	// get sub property array by key, or the property array if not found.
+	function getSection($section) {
+		$sectionConfig = $this->getProperty($section);
+		if (!isset($sectionConfig))
+			return $this;
+
+		return new NxProperties($sectionConfig,$this);
+	}
+	
+}
+?>

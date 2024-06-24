@@ -1,0 +1,1 @@
+<?php $properties["query"]="SELECT _soid,_treeid,_fullpath,_path,_name,_full_name,_itemid,_selprompt,_index,_perms,_lang FROM _ds_category"; ?>

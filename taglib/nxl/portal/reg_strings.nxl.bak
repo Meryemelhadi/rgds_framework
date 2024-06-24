@@ -1,0 +1,35 @@
+<?xml version="1.0"?> 
+<nxl:nxl version="1.0"
+	xmlns:nxl="http://www.nxfrontier.com/nxl/nxl"
+	xmlns:i8n="http://www.nxfrontier.com/nxl/i8n"
+	xmlns="http://www.w3.org/TR/REC-html40"
+	>
+
+<i8n:strings name="portal_reg" lang="en">
+	<i8n:string id="enter information">Please enter here your company details.<br/> 
+This information will be used to create your company profile on the Pressure Equipment Company Register.
+Once you submit your details you will receive an e-mail with a password for re-entry into you company profile from where you can self manage your account with us.<br/>
+This stage is free and there are no obligations to submit your information to the public site.
+For further information please visit the <a href="aboutus.php">About Us</a> links: <a href="aboutus.php?docID=register_your_company">"Why Register"</a>, <a href="aboutus.php?docID=how_it_works">"How it works"</a> and <a href="aboutus.php?docID=costs">"Costs"</a>.</i8n:string>
+
+	<i8n:string id="confirm your information">Please confirm your registration details.</i8n:string>
+
+	<i8n:string id="check your email">An email has been sent to you with your password. Please check your email and enter company id and password here.
+Your account will be created on PECR only after you have entered your name and password.
+NB.It can take up to several minutes for the email to arrive into your inbox, depending on internet traffic and your email system.
+<b>IMPORTANT NOTE: Please do NOT navigate to another page or close this window until you have entered your registration name and password. Otherwise you will have to enter your details again.</b>
+Your account is created only after you have entered this information.</i8n:string>
+
+	<i8n:string id="Record deleted">Account deleted</i8n:string>
+	<i8n:string id="confirm deletion">Please confirm the deletion of this record from the database</i8n:string>
+	<i8n:string id="Page expired">The page you requested was created using information which is only valid when you follow links provided on the page and not when clicking  \"back\" or \"forward\" buttons of your browser.
+	Please use on the following button to come back to a valid page.</i8n:string>
+
+</i8n:strings>
+	<i8n:string id="User id already taken">The user id you entered already exists, please try another one.</i8n:string>
+	<i8n:string id="Suggested id"><br/>Suggestion: you can use the following user id</i8n:string>
+	<i8n:string id="Record saved">Your PECR account has been successfully created.</i8n:string>
+	<i8n:string id="Record updated">Account updated.</i8n:string>
+
+</nxl:nxl>
+

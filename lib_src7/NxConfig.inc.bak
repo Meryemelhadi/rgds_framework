@@ -1,0 +1,108 @@
+<?php
+
+/*
+ class for getting configuration for an application.
+*/
+class NxConfig extends NxProperties
+{
+	static $config=array();
+
+	var $ctxt;
+	var $props;
+	var $package=null;
+	var $id=null;
+	var $name=null;
+
+	/* 
+	 loads configuration properties from ds/$app.$instance.inc
+	 @param $ctxt : application context or properties, of type NxProperties. if null : uses $_NX_Site
+	 @param $app  : id for the application (ex. ged)
+	 @param $instance : connection instance (ex. default, client specific property set, etc.)
+	*/
+	static function getConfig($ctxt,$app,$instance='default',$package='',$dir='ds') 
+	{
+		if (!isset(self::$config[$package][$dir][$app][$instance]))
+			self::$config[$package][$dir][$app][$instance] = new NxConfig($ctxt,$app,$instance,$package,$dir);
+
+		return self::$config[$package][$dir][$app][$instance];
+	}
+
+
+	function __construct($ctxt,$conf_name,$instance='default',$package='',$dir='ds') {
+		// get config parameters from file in nx/conf/ds/csv.doctors.inc
+		if ($ctxt)
+			$this->ctxt = $ctxt;
+		else
+		{
+			global $siteDesc;
+			require_once(NX_LIB.'module/NxPage.inc');
+			$this->ctxt = new NxPage(array(),$siteDesc);
+		}
+		$props=array();
+		parent::__construct($props,$ctxt);
+		$this->f = $this->load($conf_name,$instance,$package,$dir);
+		$this->id = "$conf_name@$package";
+		$this->name = $conf_name;
+	}
+
+	// CONFIG : returns a new instance of properties
+	function load($conf_name,$instance='',$package='',$dir='ds') 
+	{
+		if($instance)
+        	$cnxName='.'.$instance;
+        else
+        	$cnxName='';
+
+		// get package
+		if (!$package)
+		{
+			if (!isset($this->package))
+				$this->package=$this->getProperty('nx.package','');
+				
+			$package=$this->package;
+		}
+		else
+			$this->package=$package;
+
+		if (
+			($package && 
+				(
+					is_file($f=($p=GENERIS_PACKAGES."{$package}/$dir/{$conf_name}")."{$cnxName}".NX_HOST_SWITCH.'.inc') || 
+					is_file($f="{$p}{$cnxName}.inc") ||
+					is_file($f="{$p}".NX_HOST_SWITCH.'.inc') ||
+					is_file($f="{$p}.inc")
+				)
+			) ||
+			is_file($f=($p=NX_CONF."$dir/".$conf_name).$cnxName.NX_HOST_SWITCH.'.inc') || 
+			is_file($f=$p.$cnxName.'.inc') ||
+            is_file($f=$p.NX_HOST_SWITCH.'.inc') ||
+            is_file($f=$p.'.inc'))
+		{
+			// load connexion parameters
+			include($f);
+			nxLog("loaded config for $conf_name.$cnxName from $f",'CONF');
+		}
+		else
+		{
+			/*
+            $errorCB = new NxErrorCB();
+			$errorCB->addError("cant find config for $conf_name(.$cnxName)");
+            */
+			return null;
+		}
+
+		$this->addProperties($properties);
+		return $fs;
+	}
+
+	function getClientConfig($section,$cltName='') {
+		$clientConfigs = $this->getProperty($section);
+		if (!$cltName || !isset($clientConfigs[$cltName]))
+			return $this;
+
+		$props = $clientConfigs[$cltName];
+		return new NxProperties($props,$this);
+	}
+}
+
+?>

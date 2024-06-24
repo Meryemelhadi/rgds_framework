@@ -1,0 +1,121 @@
+<?xml version="1.0"?> 
+<nxl version="1.0"
+	xmlns="http://www.nxfrontier.com/nxl/nxl" 
+	xmlns:xo="http://www.nxfrontier.com/xo/core">
+	>
+
+<!-- define rulesets -->
+<xo:taglib uri="http://www.generis.com/rh/conge/ruleset/maroc" 
+	xmlns:this="http://www.nxfrontier.com/xo/this"
+	xmlns:xo="http://www.nxfrontier.com/xo/core">
+
+	<xo:tag name="type">maroc</xo:tag>
+
+	<xo:tag name="class">lib.rh.conge.demand</xo:tag>
+	<xo:tag name="my_demand_class">lib.rh.conge.services.my_demands</xo:tag>
+	<xo:tag name="validation_class">lib.rh.conge.services.validation</xo:tag>
+	<xo:tag name="process_class">lib.rh.conge.services.process</xo:tag>
+
+	<xo:tag name="onload"></xo:tag>
+
+	<!-- HR counters to be included in the user record -->
+	<xo:tag name="user_counters" xmlns="http://www.nxfrontier.com/dml/dml">
+		
+		<field name="current_year" alias="current_year" label="current_year" type="date" default="now" format="year" table="user" isEdit="no" />
+		<field name="last_credit" alias="last_credit" label="last_credit" type="text" table="user" isEdit="no" />
+		<field name="current_credit" alias="current_credit" label="current_credit" type="text" table="user" isEdit="no" />	
+		<field name="reliquat" alias="reliquat" label="reliquat" type="text" table="user" isEdit="no" />
+		
+	</xo:tag>
+
+	<!-- HR counters + workflow settings to be included in the user record -->
+	<xo:tag name="user_fields" xmlns="http://www.nxfrontier.com/dml/dml">
+		<this:user_counters />		
+
+		<field name="hr_manager" alias="validators" label="hr_manager" multiLines="true" type="text-choice" multiple="true" control="select" ds="rh.conge.demand.get_employee" ds_format="{field:first_name} {field:last_name}" ds_field_value="oid" default="0" show="hidden"/>
+
+		<field name="mgc_parent_group_RH" alias="parent_group" label="parent_group_RH_mgc" type="text-choice" multiple="true" control="lists_filter" colums="2" ds="rh.conge.demand.group_list" ds_format="{field:group_name}" ds_field_value="oid" prompt="Aucun groupe RH parent" show="hidden"/>	
+
+	</xo:tag>
+
+	<!-- HR workflow settings to be included in the user group record -->
+	<xo:tag name="group_fields" xmlns="http://www.nxfrontier.com/dml/dml">
+		<field name="hr_manager" alias="validators" label="hr_manager" multiLines="true" type="text-choice" multiple="true" control="select" ds="rh.conge.demand.get_employee" ds_format="{field:first_name} {field:last_name}" ds_field_value="oid" />
+
+		<field name="mgc_parent_group_RH" alias="parent_group" label="parent_group_RH_mgc" type="text-choice" multiple="true" control="lists_filter" columns="2" ds="rh.conge.demand.group_list" ds_format="{field:group_name}" ds_field_value="oid"  />	
+	</xo:tag>
+
+	<!-- HR counters to be included in the demand object -->
+	<xo:tag name="demand_counters" xmlns="http://www.nxfrontier.com/dml/dml">
+		<field name="legal_days" label="legal_days" multiLines="no" type="text-choice" prompt="Jours de droit ..." multiple="false" control="radio" ds="db:rh.conge.demand.get_all_legal_days" ds_format="{field:legal_day_name}" ds_field_value="oid" default="1" />
+		<field name="days_to_take" label="days_to_take" type="line" default="0" isEdit="no"/>
+	</xo:tag>
+
+	<xo:tag name="demand_information" xmlns="http://www.nxfrontier.com/dml/dml">
+		<field name="start_date" alias="start_date" label="start_date" type="date" default="now+1days" isRequired="true" />
+		
+		<field name="half_start_date" type="text-choice" alias="half_start_date" label="half_start_date" multiple="no" control="radio" list="rh.conge.demi_journee_am_values" default="0" help="half_start_date_help" />
+		
+		<field name="end_date" alias="end_date" label="end_date" type="date" default="now+2days" />
+		
+		<field name="half_end_date" type="text-choice" alias="half_end_date" label="half_end_date" multiple="no" control="radio" list="rh.conge.demi_journee_pm_values" default="0" help="half_end_date_help" />
+		
+		<field name="remplacant" label="remplacant" multiLines="no" type="text-choice" prompt="remplacant" multiple="false" control="select" ds="rh.conge.demand.get_liste_remplacants" ds_format="{field:first_name} {field:last_name}" ds_field_value="oid" />
+		
+		<field name="observations" alias="observations" label="observations" type="text" size="255" multiLines="auto" help="observations_help" />
+
+	</xo:tag>
+
+	<xo:tag name="demand_workflow_fields" xmlns="http://www.nxfrontier.com/dml/dml">
+		<field name="oid" label="object_id" type="oid" isKey="primary" show="hidden" isEdit="no" />
+		<!-- Identifiant du demandeur -->
+		<field name="empid" label="empid" type="ref-oid" isKey="secondary" show="hidden"/>
+		<!-- Identifiant du validateur -->
+		<field name="group_oid" label="group_oid" type="ref-oid" isKey="secondary" show="hidden"/>
+		<field name="demand_state" label="demand_state" type="text-choice" default="1" list="rh.conge.demands_state_orm" show="hidden"/>
+<!-- 		<field name="traiter" label="traiter" type="line" default="0" show="hidden"/>
+ -->
+		<field name="request_date" label="request_date" type="timestamp" default="now" show="hidden"/>
+	</xo:tag>
+
+	<xo:tag name="demand_fields" xmlns="http://www.nxfrontier.com/dml/dml">
+		<field name="legal_days" label="legal_days" multiLines="no" type="text-choice" prompt="Jours de droit ..." multiple="false" control="radio" ds="db:rh.conge.demand.get_all_legal_days" ds_format="{field:legal_day_name}" ds_field_value="oid" default="::first" />
+
+		<field name="start_date" alias="start_date" label="start_date" type="date" default="now+1days" isRequired="true" />
+		
+		<field name="half_start_date" type="text-choice" alias="half_start_date" label="half_start_date" multiple="no" control="radio" list="rh.conge.demi_journee_am_values" default="0" help="half_start_date_help" />
+		
+		<field name="end_date" alias="end_date" label="end_date" type="date" default="now+2days" />
+		
+		<field name="half_end_date" type="text-choice" alias="half_end_date" label="half_end_date" multiple="no" control="radio" list="rh.conge.demi_journee_pm_values" default="0" help="half_end_date_help" />
+		
+		<field name="days_to_take" label="days_to_take" type="line" default="0" isEdit="no"/>
+
+		<field name="remplacant" label="remplacant" multiLines="no" type="text-choice" prompt="remplacant" multiple="false" control="select" ds="rh.conge.demand.get_liste_remplacants" ds_format="{field:first_name} {field:last_name}" ds_field_value="oid" />
+		
+		<field name="observations" alias="observations" label="observations" type="text" size="255" multiLines="auto" help="observations_help" />
+	</xo:tag>
+
+	<xo:tag name="demand_fields_list" xmlns="http://www.nxfrontier.com/dml/dml">
+		<field name="legal_days" label="legal_days" multiLines="no" type="text-choice" prompt="Jours de droit ..." multiple="false" control="radio" ds="db:rh.conge.demand.get_all_legal_days" ds_format="{field:legal_day_name}" ds_field_value="oid" default="1" />
+		<field name="days_to_take" label="days_to_take" type="line" default="0" isEdit="no"/>
+
+		<field name="start_date" alias="start_date" label="start_date" type="date" format="%d/%m/%y" />
+		<field name="end_date" alias="end_date" label="end_date" type="date" format="%d/%m/%y" />
+
+		<field name="remplacant" alias="remplacant" label="remplacant" multiLines="no" type="text-choice" prompt="remplacant" 
+		multiple="false" control="select" ds="rh.conge.demand.get_employee" ds_format="{field:first_name} {field:last_name}" 
+		ds_field_value="oid" />
+
+		<field name="demand_state" alias="demand_state" label="demand_state" type="text-choice" list="rh.conge.demands_state_orm" />
+
+	</xo:tag>
+
+</xo:taglib>
+
+<!-- generic ruleset including others -->
+<xo:taglib uri="http://www.generis.com/rh/conge/ruleset" inherit="http://www.generis.com/rh/conge/ruleset/maroc">
+	<xo:tag name="type">generic</xo:tag>
+</xo:taglib>
+
+</nxl>

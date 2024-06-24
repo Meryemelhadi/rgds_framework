@@ -1,0 +1,1767 @@
+<?PHP
+
+class DML_genSQL
+{
+	function __construct(&$fs,$path,&$props)
+	{
+		$this->props=&$props;
+		$this->fs=&$fs;
+		$this->path=$path;
+	}
+	
+	function genSQL($comp,$tables,$views)
+	{
+		// generate tables
+		$this->genTables($comp,$tables);
+			
+		// for each table
+		foreach($tables as $name=>$table)
+		{
+			$this->genTable($name,$table);
+			$this->genView($name,$table);
+		}
+		
+		// for each view
+		foreach($views as $name=>$table)
+		{
+			$this->genView($name,$table);
+		}
+	}
+	
+	function getTableName($tname)
+	{
+		return preg_replace('#[-. /]#','_',$tname);
+	}
+	
+	function genTable($name,$view)
+	{
+		$path=$this->path.$name.'_';
+		
+		// create table
+		$this->SQL_createTable($name,$view);
+
+		// delete table
+		$this->saveFile($path.'deleteSQLTable.inc',
+							$this->SQL_deleteTable($name,$view));
+	}
+	
+	function genTables($comp,$tables)
+	{
+		$path=$this->path.$comp.'_';
+		
+		// create table
+		$this->saveFile($path.'createSQLTables.inc',
+							$this->SQL_createTables($tables));
+
+		// delete table
+		$this->saveFile($path.'deleteSQLTables.inc',
+							$this->SQL_deleteTables($tables));
+	}
+	
+	function genView($name,$view) {	
+		$path=$this->path.$name.'_';
+				
+		// insert record
+		$this->saveFile($path.'insertRecord.inc',
+							$this->SQL_insert($name,$view));
+		// update record
+		$this->saveFile($path.'updateRecord.inc',
+							$this->SQL_update($name,$view));
+        // select record
+        $this->saveFile($path.'selectRecord.inc',
+                            $this->SQL_select($name,$view));
+		// count record
+		$this->saveFile($path.'countRecord.inc',
+							$this->SQL_count($name,$view));
+		// delete record
+		$this->saveFile($path.'deleteRecord.inc',
+							$this->SQL_delete($name,$view));
+	}
+	
+	
+	// Queries
+	function SQL_createTable($name,$view) {
+		$tname=$view['rprops']['table'];
+        if (isset($view['rprops']['database']))
+            $tname=$this->getDBName($view['rprops']['database']).'.'.$tname;
+        
+		$s='<?php $self=$this; $properties["query"]="CREATE TABLE IF NOT EXISTS '.$tname.'(';
+		$key='';
+		$fkeys=array();
+		$fkey='';
+		$sep='';
+		$ksep='';
+		$key_fields=array();
+		foreach ($view['fields'] as $f)
+		{
+			if (isset($f['server']['IS_TRANSIENT']) && ($f['server']['IS_TRANSIENT']))
+					continue;
+			$fn=$f['server']['ufname'];
+
+			$t=$this->getType($f,$fkey);
+			if ($fkey)
+				$fkeys[]= $fkey;
+
+			$s.="{$sep}{$fn} {$t}";
+			$sep=',';
+			if (isset($f['sql']['KEY']) && !isset($key_fields[$fn]))
+			{
+				$key_fields[$fn]=true; // workaround for bug w/ field duplicates from DML pass1
+				$key.="{$ksep}{$fn}";
+				$ksep=',';
+			}
+		}
+		
+		if ($key)
+			$s .=",PRIMARY KEY($key)";
+			
+		if (count($fkeys)>0)
+		{
+			$s .= ',' .implode(',',$fkeys);
+		}
+
+		$s.=')"; ?>';
+		
+		$path=$this->path.$name.'_';
+		
+		// create table
+		$this->saveFile($this->path.$name.'_'.'createSQLTable.inc', $s);
+		
+        if (isset($view['rprops']['database']))
+        {
+            $name=$this->getQAlias($view,$view['rprops']['database']).'_'.$name;
+			$this->saveFile($this->path.$name.'_'.'createSQLTable.inc', $s);
+		}
+		
+	}
+
+	function SQL_createTables($tables) {
+		$s='<?php $self=$this; $properties["query"]=array(';
+		
+		// for each table
+		foreach($tables as $name=>$table)
+		{		
+			$tname=$table['rprops']['table'];
+            if (isset($table['rprops']['database']))
+                $tname=$this->getDBName($table['rprops']['database']).'.'.$tname;
+			
+			$s.='"CREATE TABLE IF NOT EXISTS '.$tname.'(';
+			$key='';
+			$fkeys=array();
+			$fkey='';
+			$sep='';
+			$ksep='';
+			$key_fields=array();
+			$index='';
+			if (isset($table['key']))
+			{
+				$ifields=array();
+				foreach ($table['key'] as $n=>$f)
+				{
+					if (isset($f['server']['IS_TRANSIENT']) && ($f['server']['IS_TRANSIENT']))
+						continue;
+					if (isset($f['server']['IS_TRANSIENT']) && ($f['server']['IS_TRANSIENT']=='yes'))
+						continue;
+					$ifields[]= $f['server']['ufname'];
+				}
+				$index = 'KEY IDX_MAIN (';
+				$index .= implode(',',$ifields).')';
+			}
+			
+			foreach ($table['fields'] as $f)
+			{
+				if (isset($f['server']['IS_TRANSIENT']) && ($f['server']['IS_TRANSIENT']))
+					continue;
+					
+				$fn=$f['server']['ufname'];
+				$t=$this->getType($f,$fkey);
+				if ($fkey)
+					$fkeys[]= $fkey;
+
+				$s.="{$sep}{$fn} {$t}";
+				$sep=',';
+				if (isset($f['sql']['KEY']) && !isset($key_fields[$fn]))
+				{
+					$key_fields[$fn]=true; // workaround for bug w/ field duplicates from DML pass1
+					$key.="{$ksep}{$fn}";
+					$ksep=',';
+				}
+			}
+			
+			if ($key)
+				$s .=",PRIMARY KEY($key)";
+ 			if ($index!='')
+			{
+				$s .= ','.$index;
+			}
+
+			if (count($fkeys)>0)
+			{
+				$s .= ',' .implode(',',$fkeys);
+			}
+			
+			$s.=')",';
+		}
+		return $s.'); ?>';
+	}
+	
+	function SQL_deleteTables($tables) {
+		$s='<?php $self=$this; $properties["query"]=array(';
+		
+		// for each table
+		foreach($tables as $name=>$table)
+		{		
+			$tname=$table['rprops']['table'];
+            if (isset($table['rprops']['database']))
+                $tname=$this->getDBName($table['rprops']['database']).'.'.$tname;
+
+			$s.='"DROP TABLE IF EXISTS '.$tname.'",';
+		}
+		return $s.'); ?>';
+	}
+	
+	function getType($f,&$fk) {
+		$fsql = $f['sql'];
+		if (isset($f['server']['SQLTYPE']))
+			return $f['server']['SQLTYPE']; 
+		
+		switch($s=$fsql['TYPE'])
+		{
+			case 'VARCHAR': 
+				$s.='('.$fsql['SIZE'].')';
+				break;
+			case 'FLOAT':
+				if (isset($f['server']['PRECISION']))
+					$s.='('.$f['server']['PRECISION'].') DEFAULT 0.0';
+			    else
+					$s.='(10,2) DEFAULT 0.0';
+				break;
+		}
+
+		// foreignKey="oid" foreignTable="expense_report"
+		// _expense_report_oid integer REFERENCES expense_report (oid),
+		if (isset($f['server']['FOREIGNTABLE']))
+		{
+			if (isset($f['server']['FOREIGNKEY']))
+				$key = $f['server']['FOREIGNKEY'];
+			else
+				$key = 'oid';
+			$fn = $f['server']['ufname'];
+
+			$fk = "FOREIGN KEY ($fn) REFERENCES _{$f['server']['FOREIGNTABLE']} (_{$key})";
+		}
+		else
+			$fk = '';
+
+		return $s;
+	}
+	
+	function SQL_deleteTable($name,$table) {
+		$tname=$table['rprops']['table'];
+        if (isset($table['rprops']['database']))
+            $tname=$this->getDBName($table['rprops']['database']).'.'.$tname;
+            
+		return '<?php $self=$this; $properties["query"]="DROP TABLE IF EXISTS '.$tname.'";?>';
+	}
+	
+	function SQL_insert($name,$view) {
+		$tname=$view['rprops']['table'];
+        if (isset($view['rprops']['database']))
+            $tname=$this->getDBName($view['rprops']['database']).'.'.$tname;
+
+		$s='<?php $self=$this; $properties["query"]="INSERT INTO '.$tname.'(';
+		$sep='';
+		$vals='';
+		$vsep='';
+		foreach ($view['fields'] as $f)
+		{
+			if (isset($f['server']['IS_TRANSIENT']) && ($f['server']['IS_TRANSIENT']))
+				continue;
+			$ufn=$f['server']['ufname'];
+			$s.="{$sep}{$ufn}";
+			$vals.=$vsep.$this->getVal($view,$f,'',false,'insert');
+			$sep=',';
+			$vsep='.",".'."\n";
+		}		
+			
+		return $this->cleanSQLSrc($s.') VALUES(".'.$vals.'.")"; ?>');
+	}
+
+	function SQL_completeViewFields(&$view)
+	{
+		$tname=$view['rprops']['table'];
+		$tname_src=$view['rprops']['table_src'];
+
+		$view['metadata']=array();
+		if (isset($view['rprops']['database']))
+        {
+            $db=$this->getDBName($view['rprops']['database']);
+            $dbPrefix=$db.'.';
+
+	        $dbname=ltrim($view['rprops']['database'],'_');
+            $dbalias=$this->getQAlias($view,$view['rprops']['database']);
+            $dbaliasPrefix=$dbalias.'.';
+            $databases[ltrim($dbname,'_')]=$dbname;
+        }
+        else
+        {
+            $dbPrefix='';
+			$dbname='';
+			$databases=array(); 
+			$dbaliasPrefix='';
+			$dbalias='';
+		}
+		$view['metadata']['databases']=$databases;
+
+		$tprefix=$view['rprops']['tprefix'];
+		$fprefix=$view['rprops']['fprefix'];
+						
+		// init table list
+		$tables[$dbPrefix.ltrim($tname,'_')]=$dbPrefix.$tname;
+		
+		// init list of tables in outer join
+		$ojoin_tables=array();
+		
+//		$tables[$tname_src]=$tname;
+		
+		// get tables from key
+		if (isset($view['key']))
+			foreach ($view['key'] as $f)
+			{
+				if (isset($f['server']['IS_TRANSIENT']) && ($f['server']['IS_TRANSIENT']))
+					continue;
+				if (isset($f['server']['IS_TRANSIENT']) && ($f['server']['IS_TRANSIENT']))
+					continue;
+					
+				if (isset($f['server']['TABLE']))
+				{
+                    $fdbPrefix=$this->getFieldDBPrefix($f,$dbPrefix);
+					$t=$this->sqlTableName($f['server']['TABLE']);
+					$tables[$fdbPrefix.$t]=$fdbPrefix.$tprefix.$t;
+				}
+				
+				if (isset($f['server']['JOIN']) && (strtolower($f['server']['JOIN'])=='left'))
+				{
+					if (isset($f['server']['TABLE']))
+					{
+	                    $fdbPrefix=$this->getFieldDBPrefix($f,$dbPrefix);
+						$t=$this->sqlTableName($f['server']['TABLE']);
+						$ojoin_tables[$fdbPrefix.$t]=$fdbPrefix.$tprefix.$t;
+					}					
+				}
+				
+	            if (isset($f['server']['DATABASE']))
+	            {
+	                $databases[$f['server']['DATABASE']]=$f['server']['DATABASE'];
+	                $dbaliases[$f['server']['DATABASE']]=$this->getQAlias($view,$f['server']['DATABASE']);  
+	            }				
+			}      
+			
+		foreach ($view['fields'] as $f)
+		{
+			// fix transient issue
+			if (isset($f['server']['IS_TRANSIENT']) && ($f['server']['IS_TRANSIENT']))
+				continue;
+			if (isset($f['server']['IS_TRANSIENT']) && ($f['server']['IS_TRANSIENT']=='yes'))
+				continue;
+				
+			if (isset($f['server']['TABLE']))
+			{
+                $fdbPrefix=$this->getFieldDBPrefix($f,$dbPrefix);
+				$t=$this->sqlTableName($f['server']['TABLE']);
+				$tables[$fdbPrefix.$t]=$fdbPrefix.$tprefix.$t;
+			}
+			
+            if (isset($f['server']['DATABASE']))
+            {
+                $databases[$f['server']['DATABASE']]=$f['server']['DATABASE'];
+                $dbaliases[$f['server']['DATABASE']]=$this->getQAlias($view,$f['server']['DATABASE']);  
+            }			
+		}
+
+		$view['metadata']['tables']=$tables;
+	
+        $view['metadata']['isMultipleTables']=$isMultipleTables=count($tables)>1;
+        $isMultipleDatabases=count($databases)>1;
+		$view['metadata']['isDatabase']=$isDatabase=(count($databases)>0) && $isMultipleTables; 
+		$view['metadata']['addTablePrefix']=$isMultipleTables || $isDatabase; 
+		
+		// check if multiple tables
+		if ($isMultipleTables || $isDatabase)
+		{
+			$multi=true;
+			if (count($ojoin_tables)>0)
+			{
+//				$tablesList=array_diff($tables,$ojoin_tables);
+				$tablesList=array();
+				foreach ($ojoin_tables as $ot)
+					$tablesList[]=$tname.' LEFT OUTER JOIN '.$ot .'"'.$this->SQL_where('',$view,$multi,$ot,'select','outer',$ot).'."';
+				$tnames = implode(',',$tablesList);
+			}
+			else
+				$tnames = implode(',',$tables);
+		}	
+		else
+		{	
+			$tnames = $dbPrefix.$tname;
+			$multi=false;
+		}
+		$view['metadata']['tableList']=$tnames; 
+		
+		// complete implicit "table" for fields
+		if ($multi)
+		{
+			foreach ($view['fields'] as $n=>$f)
+			{
+				if (isset($f['server']['IS_TRANSIENT']) && ($f['server']['IS_TRANSIENT']))
+					continue;
+				if (isset($f['server']['IS_TRANSIENT']) && ($f['server']['IS_TRANSIENT']=='yes'))
+					continue;
+					
+				if (isset($f['server']['TABLE']))
+				{
+                    $fdbPrefix=$this->getFieldDBPrefix($f,$dbPrefix);
+					$t=$this->sqlTableName($f['server']['TABLE']);
+					$view['fields'][$n]['sql']['table']=$tables[$fdbPrefix.$t];
+				}
+				else
+					$view['fields'][$n]['sql']['table']=$tname;
+			}
+
+			if (isset($view['key']))
+				foreach ($view['key'] as $n=>$f)
+				{
+					if (isset($f['server']['IS_TRANSIENT']) && ($f['server']['IS_TRANSIENT']))
+						continue;
+					if (isset($f['server']['IS_TRANSIENT']) && ($f['server']['IS_TRANSIENT']=='yes'))
+						continue;
+						
+					if (isset($f['server']['TABLE']))
+					{
+                        $fdbPrefix=$this->getFieldDBPrefix($f,$dbPrefix);
+                        $t=$this->sqlTableName($f['server']['TABLE']);
+                        $view['key'][$n]['sql']['table']=$tables[$fdbPrefix.$t];
+					}
+					else
+						$view['key'][$n]['sql']['table']=$tname;
+				}
+				
+			if (isset($view['sort']))
+				foreach ($view['sort'] as $n=>$f)
+				{
+					if (isset($f['server']['IS_TRANSIENT']) && ($f['server']['IS_TRANSIENT']))
+						continue;
+					if (isset($f['server']['IS_TRANSIENT']) && ($f['server']['IS_TRANSIENT']=='yes'))
+						continue;
+						
+					if (isset($f['server']['TABLE']))
+					{
+                        $fdbPrefix=$this->getFieldDBPrefix($f,$dbPrefix);
+                        $t=$this->sqlTableName($f['server']['TABLE']);
+                        $view['sort'][$n]['sql']['table']=$tables[$fdbPrefix.$t];
+					}
+					else
+						$view['sort'][$n]['sql']['table']=$tname;
+				}
+				
+			if (isset($view['group_by']))
+				foreach ($view['group_by'] as $n=>$f)
+				{
+					if (isset($f['server']['IS_TRANSIENT']) && ($f['server']['IS_TRANSIENT']))
+						continue;
+					if (isset($f['server']['IS_TRANSIENT']) && ($f['server']['IS_TRANSIENT']=='yes'))
+						continue;
+						
+					if (isset($f['server']['TABLE']))
+					{
+                        $fdbPrefix=$this->getFieldDBPrefix($f,$dbPrefix);
+                        $t=$this->sqlTableName($f['server']['TABLE']);
+                        $view['group_by'][$n]['sql']['table']=$tables[$fdbPrefix.$t];
+					}
+					else
+						$view['group_by'][$n]['sql']['table']=$tname;
+				}
+		}
+		
+		$view['metadata']['ojoin_tables']=$ojoin_tables;
+		$view['metadata']['dbPrefix']=$dbPrefix;
+		$view['metadata']['dbname']=$dbname;
+		$view['metadata']['dbalias']=$dbalias;
+		$view['metadata']['dbaliasPrefix']=$dbaliasPrefix;
+	}
+
+	function SQL_select($name,&$view) {
+		$this->SQL_completeViewFields($view);
+
+		$s='<?php $self=$this; $properties["query"]="SELECT ';
+		$sep='';
+/*	
+        $view['metadata']['isMultipleTables']=$isMultipleTables=count($tables)>1;
+        $isMultipleDatabases=count($databases)>1;
+		$view['metadata']['isDatabase']=$isDatabase=(count($databases)>0) && $isMultipleTables; 
+		$view['metadata']['addTablePrefix']=$isMultipleTables || $isDatabase; 
+*/
+		$tname=$view['rprops']['table'];
+		$tname_src=$view['rprops']['table_src'];
+
+  		$isMultipleTables=$view['metadata']['isMultipleTables'];
+        $isDatabase=$view['metadata']['isDatabase'];
+        $ojoin_tables=$view['metadata']['ojoin_tables'];
+        $tables=$view['metadata']['tables'];
+		$dbPrefix=$view['metadata']['dbPrefix'];
+		$dbname=$view['metadata']['dbname'];
+		$dbalias=$view['metadata']['dbalias'];
+		$dbaliasPrefix=$view['metadata']['dbaliasPrefix'];
+		
+		// check if multiple tables
+		if ($isMultipleTables || $isDatabase)
+		{
+			$multi=true;
+			if (count($ojoin_tables)>0)
+			{
+//				$tablesList=array_diff($tables,$ojoin_tables);
+				$tablesNotJoinList = array_diff($tables,$ojoin_tables);
+				$tablesList=array();
+				foreach ($ojoin_tables as $ot)
+//					$tablesList[]=$tname.' LEFT OUTER JOIN '.$ot .'"'.$this->SQL_where($view,$multi,$ot,'select','outer',$ot).'."';
+					$tablesList[]=' LEFT OUTER JOIN '.$ot .'"'.$this->SQL_where('',$view,$multi,$ot,'select','outer',$ot).'."';
+				$tnames = implode(',',$tablesNotJoinList) . implode(',',$tablesList);
+			}
+			else
+				$tnames = implode(',',$tables);
+		}	
+		else
+		{	
+			$tnames = $dbPrefix.$tname;
+			$multi=false;
+		}
+		
+		// complete implicit "table" for fields
+		if ($multi)
+		{
+			foreach ($view['fields'] as $n=>$f)
+			{
+				if (!isset($f['server']['SQL']) && isset($f['server']['IS_TRANSIENT']) && (($f['server']['IS_TRANSIENT']) || ($f['server']['IS_TRANSIENT']=='yes')) )
+				{
+						continue;
+				}
+					
+				if (isset($f['server']['TABLE']))
+				{
+                    $fdbPrefix=$this->getFieldDBPrefix($f,$dbPrefix);
+					$t=$this->sqlTableName($f['server']['TABLE']);
+					$view['fields'][$n]['sql']['table']=$tables[$fdbPrefix.$t];
+				}
+				else
+					$view['fields'][$n]['sql']['table']=$tname;
+			}
+
+			if (isset($view['key']))
+				foreach ($view['key'] as $n=>$f)
+				{
+					if (isset($f['server']['IS_TRANSIENT']) && ($f['server']['IS_TRANSIENT']))
+						continue;
+					if (isset($f['server']['IS_TRANSIENT']) && ($f['server']['IS_TRANSIENT']=='yes'))
+						continue;
+						
+					if (isset($f['server']['TABLE']))
+					{
+                        $fdbPrefix=$this->getFieldDBPrefix($f,$dbPrefix);
+                        $t=$this->sqlTableName($f['server']['TABLE']);
+                        $view['key'][$n]['sql']['table']=$tables[$fdbPrefix.$t];
+					}
+					else
+						$view['key'][$n]['sql']['table']=$tname;
+				}
+				
+			if (isset($view['sort']))
+				foreach ($view['sort'] as $n=>$f)
+				{
+					if (isset($f['server']['IS_TRANSIENT']) && ($f['server']['IS_TRANSIENT']))
+						continue;
+					if (isset($f['server']['IS_TRANSIENT']) && ($f['server']['IS_TRANSIENT']=='yes'))
+						continue;
+						
+					if (isset($f['server']['TABLE']))
+					{
+                        $fdbPrefix=$this->getFieldDBPrefix($f,$dbPrefix);
+                        $t=$this->sqlTableName($f['server']['TABLE']);
+                        $view['sort'][$n]['sql']['table']=$tables[$fdbPrefix.$t];
+					}
+					else
+						$view['sort'][$n]['sql']['table']=$tname;
+				}
+				
+			if (isset($view['group_by']))
+				foreach ($view['group_by'] as $n=>$f)
+				{
+					if (isset($f['server']['IS_TRANSIENT']) && ($f['server']['IS_TRANSIENT']))
+						continue;
+					if (isset($f['server']['IS_TRANSIENT']) && ($f['server']['IS_TRANSIENT']=='yes'))
+						continue;
+						
+					if (isset($f['server']['TABLE']))
+					{
+                        $fdbPrefix=$this->getFieldDBPrefix($f,$dbPrefix);
+                        $t=$this->sqlTableName($f['server']['TABLE']);
+                        $view['group_by'][$n]['sql']['table']=$tables[$fdbPrefix.$t];
+					}
+					else
+						$view['group_by'][$n]['sql']['table']=$tname;
+				}
+		}
+			
+		foreach ($view['fields'] as $f)
+		{
+			$ufn=$f['server']['ufname'];
+
+			if (!isset($f['server']['SQL']) && isset($f['server']['IS_TRANSIENT']) && (($f['server']['IS_TRANSIENT']) || ($f['server']['IS_TRANSIENT']=='yes')) )
+			{
+					continue;
+			}
+				
+			else if ($multi)
+			{
+				if (isset($f['sql']['table']))
+					$table=$f['sql']['table'];
+				else
+					$table=$tname;
+					
+				// $ufn = "$table.$ufn";
+//                $qtable=str_replace('.','_',$this->trim_prefix($table,$tprefix));
+
+                $qf=$f['server']['QName'];
+//                $s.="{$sep}$table.$ufn AS ".$qtable.$ufn;
+
+				if (isset($f['server']['SQL']))
+					$s.="{$sep} {$f['server']['SQL']} AS ".$qf;
+				else
+					$s.="{$sep}$table.$ufn AS ".$qf;
+			}
+			else {
+				if (isset($f['server']['SQL']))
+					$s.="{$sep} {$f['server']['SQL']} AS {$ufn}";
+				else
+					$s.="{$sep}{$ufn}";
+			}
+
+			// $fn=$f['server']['NAME'];
+			$sep=',';
+		}
+
+		$s.=" FROM {$tnames}\"";
+		
+		// WHERE
+		$s.=$this->SQL_where($name,$view,$multi,$tname);
+		
+		// GROUP BY
+		$s.=$this->SQL_groupby($name,$view,$multi,$tname);
+		
+		// ORDER BY
+		$s.=$this->SQL_sort($name,$view,$multi,$tname);
+		
+		// LIMIT
+		$s.=$this->SQL_limit($name,$view);
+		
+	/*	$lim='';
+		if (isset($view['limit']))
+		{
+			$sep='';
+			foreach ($view['limit'] as $f)
+			{
+				$ufn=$f['ufname'];
+				$fn=$f['NAME'];
+				$sep=',';
+			}		
+		}
+	*/
+
+		return $this->cleanSQLSrc($s).'; ?>';		
+		
+	}
+
+	function SQL_where($name,$view,$isMulti=false,$deftTable='',$op='select',$join='inner',$join_on='')
+	{
+		// WHERE
+		$s='';
+		$sep_op='AND';
+		$sep_op_stack[]='AND';
+		$left_op=true;
+		if (isset($view['key']))
+		{			
+			$w='';
+			$sep='';
+			foreach ($view['key'] as $f)
+			{			
+				// dont treat outer join fields
+				if (isset($f['server']['JOIN']) && (strtolower($f['server']['JOIN'])=='left'))
+				{
+					// outer join field
+					
+					if ($join=='inner')
+						continue;  // ignore outer field in inner mode
+					
+					// outer field in outer mode => ignore if not the requested "on table"
+					if (isset($f['sql']['table']) && $f['sql']['table']!=$join_on)
+						continue;					
+				}
+				else
+				{
+					// inner join field
+					
+					if ($join!='inner')
+						// ignore inner field in outer mode
+						continue;
+				}
+				
+				if (isset($f['server']['IS_TRANSIENT']) && ($f['server']['IS_TRANSIENT']))
+				{
+					if (!isset($f['server']['OP']) || !isset($f['server']['ACTION']))
+						continue;
+
+					if (isset($f['server']['NARY']) && $f['server']['NARY']=='1')
+					{
+						switch ($f['server']['ACTION'])
+						{
+							case 'start':
+								if (!$left_op)
+									$w.='." '.$sep_op.' '.$f['server']['OP'].'(';
+								else
+									$w.=$f['server']['OP'].'(';
+								$left_op=false;			
+								$sep='';
+								break;
+							case 'end':
+								$left_op=false;			
+								$w.='.") "';
+								break;
+						}
+					}
+					else switch ($f['server']['ACTION'])
+					{
+						case 'start':
+							if (!$left_op)
+								$w.='." '.$sep_op.' (';
+							else
+								$w.='(';
+								
+							$left_op=true;			
+							$sep_op=$f['server']['OP'];
+							array_unshift($sep_op_stack,$sep_op);
+							$sep='';
+							break;
+						case 'end':
+							$left_op=false;			
+							$w.='.") "';
+							array_shift($sep_op_stack);
+							$sep_op=$sep_op_stack[0];
+							break;
+					}
+					
+					continue;				
+				}
+
+				if (isset($f['server']['NO_ACCENTS']) && ($f['server']['NO_ACCENTS']=='yes'||$f['server']['NO_ACCENTS']=='true')) {
+					$noAccent = 'true';
+				}
+				else
+					$noAccent = 'false';
+
+				// we have something left of operande
+				$left_op=false;			
+				$ufn=$f['server']['ufname'];
+//				$qfn=$f['server']['QName'];
+				if ($isMulti)
+				{
+					if (isset($f['sql']['table']))
+						$table=$this->sqlTableName($f['sql']['table']);
+					else
+						$table=$deftTable;
+						
+					$ufn = "$table.$ufn";
+                    //$ufn = $f['server']['QName'];
+				}
+				$qfn=$ufn;
+					
+				$op='=';
+				$wrap='';
+				$expr='';
+				if (isset($f['server']['DEBUG']))
+					DebugBreak();
+					
+				if (isset($f['server']['RELATION']))
+				{
+					$rel=preg_replace('/[ _]+/','-',trim(strtolower($f['server']['RELATION']),"' "));
+					$csv_sep=isset($f['server']['CSV_SEP'])?$f['server']['CSV_SEP']:'|';
+					if (isset($f['server']['MULTIPLE']) && ($f['server']['MULTIPLE']=='true'||$f['server']['MULTIPLE']=='yes'))
+						$patMul = $csv_sep;
+					else
+						$patMul = '';
+					
+					$pat_match_right="'".$patMul.(isset($f['server']['PATTERN_MATCH_RIGHT'])?$f['server']['PATTERN_MATCH_RIGHT']:'%')."'";
+					$pat_match_left="'".(isset($f['server']['PATTERN_MATCH_LEFT'])?$f['server']['PATTERN_MATCH_LEFT']:'%').$patMul."'";
+					switch($rel)
+					{
+						case 'match-all': 
+							$expr="{$sep}\".\$this->getWhereClause(\"{$qfn}\",".$this->getVal($view,$f,$wrap,true,'where',$csv_sep).",'LIKE','AND',$pat_match_left,$pat_match_right,true,false,'$csv_sep','$noAccent').\"\"";
+							break;
+						case 'match':
+						case 'match-like': 
+							$expr="{$sep}\".\$this->getWhereClause(\"{$qfn}\",".$this->getVal($view,$f,$wrap,true,'where',$csv_sep).",'LIKE','OR',$pat_match_left,$pat_match_right,true,false,'$csv_sep','$noAccent').\"\"";
+							break;
+						case 'match-or-null': 
+							$expr="{$sep}\".\$this->getWhereClause(\"{$qfn}\",".$this->getVal($view,$f,$wrap,true,'where',$csv_sep).",'LIKE','OR',$pat_match_left,$pat_match_right,true,true,'$csv_sep','$noAccent').\"\"";
+							break;
+						case 'strict-match': 
+							$expr="{$sep}\".\$this->getWhereClause(\"{$qfn}\",".$this->getVal($view,$f,$wrap,true,'where',$csv_sep).",'LIKE','OR',$pat_match_left,$pat_match_right,false,false,'$csv_sep','$noAccent').\"\"";
+							break;
+						case 'like': 
+							$expr="{$sep}\".\$this->getWhereClause(\"{$qfn}\",".$this->getVal($view,$f,$wrap,true,'where',$csv_sep).",'LIKE','OR',$pat_match_left,$pat_match_right,true,false,'$csv_sep','$noAccent').\"\"";
+//							$op=' LIKE '; $wrap='%'; 
+							break;
+						case 'gt': $op='>'; break;
+						case 'gte': case 'ge': $op='>='; break;
+						case 'before':
+							$expr="{$sep}\".\$this->getWhereClause(\"{$qfn}\",".$this->getVal($view,$f,$wrap,true,'where',$csv_sep).",'<','OR','','',true,false,'$csv_sep','$noAccent').\"\"";
+						case 'after':
+							$expr="{$sep}\".\$this->getWhereClause(\"{$qfn}\",".$this->getVal($view,$f,$wrap,true,'where',$csv_sep).",'>','OR','','',true,false,'$csv_sep','$noAccent').\"\"";
+							break;
+						case 'lt': $op='<'; break;
+						case 'lte':	case 'le': $op='<='; break;
+						// if key is provided and field not empty, check if equal
+						case 'eq-match-or-null':
+							$expr="{$sep}\".\$this->getWhereClause(\"{$qfn}\",".$this->getVal($view,$f,$wrap,true,'where',$csv_sep).",'=','OR','','',true,true,'$csv_sep','$noAccent').\"\"";
+							break;
+						case 'lte-or-null':
+							$expr="{$sep}\".\$this->getWhereClause(\"{$qfn}\",".$this->getVal($view,$f,$wrap,true,'where',$csv_sep).",'<=','OR','','',true,false,'$csv_sep','$noAccent').\"\"";
+							break;
+						case 'lt-or-null':
+							$expr="{$sep}\".\$this->getWhereClause(\"{$qfn}\",".$this->getVal($view,$f,$wrap,true,'where',$csv_sep).",'<','OR','','',true,false,'$csv_sep','$noAccent').\"\"";
+							break;
+						case 'gte-or-null':
+							$expr="{$sep}\".\$this->getWhereClause(\"{$qfn}\",".$this->getVal($view,$f,$wrap,true,'where',$csv_sep).",'>=','OR','','',true,false,'$csv_sep','$noAccent').\"\"";
+							break;
+						case 'gt-or-null':
+							$expr="{$sep}\".\$this->getWhereClause(\"{$qfn}\",".$this->getVal($view,$f,$wrap,true,'where',$csv_sep).",'>','OR','','',true,false,'$csv_sep','$noAccent').\"\"";
+							break;
+						// if key is provided, check if equal
+						case 'eq-match':
+						case 'eq-or-null':
+							$expr="{$sep}\".\$this->getWhereClause(\"{$qfn}\",".$this->getVal($view,$f,$wrap,true,'where',$csv_sep).",'=','OR','','',true,false,'$csv_sep','$noAccent').\"\"";
+							break;
+						case 'eq-match-strict':							$expr="{$sep}\".\$this->getWhereClause(\"{$qfn}\",".$this->getVal($view,$f,$wrap,true,'where',$csv_sep).",'=','OR','','',false,false,'$csv_sep','$noAccent').\"\"";
+							break;
+						// accepts wildcards but not added by default
+						case 'eq-match-ex':
+							$expr="{$sep}\".\$this->getWhereClause(\"{$qfn}\",".$this->getVal($view,$f,$wrap,true,'where',$csv_sep).",'LIKE','OR','','',true,false,'$csv_sep','$noAccent').\"\"";
+							break;
+						case 'eq': case '=': $op='='; break;
+						case 'neq': case 'ne': case '!=': $op='<>'; break;
+						case 'in':
+							$expr="{$sep}{$ufn} in(\".".$this->getVal($view,$f,$wrap,true,'where',$csv_sep).".\")\".\"\"";
+							break;
+						case 'in-or-null':
+							$val = $this->getVal($view,$f,$wrap,true,'where',$csv_sep);
+							$expr="{$sep}{$ufn} in(\".".$val.".\")\".\"\"";
+							break;
+						case 'isnull':
+						case 'is null':
+						case 'is-null':
+							$expr="{$sep}{$ufn} is null \"";
+							break;
+						case 'not null':
+						case 'not is null':
+                        case 'is not null':
+                        case 'is-not-null':
+						case 'not-is-null':
+							$expr="{$sep}{$ufn} IS NOT NULL \"";
+							break;
+                        case 'full-text':
+                        case 'fulltext':
+							$expr="{$sep}\".\$this->getWhereClause(\"{$qfn}\",".$this->getVal($view,$f,$wrap,true,'where',$csv_sep).",'ft','OR','','',true,true,'$csv_sep','$noAccent').\"\"";
+							break;
+
+                        case 'full-text bool':
+                        case 'fulltext bool':
+                        case 'full-text boolean':
+                        case 'full-text-boolean':
+                        case 'fulltext boolean':
+                        case 'boolean full-text':
+                        case 'boolean fulltext':
+							$expr="{$sep}\".\$this->getWhereClause(\"{$qfn}\",".$this->getVal($view,$f,$wrap,true,'where',$csv_sep).",'ftb','OR','','',true,true,'$csv_sep','$noAccent').\"\"";
+							// $expr="{$sep}MATCH({$ufn}) AGAINST(\".".$this->getVal($view,$f,$wrap,true,'where',',').".\" IN BOOLEAN MODE)\".\"\"";
+							break;
+						default:
+                        // DebugBreak();
+
+							if ($rel[0]=='%')
+							{
+								$op=$this->getQValue($view,$f,null,$rel,null,'rel');
+								// $op="\$this->getFieldParam(\"$n_relation\",\"$dft\",\"$mul_sep\",\$record,\"$opt\")";								
+								$expr="{$sep}\".\$this->getWhereClause(\"{$qfn}\",".$this->getVal($view,$f,$wrap,true,'where',$csv_sep).",$op,'OR','','',true,false,'$csv_sep','$noAccent').\"\"";
+							}
+							else					
+								nxltrace("DML unsupported WHERE operator:[{$f['server']['RELATION']}]",'error');
+					}
+				}
+				if ($expr!='')
+					$w.=$expr;
+				else {
+					$ufn=$this->getQName($ufn);
+					$w.="{$sep}{$ufn}".$op."\".".$this->getVal($view,$f,$wrap,true,'where').".\"\"";
+				}
+					
+				$sep='." '.$sep_op.' ';
+			}
+			
+			if ($w!='')
+				if ($join=='inner')
+				{
+					$s.= ".\" WHERE $w";
+				}
+				else
+				{
+					$s.= ".\" ON $w";
+				}
+
+			if ($name)
+				$this->props->setProperty($name.'.where',''.$s.'."');
+		}
+		return $s;
+	}
+
+	function SQL_limit($name,$view)
+	{			
+		$s='';
+		if (isset($view['pages']))
+		{
+			if (isset($view['pages']['RECORDSPERPAGE'])) // because SAX parser not case sensitive...
+				$nbRecords=$view['pages']['RECORDSPERPAGE'];
+			elseif (isset($view['pages']['recordsPerPage']))
+				$nbRecords=$view['pages']['recordsPerPage'];
+			else
+				$nbRecords=20;				
+				
+			$nbRecords=preg_replace('/%[{]([^}]+)[}]/','#$1#',$nbRecords);
+			$nbRecords=NxTagLib::parseValStatic($nbRecords,true,false,'20');
+			
+			if (isset($view['pages']['pageOffset'])) // because SAX parser not case sensitive...
+				$page=$view['pages']['pageOffset'];
+			elseif (isset($view['pages']['PAGEOFFSET']))
+				$page=$view['pages']['PAGEOFFSET'];
+			else
+				$page=0;
+
+			// for backward compatibility, map param to get
+			$page=preg_replace(
+				array('/%{param:/','/%[{]([^}]+)[}]/'),
+				array('%{get:','#$1#'),
+				$page);
+			$page=NxTagLib::parseValStatic($page,false,false,'0');
+
+			if (isset($view['pages']['pageAlias'])) // because SAX parser not case sensitive...
+				$page_alias=$view['pages']['pageAlias'];
+			elseif (isset($view['pages']['PAGEALIAS']))
+				$page_alias=$view['pages']['PAGEALIAS'];
+			else
+				$page_alias='page';
+
+			$page_alias=preg_replace('/%[{]([^}]+)[}]/','#$1#',$page_alias);
+			$page_alias=NxTagLib::parseValStatic($page_alias,true,false,'page');
+			
+			
+			return ';
+	$properties["pageOffset"]=0+'.$page.';
+	$properties["pageAlias"]='.$page_alias.';
+	$properties["nbRecords"]=0+'.$nbRecords.';
+	$properties["query"] .= " LIMIT ".(string)($properties["nbRecords"]*$properties["pageOffset"]).",".$properties[\'nbRecords\'];
+';	
+		}
+
+		if ($name)
+			$this->props->setProperty($name.'.limit',$s.'."');
+
+		return $s;
+		
+	}
+	
+	function SQL_groupby($name,$view,$isMulti=false,$deftTable='')
+	{			
+		// ORDER BY
+		$s='';
+		if (isset($view['group_by']))
+		{			
+			$w='';
+			$sep='';
+			foreach ($view['group_by'] as $f)
+			{
+				if (isset($f['server']['IS_TRANSIENT']) && ($f['server']['IS_TRANSIENT']))
+					continue;
+					
+				// $ufn=$f['server']['ufname'];
+				$expr=preg_replace('/%[{]([^}]+)[}]/','#$1#',$f['server']['srcName']);
+				$ufn=NxTagLib::parseValStatic($expr,false,false);
+				if (preg_match('/[$]/',$ufn))
+				{
+					$ufn="_\".$ufn.\"";
+				}
+				else
+					$ufn=$f['server']['ufname'];
+				
+				if ($isMulti)
+				{
+					if (isset($f['sql']['table']))
+						$table = $f['sql']['table'];
+					else
+						$table = $deftTable;
+					
+					$ufn = "$table.$ufn";
+  //                  $ufn = $f['server']['QName'];
+				}
+
+				$w.="{$sep}{$ufn}";
+				$sep=',';
+			}
+			
+			if ($w!='')
+				$s.= ".\" GROUP BY $w \"";
+
+			if ($name)
+				$this->props->setProperty($name.'.group_by',$s.'."');
+		}
+		return $s;
+	}
+
+	function SQL_sort($name,$view,$isMulti=false,$deftTable='')
+	{
+		// ORDER BY
+		$s='';
+		if (isset($view['sort']))
+		{			
+			$w='';
+			$sep='';
+			foreach ($view['sort'] as $f)
+			{
+				if (isset($f['server']['IS_TRANSIENT']) && ($f['server']['IS_TRANSIENT']))
+					continue;
+					
+				// $ufn=$f['server']['ufname'];
+				$expr=preg_replace('/%[{]([^}]+)[}]/','#$1#',$f['server']['srcName']);
+				$ufn=NxTagLib::parseValStatic($expr,false,false);
+				if (preg_match('/[$]/',$ufn))
+				{
+					// dynamic field
+					if ($isMulti)
+					{
+						// multiple field: we assume it is already the name with table prefix
+						$ufn=str_replace('.','_',$ufn); // replace table.name by table_name
+						$ufn="\".$ufn.\"";
+					}
+					else
+						$ufn="_\".$ufn.\"";
+				}
+				else
+				{
+					$ufn=$f['server']['ufname'];
+				
+					if ($isMulti)
+					{
+						if (isset($f['sql']['table']))
+							$table = $f['sql']['table'];
+						else
+							$table = $deftTable;
+						
+						$ufn = "$table.$ufn";
+//                        $ufn = $f['server']['QName'];
+
+					}
+				}
+
+				$dir='ASC';
+				$wrap='';
+				if (isset($f['server']['DIRECTION']))
+				{
+					$expr=preg_replace('/%[{]([^}]+)[}]/','#$1#',$f['server']['DIRECTION']);
+					$dir=NxTagLib::parseValStatic($expr,false,false);
+					if (preg_match('/[$]/',$dir))
+					{
+						$dir="\".$dir.\"";
+					}
+					else
+					{
+						switch(strtolower($f['server']['DIRECTION']))
+						{
+							case 'dsc': $dir='DESC'; break;
+							case 'desc': $dir='DESC'; break;
+							case 'asc':	$dir='ASC'; break;
+							default: 
+								nxltrace("DML: wrong value for dml view sort:[$dir]. Only asc and desc are allowed",'error');
+								$dir='ASC';
+								break;
+						}
+					}
+				}
+				$w.="{$sep}{$ufn} {$dir}";
+				$sep=',';
+			}
+			
+			if ($w!='')
+				$s.= ".\" ORDER BY $w \"";
+		}
+
+		if ($name)
+			$this->props->setProperty($name.'.sort',$s.'."');
+
+		return $s;
+	}
+
+	function SQL_update($name,$view) {
+		$tname=$view['rprops']['table'];
+        if (isset($view['rprops']['database']))
+            $tname=$this->getDBName($view['rprops']['database']).'.'.$tname;
+
+		$s='<?php $self=$this; $properties["query"]="UPDATE '.$tname.' SET ';
+		
+		// SET field=val
+		$sep='';
+		foreach ($view['fields'] as $f)
+		{
+			if (isset($f['server']['IS_TRANSIENT']) && ($f['server']['IS_TRANSIENT']))
+				continue;
+
+			$ufn=$f['server']['ufname'];
+			$fn=$f['server']['NAME'];
+			$s.="{$sep}{$ufn}=\".".$this->getVal($view,$f,'',false,'update');
+			$sep=".\",";
+		}
+		$s.=".\"\"";
+				
+		// WHERE
+		$s.=$this->SQL_where($name,$view,false,$tname,'update');
+				
+		return $this->cleanSQLSrc($s).'; ?>';	
+	}
+	
+	function SQL_delete($name,$view) {
+
+		$tname=$view['rprops']['table'];
+        if (isset($view['rprops']['database']))
+            $tname=$this->getDBName($view['rprops']['database']).'.'.$tname;
+
+		$s='<?php $self=$this; $properties["query"]="DELETE FROM '.$tname.'"';		
+		
+		// WHERE
+		$s.=$this->SQL_where($name,$view,false,$tname,'delete');
+				
+		return $s.'; ?>';	
+	}	
+	
+	function SQL_count($name,$view) {
+		
+		$tname=$view['rprops']['table'];
+		$tname_src=$view['rprops']['table_src'];
+
+  		$isMultipleTables=$view['metadata']['isMultipleTables'];
+        $isDatabase=$view['metadata']['isDatabase'];
+        $ojoin_tables=$view['metadata']['ojoin_tables'];
+        $tables=$view['metadata']['tables'];
+		$dbPrefix=$view['metadata']['dbPrefix'];
+		$dbname=$view['metadata']['dbname'];
+		$dbalias=$view['metadata']['dbalias'];
+		$dbaliasPrefix=$view['metadata']['dbaliasPrefix'];
+		
+		// check if multiple tables
+		if ($isMultipleTables || $isDatabase)
+		{
+			$multi=true;
+			if (count($ojoin_tables)>0)
+			{
+//				$tablesList=array_diff($tables,$ojoin_tables);
+				$tablesList=array();
+				foreach ($ojoin_tables as $ot)
+					$tablesList[]=$tname.' LEFT OUTER JOIN '.$ot .'"'.$this->SQL_where('',$view,$multi,$ot,'select','outer',$ot).'."';
+				$tnames = implode(',',$tablesList);
+			}
+			else
+				$tnames = implode(',',$tables);
+		}	
+		else
+		{	
+			$tnames = $dbPrefix.$tname;
+			$multi=false;
+		}
+		
+		// complete implicit "table" for fields
+		if ($multi)
+		{
+            foreach ($view['fields'] as $n=>$f)
+            {
+                if (isset($f['server']['IS_TRANSIENT']) && ($f['server']['IS_TRANSIENT']))
+                    continue;
+                if (isset($f['server']['IS_TRANSIENT']) && ($f['server']['IS_TRANSIENT']=='yes'))
+                    continue;
+                    
+                if (isset($f['server']['TABLE']))
+                {
+                    $fdbPrefix=$this->getFieldDBPrefix($f,$dbPrefix);
+                    $t=$this->sqlTableName($f['server']['TABLE']);
+                    $view['fields'][$n]['sql']['table']=$tables[$fdbPrefix.$t];
+                }
+                else
+                    $view['fields'][$n]['sql']['table']=$tname;
+            }
+
+            if (isset($view['key']))
+                foreach ($view['key'] as $n=>$f)
+                {
+                    if (isset($f['server']['IS_TRANSIENT']) && ($f['server']['IS_TRANSIENT']))
+                        continue;
+                    if (isset($f['server']['IS_TRANSIENT']) && ($f['server']['IS_TRANSIENT']=='yes'))
+                        continue;
+                        
+                    if (isset($f['server']['TABLE']))
+                    {
+                        $fdbPrefix=$this->getFieldDBPrefix($f,$dbPrefix);
+                        $t=$this->sqlTableName($f['server']['TABLE']);
+                        $view['key'][$n]['sql']['table']=$tables[$fdbPrefix.$t];
+                    }
+                    else
+                        $view['key'][$n]['sql']['table']=$tname;
+                }
+                
+            if (isset($view['sort']))
+                foreach ($view['sort'] as $n=>$f)
+                {
+                    if (isset($f['server']['IS_TRANSIENT']) && ($f['server']['IS_TRANSIENT']))
+                        continue;
+                    if (isset($f['server']['IS_TRANSIENT']) && ($f['server']['IS_TRANSIENT']=='yes'))
+                        continue;
+                        
+                    if (isset($f['server']['TABLE']))
+                    {
+                        $fdbPrefix=$this->getFieldDBPrefix($f,$dbPrefix);
+                        $t=$this->sqlTableName($f['server']['TABLE']);
+                        $view['sort'][$n]['sql']['table']=$tables[$fdbPrefix.$t];
+                    }
+                    else
+                        $view['sort'][$n]['sql']['table']=$tname;
+                }
+                
+            if (isset($view['group_by']))
+                foreach ($view['group_by'] as $n=>$f)
+                {
+                    if (isset($f['server']['IS_TRANSIENT']) && ($f['server']['IS_TRANSIENT']))
+                        continue;
+                    if (isset($f['server']['IS_TRANSIENT']) && ($f['server']['IS_TRANSIENT']=='yes'))
+                        continue;
+                        
+                    if (isset($f['server']['TABLE']))
+                    {
+                        $fdbPrefix=$this->getFieldDBPrefix($f,$dbPrefix);
+                        $t=$this->sqlTableName($f['server']['TABLE']);
+                        $view['group_by'][$n]['sql']['table']=$tables[$fdbPrefix.$t];
+                    }
+                    else
+                        $view['group_by'][$n]['sql']['table']=$tname;
+                }
+		}
+				
+		$s='<?php $self=$this; $properties["query"]="SELECT COUNT(*) as nbrecords FROM '.$tnames.'"';		
+		
+		// WHERE
+		$s.=$this->SQL_where('',$view,$multi,$tname,'count');
+
+		// GROUP BY
+		$s.=$this->SQL_groupby('',$view,$multi,$tname);
+				
+		return $this->cleanSQLSrc($s).'; ?>';	
+	}
+	
+	/* get value
+	 * f: field name
+	 * wrap: how to write value
+	 * isKey: is it a key and if has an "alias", use this as http key.
+	 * op : operation (select, update or where)
+	 * $mul_sep: when multiple values, what is the separator between values (for matching values)
+	 */
+	function getVal($view,$f,$wrap='',$isKey=false,$op='select',$mul_sep=',') {
+		$ufn=$f['server']['ufname'];
+		$fn=$f['server']['NAME'];
+
+		// get default value
+		if (isset($f['server']['DEFAULT']))
+			$dft=$f['server']['DEFAULT'];
+		else if (isset($f['sql']['DEFAULT']))
+			$dft=$f['sql']['DEFAULT'];
+		else
+			$dft='NULL';
+
+		// check if value is set
+		if (isset($f['server']['VALUE']))
+		{
+			return $this->getQValue($view,$f,$fn,$f['server']['VALUE'],$dft,$wrap,$mul_sep);
+		}
+		
+		if (isset($f['server']['DEFAULT']) && $op=='update')
+		{
+			return $this->getQValue($view,$f,$fn,null,$dft,$wrap,$mul_sep);
+		}
+		
+		if ($isKey)
+		{
+			// field alias: field name in forms
+			if (isset($f['server']['alias']))
+				$n=$f['server']['alias'];
+			else
+				$n=$f['server']['NAME'];	
+				
+			// default field value
+			if (isset($f['server']['DEFAULT']))
+				$dft=$f['server']['DEFAULT'];
+			else
+				$dft='null';
+
+			// option to be provided as "opts" parameter for readForm() field function
+			if (isset($f['server']['key_option']))
+				$opt=$f['server']['key_option'];
+			elseif (isset($f['server']['KEY_OPTION']))
+				$opt=$f['server']['KEY_OPTION'];
+			else
+				$opt='';
+				
+			// return '$this->getParam("'.$n.'","'.$dft.'","'.$mul_sep.'")';
+			return "\$this->getFieldParam(\"$n\",\"$dft\",\"$mul_sep\",\$record,\"$opt\")";
+		}
+		
+		
+		switch($op)
+		{
+			case 'insert':
+			case 'update':
+				return '$record->getFieldValue("'.$fn.'","DB","'.$dft.'")';
+			case 'where':
+			default:
+				return $ufn;
+		}
+	}
+	
+	function processValue($f,$v) {
+		$type = $f['sql']['TYPE'];			
+		switch ($type) {
+			case 'DATE':
+				if (strtolower($v)=='now' || strtolower($v)=='now()')
+					return '"NOW()"';
+				return 	"\"'\".strftime('%Y-%m-%d',strtotime('$v',time())).\"'\"";
+				break;
+			case 'DATETIME':
+			case 'TIMESTAMP':
+				if (strtolower($v)=='now' || strtolower($v)=='now()')
+					return '"NOW()"';
+				return 	"\"'\".strftime('%Y-%m-%d %H:%M:%S',strtotime('$v',time())).\"'\"";
+				break;
+			default:
+				$list=explode('|',preg_replace('/[,]/','|',$v));
+				$list2=array();
+				foreach($list as $item)
+				{
+					$list2[]="'".trim($item,"'")."'";
+				}
+				$v=implode(',',$list2);
+				return "\"$v\"";
+		}
+	}
+
+	function getQValue($view,$f,$fn,$qv,$dft,$wrap='',$mul_sep=',')
+	{
+		if ($qv===null)
+		{
+			// return $f['server']['ufname'];
+			return '$record->getFieldValue("'.$fn.'","DB",'.$this->processValue($f,$dft).')';		
+		}
+		
+		if (!@preg_match('/^([^%]*)\%\{((?:\w|-)+):([^:|]+)([:|]([^}:]*)(:([^}:]+))?)?\}(.*)$/', $qv,$regs) &&
+		!@preg_match('/^([^#]*)#((?:\w|-)+):([^:|#]+)([:|]([^}#:]*)(:([^}#:]+))?)?\}(.*)$/', $qv,$regs))
+		{
+			return $this->processValue($f,$qv);
+		}
+			
+		$media = strtolower($regs[2]);
+		$name  = $regs[3];
+		$dft   = trim($regs[5],'\'"');
+		$storage = $regs[7];
+
+		$prefix=$regs[1];
+		$other=$regs[8];
+			
+		// translate name to field format
+//		$fname = strtr($name, array('-' => '_',' '=>'_','.'=>'_', '/'=>'_')); 
+		$fname = strtr($name, array('-' => '_',' '=>'_', '/'=>'_')); 
+
+		$tprefix=$view['rprops']['tprefix'];
+		$fprefix=$view['rprops']['fprefix'];
+		$v = $dft;
+
+		//echo "$qv ,media=$media,name=$name, deft=".$regs[4].", count regs=".count($regs).",storage=".$storage;
+		
+		switch($wrap)
+		{ 
+			case '':
+				$wrap1='"\''.$prefix.'".';
+				$wrap2='."'.$other.'\'"';
+				break;
+			case 'rel':
+				$wrap1=' ".';
+				$wrap2='." ';
+				break;
+			default:
+				$wrap1='"\'%'.$prefix.'".';
+				$wrap2='."%'.$other.'\'"';
+				break;
+		}
+			
+		switch($media)
+		{			
+			case "property":
+				$v = $wrap1.'$props->getProperty("'.$name.'","'.$dft.'",true)'.$wrap2;
+				break;
+			case "parent":
+				$v = $wrap1.'$props->props->getProperty("'.$name.'","'.$dft.'",true)'.$wrap2;
+				break;
+			case 'field': 
+                if (preg_match('/^(.+)\.(.+)\.(.+)$/',$fname,$m)) // field:db.table.field
+                    return '$props->getProperty(\''.$m[1].'\',\''.$m[1].'\').".'.$tprefix.$m[2].'.'.$fprefix.$m[3].'"'; // sql: db_table_field
+                
+                return '"'.$tprefix.preg_replace('/\./',".$fprefix",$fname).'"'; // sql: table.field 
+			case 'sql': return $name; // sql
+			case 'record': return '$record->getFieldValue("'.$fname.'","DB","'.$dft.'")';
+			case 'parent-record': 
+			case 'parentRecord': 
+				return '(($_rec_=$props->getProperty("parentRecord"))?$_rec_->getFieldValue("'.$fname.'","DB","'.$dft.'"):"")';
+			
+			case 'key': return "\$this->getFieldParam(\"$name\",\"=\",\"|\",\$record,\"\")";
+			case 'key-relation': return "\$this->getFieldParam(\"$name\",\"=\",\"|\",\$record,\"as-relation\")";
+			
+			case "param": // get or session
+				$v = $wrap1.'$props->getProperty("'.$name.'","'.$dft.'",false)'.$wrap2;
+//				$v = $wrap1.'$this->props->getParam("'.$name.'","'.$dft.'")'.$wrap2;
+				break;
+			case "param-field": // get or session
+				$v = $wrap1.'$this->props->getParam("'.$fname.'","'.$dft.'")'.$wrap2;
+				break;
+			case "site":
+			case "user":
+				$v = $wrap1.'$GLOBALS["_NX_user"]->getProperty("'.$name.'","'.$dft.'",true)'.$wrap2;
+				break;
+			case "get":// $v = $wrap1.'(isset($_GET["'.$name.'"])?$_GET["'.$name.'"]:"'.$dft.'")'.$wrap2;	break;
+			case "cookie":
+			case "request":// $v = $wrap1.'(isset($_REQUEST["'.$name.'"])?$_REQUEST["'.$name.'"]:"'.$dft.'")'.$wrap2;	break;
+			case "session":// $v = $wrap1.'(isset($_SESSION["'.$name.'"])?$_SESSION["'.$name.'"]:"'.$dft.'")'.$wrap2;	break;
+			case "post":
+				// $v = $wrap1.'(isset($_POST["'.$name.'"])?$_POST["'.$name.'"]:"'.$dft.'")'.$wrap2;
+				$v = $wrap1.'$this->getParamValue("'.$name.'","'.$dft.'","'.$media.'","'.$mul_sep.'")'.$wrap2;				
+				break;
+			case "http":
+				// $v = $wrap1.'(isset($_REQUEST["'.$name.'"])?$_REQUEST["'.$name.'"]:"'.$dft.'")'.$wrap2;
+				$v = $wrap1.'$this->getParamValue("'.$name.'","'.$dft.'","request","'.$mul_sep.'")'.$wrap2;					break;
+
+			case "get-field":
+				$v = $wrap1.'$this->getParamValue("'.$fname.'","'.$dft.'","get","'.$mul_sep.'")'.$wrap2;				
+				break;
+			case "post-field":
+				$v = $wrap1.'$this->getParamValue("'.$fname.'","'.$dft.'","post","'.$mul_sep.'")'.$wrap2;						break;
+			case "http-field":
+				// $v = $wrap1.'(isset($_REQUEST["'.$fname.'"])?$_REQUEST["'.$fname.'"]:"'.$dft.'")'.$wrap2;
+				$v = $wrap1.'$this->getParamValue("'.$fname.'","'.$dft.'","request","'.$mul_sep.'")'.$wrap2;						break;
+			case "variable":
+				$v = $wrap1.'$GLOBALS["'.$name.'"]'.$wrap2;
+				break;
+/*			case "constant":
+				$v = $wrap1.''.$name.'"\'"';
+*/
+			case "literal":
+				return $name;
+/*			case "cookie":
+			case "user-or-get":
+			case "any":
+			case "all":
+			case "*" 
+*/
+			default:
+				// we dont know what to do with this prefix => will be treated at runtime
+				$v = '$props->getQValue("'.$qv.'")';
+				break;
+		}
+
+/*
+		if ($storage != "")
+		{
+			//echo "storage";
+			switch($storage)
+			{
+				case "param":
+					$this->setParam($name,$v);
+					break;			
+				case "session":
+					$_SESSION[$name] = $v;
+					break;
+				case "cookie":
+					$cookie=$this->getPlugIn("Cookie");
+					$cookie->setCookie($name,$v);
+					break;
+				case "variable":
+					$GLOBALS[$name]=$v;
+					break;	
+				case "user":
+					global $_NX_user;
+					if (isset($_NX_user))
+						$_NX_user->setProperty($name,$v);
+						// to do : save it back to user property bag
+					break;
+				default:				
+					break;
+			}
+		}
+*/
+		return $v;
+	}
+	
+	function getQName($qfn,$wrap2='." ') {
+		//return $qfn;
+		
+		if (!@preg_match('/^([^%]*)\%\{((?:\w|-)+):([^:|]+)([:|]([^}:]*)(:([^}:]+))?)?\}(.*)$/', $qfn,$regs) &&
+			!@preg_match('/^([^#]*)#((?:\w|-)+):([^:|#]+)([:|]([^}#:]*)(:([^}#:]+))?)?\}(.*)$/', $qfn,$regs))
+		{
+			return $qfn;
+		}
+			
+		$media = strtolower($regs[2]);
+		$name  = $regs[3];
+		$dft   = trim($regs[5],'\'"');
+		$storage = $regs[7];
+
+		$prefix=$regs[1];
+		$other=$regs[8];
+
+		$v = $dft;
+
+		//echo "$qv ,media=$media,name=$name, deft=".$regs[4].", count regs=".count($regs).",storage=".$storage;
+		$wrap1=' ".';
+		// $wrap2='." ';
+					
+		switch($media)
+		{			
+			case "property":
+				$v = $wrap1.'$props->getProperty("'.$name.'","'.$dft.'",true)'.$wrap2;
+				break;
+			case 'field': return '"'.$tprefix.preg_replace('/\./',".$fprefix",$fname).'"'; // sql: table.field 
+			case 'sql': return $name; // sql
+			case 'record': return '$record->getFieldValue("'.$fname.'","DB","'.$dft.'")';
+			
+			case 'key': return "\$this->getFieldParam(\"$name\",\"=\",\"|\",\$record,\"\")";
+			case 'key-relation': return "\$this->getFieldParam(\"$name\",\"=\",\"|\",\$record,\"as-relation\")";
+			
+			case "param": // get or session
+				$v = $wrap1.'$this->props->getParam("'.$name.'","'.$dft.'")'.$wrap2;
+				break;
+			case "param-field": // get or session
+				$v = $wrap1.'$this->props->getParam("'.$fname.'","'.$dft.'")'.$wrap2;
+				break;
+			case "site":
+			case "user":
+				$v = $wrap1.'$GLOBALS["_NX_user"]->getProperty("'.$name.'","'.$dft.'",true)'.$wrap2;
+				break;
+			case "get":// $v = $wrap1.'(isset($_GET["'.$name.'"])?$_GET["'.$name.'"]:"'.$dft.'")'.$wrap2;	break;
+			case "cookie":
+			case "request":// $v = $wrap1.'(isset($_REQUEST["'.$name.'"])?$_REQUEST["'.$name.'"]:"'.$dft.'")'.$wrap2;	break;
+			case "session":// $v = $wrap1.'(isset($_SESSION["'.$name.'"])?$_SESSION["'.$name.'"]:"'.$dft.'")'.$wrap2;	break;
+			case "post":
+				// $v = $wrap1.'(isset($_POST["'.$name.'"])?$_POST["'.$name.'"]:"'.$dft.'")'.$wrap2;
+				$v = $wrap1.'$this->getParamValue("'.$name.'","'.$dft.'","'.$media.'","'.$mul_sep.'")'.$wrap2;				
+				break;
+			case "http":
+				// $v = $wrap1.'(isset($_REQUEST["'.$name.'"])?$_REQUEST["'.$name.'"]:"'.$dft.'")'.$wrap2;
+				$v = $wrap1.'$this->getParamValue("'.$name.'","'.$dft.'","request","'.$mul_sep.'")'.$wrap2;					break;
+
+			case "get-field":
+				$v = $wrap1.'$this->getParamValue("'.$fname.'","'.$dft.'","get","'.$mul_sep.'")'.$wrap2;				
+				break;
+			case "post-field":
+				$v = $wrap1.'$this->getParamValue("'.$fname.'","'.$dft.'","post","'.$mul_sep.'")'.$wrap2;						break;
+			case "http-field":
+				// $v = $wrap1.'(isset($_REQUEST["'.$fname.'"])?$_REQUEST["'.$fname.'"]:"'.$dft.'")'.$wrap2;
+				$v = $wrap1.'$this->getParamValue("'.$fname.'","'.$dft.'","request","'.$mul_sep.'")'.$wrap2;						break;
+			case "variable":
+				$v = $wrap1.'$GLOBALS["'.$name.'"]'.$wrap2;
+				break;
+			case "constant":
+				$v = $wrap1.$name.$wrap2;
+				break;
+			case "literal":
+				return $name;
+/*			case "cookie":
+			case "user-or-get":
+			case "any":
+			case "all":
+			case "*" 
+*/
+			default:
+				// we dont know what to do with this prefix => will be treated at runtime
+				$v = '$props->getQValue("'.$qfn.'")';
+				break;
+		}
+
+/*
+		if ($storage != "")
+		{
+			//echo "storage";
+			switch($storage)
+			{
+				case "param":
+					$this->setParam($name,$v);
+					break;			
+				case "session":
+					$_SESSION[$name] = $v;
+					break;
+				case "cookie":
+					$cookie=$this->getPlugIn("Cookie");
+					$cookie->setCookie($name,$v);
+					break;
+				case "variable":
+					$GLOBALS[$name]=$v;
+					break;	
+				case "user":
+					global $_NX_user;
+					if (isset($_NX_user))
+						$_NX_user->setProperty($name,$v);
+						// to do : save it back to user property bag
+					break;
+				default:				
+					break;
+			}
+		}
+*/
+		return $v;
+		
+	}
+
+    /*
+        returns a unique alias name to be used for tables and databases, for building field aliases
+    */
+    function & getQAlias($view,$qv)
+    {
+        if ($qv == null)
+            return "''";
+        
+/*        if (!@ereg ('^\%\{([[:alnum:]-]+):([^:|]+)([:|]([^}:]*)(:([^}:]+))?)?\}$', $qv,$regs) &&
+            !@ereg ('^#([[:alnum:]-]+):([^:|#]+)([:|]([^}#:]*)(:([^}#:]+))?)?\}$', $qv,$regs))
+            return "$qv";
+*/
+
+        if (!preg_match('/^\%\{((?:\w|-)+):([^:|]+)([:|]([^}:]*)(:([^}:]+))?)?\}$/i', $qv,$regs) &&
+            !preg_match ('/^#((?:\w|-)+):([^:|#]+)([:|]([^}#:]*)(:([^}#:]+))?)?\}$/i', $qv,$regs))
+            return "$qv";
+			
+
+        $media = strtolower($regs[1]);
+        $name  = $regs[2];
+        $dft   = trim($regs[4],'\'"');
+        $storage = $regs[6];
+                
+        // translate name to field format
+        $fname = strtr($name, array('-' => '_',' '=>'_','.'=>'_', '/'=>'_')); 
+        $fprefix=$view['rprops']['fprefix'];
+        $v = $dft;
+            
+        $wrap1='';
+        $wrap2='';            
+//        $wrap1='"\'".';
+//        $wrap2='."\'"';            
+        switch($media)
+        {            
+            case 'field': return '"'.$fprefix.preg_replace('/\./','._',$fname).'"'; // sql: table.field 
+            case 'sql': return $name; // sql
+            case 'record': return '$record->getFieldValue("'.$fname.'","DB","'.$dft.'")';
+            case "param-field": // get or session
+                $v = $wrap1.'param_'.$name.$wrap2;
+                break;
+            
+            case "property":
+            case "param": // get or session
+            case "site":
+            case "user":
+            case "get":
+            case "request":
+            case "session":
+            case "permission":
+            case "permissions":
+            case "post":
+            case "http":
+            case "get-field":
+            case "post-field":
+            case "http-field":
+            case "variable":
+            case "constant":
+            case "literal":
+                $v = $wrap1.$media.'_'.$name.$wrap2;
+                break;
+            default:
+                return $v = '$this->getQValue("'.$qv.'")';
+        }
+
+        $v = preg_replace('/[-. ]/','_',strtolower($v));
+        return $v;
+    }	
+	function getUFName($name) {
+		return  '_'.preg_replace('#[-. /]#','_',$name);		
+	}
+  
+     function sqlTableName($name) {
+        return preg_replace('/[-]/','_',$name);
+//        return preg_replace('/[.-]/','_',$name);
+    }
+    
+    function getFieldDBPrefix($f,$defDBPrefix) {
+        if (isset($f['server']['DATABASE']))
+        {           
+            return $this->getDBName($f['server']['DATABASE']).'.';
+        }
+        
+        return $defDBPrefix;
+    } 
+    
+    function getDBName($db) {
+        return $this->getQName($db,'."');
+        // return $db;
+    }
+	
+	function cleanSQLSrc($s) {
+		return preg_replace(
+			array(
+				'/[.]["\']["\'][.]/',
+				'/["\'][.]["\']/',
+				'#"\."#',
+				'#_>#',
+				'#."";#',
+				'#SELECT\s+FROM#'
+				),
+			array('.','','','->',';','SELECT * FROM'),
+			$s
+			);
+	}
+
+	function saveFile($path,$src) {
+		$this->fs->saveFile($path,$src=$this->cleanSQLSrc($src));
+		$src=htmlentities($src);		
+		nxltrace("SQL QUERY: $path:<br/>\n$src",'listing');
+	}
+	
+	function trim_prefix($str,$prefix) {
+		
+		return substr($str,strlen($prefix));
+		
+	}
+	
+	
+}
+
+?>

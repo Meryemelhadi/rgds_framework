@@ -1,0 +1,215 @@
+<?xml version="1.0"?>
+<!-- 
+__________________________________
+Presence Media | Rabat
+__________________________________
+Projet    : Intranet WafaAssurance
+Composant : historique de demande
+Auteur    : Nadir Elasri
+Version   : 1.0
+Création  : -
+Modif     : 26/02/2008
+__________________________________
+
+Fonctionnalités du composant :
+		- historique responsable avec filtre
+		- historique employé avec filtre
+
+Paramètres :
+		ApplicationParams :
+			- name    : Nom de l'application qui instancie le module
+			- path    : Chemin de l'application ... très important pour pointer les classes de validation
+			- skin    : Skin par défaut de l'application
+			- strings : Nom des strings utilisés par l'application
+
+		DataSources :
+			- ds_search          : datasource de recherche
+			- ds_list            : datasource de liste
+			- ds_edit_record     : datasource d'édition (Utilisée pour visualiser les détails ou lors de la validation)
+			- ds_validate_record : ds à utiliser lors de la validation
+			- ds_delete_record   : ds à utiliser lors de la suppression
+
+		Templates :
+			- template_search      : Template de recherche
+			- template_list        : Template de liste
+			- template_view_record : Template de visualisation
+
+-->
+<xo:taglib uri="http://www.generis.ma/demands/credit_demand/archive.comp" 
+	xmlns:xo="http://www.nxfrontier.com/xo/core"
+	xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+	xmlns:nxl="http://www.nxfrontier.com/nxl/nxl"
+	xmlns:tpl="http://www.nxfrontier.com/tpl/tpml"
+
+	xmlns:tags_library	= "http://www.presencemedia.ma/tags_library"		
+	xmlns:site_config="http://www.nxfrontier.com/site_config">
+	
+	<xo:tag name="composant">
+
+		<!-- Component params ... -->
+
+		<!-- component parameters -->
+		<!-- @param string site mode	defines page and application settings related to this part of the site.
+			ex. skin or page name etc. Loads setting from site_config lib.	-->
+		<xo:param name="site_mode" value="user" />
+
+		<!-- @param string user_service		which user type (login service) -->
+		<xo:param name="user_service" value="user" />
+
+		<xo:param name="path" />
+		<xo:param name="skin" />
+
+		<xo:param name="name" />
+		<xo:param name="application_name" value="#{$path}##{$name}#" />
+
+		<xo:param name="strings" />
+
+		<xo:param name="ds_search" />
+		<xo:param name="ds_list" />
+		<xo:param name="ds_edit_record" />
+
+		<xo:param name="template_list"/>
+		<xo:param name="template_view_record"/>
+		<xo:param name="excel_template" value="exports.excel.records"/>
+
+		<xo:param name = "record_property" value = "page.record"/>
+		<xo:param name = "record_user" value = "user.record"/>
+		<xo:param name = "record_properties" value = "page.records"/>
+		<xo:param name = "record_search" value = "page.search"/>
+
+		<!-- pages -->
+		<pages xmlns="http://www.nxfrontier.com/nxl/page">
+
+			<page name="#{$name}#" protected="#{$user_service}#"  path="#{$path}#" cache="no" lang="fr" skin="#{$skin}#">
+				<exec logic="#{$application_name}#_logic" strings="#{$strings}#" />
+			</page>
+		
+		</pages>
+
+		<!-- logic -->
+		<logic xmlns="http://www.nxfrontier.com/nxl/nxl" xmlns:ds="http://www.nxfrontier.com/nxl/ds"
+		   xmlns:button="http://www.nxfrontier.com/nxl/button">
+
+			<application name="#{$application_name}#_logic">
+
+				<operation name="list_records">
+					<step name="list_records">
+						<code>
+							<tags_library:filter_key 
+								ds_search		= "#{$ds_search}#"
+								searchData		= "searchData"
+								filterKey		= "filterKey"
+								record_search	= "#{$record_search}#"
+							/>
+	
+							<set name="var:listContent">
+								<ds:load media="handler" ds="#{$ds_list}#" property="#{$record_properties}#" multiple="yes" addProperties="no" record="#$searchData#"/>
+							</set>
+							
+							<!-- Buttons initialization -->
+
+							<!-- Search submission button -->
+							<button:set name="search" operation="list_records">
+								<button:param name="mode" value="ajax"/>
+							</button:set>
+
+							<!-- view record details -->
+							<button:set name="view" operation="validate_record" >
+							 	<button:param name="filterKey" value="#property:filterKey#" encode="true"/>
+							</button:set>
+
+							<button:set name="excel" operation="excel"  >
+						    	<button:param name="filterKey" value="#property:filterKey#" encode="true"/>
+							</button:set>
+
+							<choose>
+								<when test="$listContent">
+									<button:set name="excel" operation="excel" >
+								    	<button:param name="filterKey" value="#property:filterKey#" encode="true"/>
+									</button:set>
+								</when>
+							</choose>
+
+							<set name="var:viewMode" value="'page'" />
+							
+							<if condition="in_array(#get:mode#,array('page','ajax'))">
+								<set name="var:viewMode" value="#get:mode#" />
+							</if>
+							
+							<!-- 
+								L'appel en ajax est différent d'un appel serveur traditionnel
+								Conditions pour gérer ça en conséquence
+							-->
+
+							<choose>
+								<when test="$viewMode == 'page'">
+									<display view="#{$application_name}#_listpage" />
+								</when>
+								<otherwise>
+									<display view="#{$application_name}#_listajax" />
+								</otherwise>
+							</choose>
+
+						</code>
+					</step>
+
+				</operation>
+
+				<operation name="excel">
+					<step name="excel">
+						<code>
+							<tags_library:filter_key 
+								ds_search		= "#{$ds_search}#"
+								searchData		= "searchData"
+								filterKey		= "filterKey"
+								record_search	= "#{$record_search}#"
+							/>
+
+							<ds:load media="db" ds="#{$ds_list}#" property="#{$record_properties}#" multiple="yes" addProperties="no" record="#$searchData#"/>
+							
+							<display view="#{$excel_template}#" type="xls" />
+						</code>
+					</step>
+				</operation>
+
+				<operation name="validate_record">
+					<step name="validate_record">
+						<code>
+							<ds:load media="db" ds="#{$ds_edit_record}#" property="#{$record_property}#" multiple="no" addProperties="no"/>
+							
+							<button:set name="list" operation="list_records">
+								<button:param name="mode" value="ajax" />
+							 	<button:param name="filterKey" value="#property:filterKey#" encode="true"/>								
+							</button:set>
+														
+							<display view="#{$application_name}#_view" />
+						</code>
+					</step>
+
+				</operation>
+
+				
+			</application>
+		</logic>
+		
+		<!-- views / screens -->
+		<tpl:screens xmlns="http://www.nxfrontier.com/tpl/tpml" xmlns:tpl="http://www.nxfrontier.com/tpl/tpml"
+			  path="/" skin="default">
+		
+				<tpl:screen name="#{$application_name}#_view" trace="yes">
+					<load view="#{$template_view_record}#" />
+				</tpl:screen>
+				
+				<tpl:screen name="#{$application_name}#_listpage" trace="yes" inherit="page">	
+					<zone>
+						<load view="#{$template_list}#" />
+					</zone>
+				</tpl:screen>
+
+				<tpl:screen name="#{$application_name}#_listajax" trace="yes">
+					<load view="#{$template_list}#" />
+				</tpl:screen>
+
+			</tpl:screens>			
+	</xo:tag>
+</xo:taglib>

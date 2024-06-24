@@ -1,0 +1,206 @@
+<?xml version="1.0"?> 
+<!-- 
+	
+	NXL Taglib 
+
+	description: tag lib for generating ExtJS tree
+
+-->
+<xo:taglib uri="http://www.presencemedia.ma/views/page#skin" 
+	xmlns:xo="http://www.nxfrontier.com/xo/core"
+	xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+	xmlns:this="http://www.nxfrontier.com/xo/this"
+	xmlns:nxl="http://www.nxfrontier.com/nxl/nxl"
+	xmlns:tpl="http://www.nxfrontier.com/tpl/tpml"
+	xmlns:format="http://www.nxfrontier.com/nxl/format"
+	xmlns:p="http://www.presencemedia.ma/views/page#skin"
+	xmlns="http://www.w3.org/1999/xhtml"
+	>
+
+<xo:tag name="page">
+	<this:compress>
+		<xsl:value-of select="$_content_" />
+	</this:compress>
+</xo:tag>
+
+<xo:tag name="resources">
+	<xsl:value-of select="$_content_" />
+</xo:tag>
+
+<xo:tag name="resource">
+	<xo:param name="type" />
+	<xo:param name="path" />
+	{require:<xsl:value-of select="$path" />:skin}
+</xo:tag>
+
+<xo:tag name="block">
+	<xsl:value-of select="$_content_" />
+</xo:tag>
+
+<!-- we dont need children content: they are executed by wsl:apply-templates -->
+<xo:tag name="header" content="no">
+	<div class="pm-page-title-wrapper theme-turquoise">
+		<h1 class="pm-title"><xsl:value-of select="title" /></h1>
+		<span class="pm-droiteH1"></span>
+	</div>
+
+	<div class="">
+		<xsl:apply-templates select="toolbar" />
+	</div>
+
+	<div class="clearBoth"></div>
+	<p class="pm-page-message">
+		<span class="pm-droiteIntro"></span>
+		<xsl:value-of select="description" />
+		<br/>
+		<xsl:value-of select="help" />
+	</p>
+
+	<xsl:apply-templates select="search" />
+</xo:tag>
+
+<xo:tag name="body">
+	<xsl:value-of select="$_content_" />
+</xo:tag>
+
+<xo:tag name="toolbar">
+	<div class="pm-button-wrapper">
+		<xsl:value-of select="$_content_" />
+	</div>
+</xo:tag>
+
+<xo:tag name="search">
+	<xo:param name="status" value="closed"/>
+	<xo:param name="id" value="pm-id-search-block"/>
+	<xo:param name="record" value="page.search"/>
+	<xo:param name="label">{string:'search'}</xo:param>
+
+	<div class="clearBoth"></div>
+	<div class="pm-search-block" id="pm-id-search-block" style="display:none">
+		<div class="pm-search-grid-wrapper">
+			{form:page.search}
+			<table cellpadding="0" cellspacing="0" class="pm-search-grid">
+				{fields}
+					{if: (field.index % 4) == 0}<tr>{/if}
+					<td>
+						<p>
+							<label>{field.label} :</label>
+							<span class="control-wrapper">
+								<span class="control">
+									{field.form}
+								</span>
+							</span>
+						</p>
+					</td>
+					{if: (field.index % #=form.nb_fields_per_row|4#) == 3}</tr>{/if}
+				{/fields}
+					{if: (field.index % 4) == 0}<tr>{/if}
+
+					<td colspan="{expr: 4 - (field.index % 4)}">
+						<p>
+							<label>&#32;</label>
+							<span class="control-wrapper">
+								<a class="pm-button" href="#" onclick="ajax_submit(event,this,'content','{=search.url}',false); this.blur(); return false;">
+									<span class="pm-button-background">
+										<span class="pm-button-content pm-button-icon pm-button-search">{string:"search"}</span>
+									</span>
+								</a>
+							</span>
+						</p>
+					</td>
+				</tr>
+			</table>
+			{/form}
+		</div>
+	</div>
+</xo:tag>
+
+<xo:tag name="button">
+	<xo:param name="name" value="default"/>
+	<xo:param name="params" />
+	<xo:param name="url" value="{=#{$name}#.url}#{$params}#"/>
+	<xo:param name="behaviour">navigate</xo:param>
+	<xo:param name="target">content</xo:param>
+	<xo:param name="iconCls" value="pm-button-#{$name}#"/>
+	<xo:param name="label" select="$_content_"/>
+	<xo:param name="check" value="no"/>
+	
+	<xo:param name="button">
+		<xsl:choose>
+			<xsl:when test="$behaviour='ajax'">
+				<a class="pm-button" href="javascript:void(0);" onclick="ajax_navigate(event,'#{$url}#','#{$target}#'); this.blur(); return false;">
+					<span class="pm-button-background">
+						<span class="pm-button-content pm-button-icon #{$iconCls}#"><xsl:value-of select="$label" /></span>
+					</span>
+				</a>
+			</xsl:when>
+
+			<xsl:when test="$behaviour='delete'">
+				<script>
+					window.dlg_deleteConfig = { title : "{string:'dlg_delete_title'}", message : "{string:'dlg_delete_content'}", viewMode : "okCancel", url : "<xsl:value-of select="$url" />", target : "<xsl:value-of select="$target" />", labels : { ok : "{string:'dlg_ok'}", cancel : "{string:'dlg_cancel'}" } };
+				</script>
+
+				<a class="pm-button" href="#" onclick="PMModalbox.display(dlg_deleteConfig, event); this.blur(); return false;">
+					<span class="pm-button-background">
+						<span class="pm-button-content pm-button-icon #{$iconCls}#"><xsl:value-of select="$label" /></span>
+					</span>
+				</a>
+			</xsl:when>
+
+			<xsl:when test="$behaviour='switch-panel'">
+				<a class="pm-button" href="javascript:void(0);" onclick="viewBlock('#{$target}#'); this.blur(); return false;">
+					<span class="pm-button-background">
+						<span class="pm-button-content pm-button-icon #{$iconCls}#"><xsl:value-of select="$label" /></span>
+					</span>
+				</a>
+			</xsl:when>
+			
+			<xsl:when test="$behaviour='navigate'">
+				<a class="pm-button" href="#{$url}#">
+					<span class="pm-button-background">
+						<span class="pm-button-content pm-button-icon #{$iconCls}#"><xsl:value-of select="$label" /></span>
+					</span>
+				</a>
+			</xsl:when>
+
+			<xsl:otherwise>
+				<a class="pm-button" href="#{$url}#" onclick="document.location.href='#{$url}#';">
+					<span class="pm-button-background">
+						<span class="pm-button-content pm-button-icon #{$iconCls}#"><xsl:value-of select="$label" /></span>
+					</span>
+				</a>
+			</xsl:otherwise>
+		</xsl:choose>
+	</xo:param>
+
+	<xsl:choose>
+		<xsl:when test="$check='yes' or $check='true'">
+			{if:#=<xsl:value-of select="#{$name}#" />.url#}
+				<xsl:value-of select="$button" />
+			{/if}
+		</xsl:when>
+		<xsl:otherwise>
+			<xsl:value-of select="$button" />
+		</xsl:otherwise>
+	</xsl:choose>
+
+</xo:tag>
+
+<xo:tag name="compress">
+	
+	<?php ob_start(); ?>
+
+		<xsl:value-of select="$_content_" />
+	
+	<tpl:code>	
+		$__buf=ob_get_contents();
+		ob_end_clean();
+		echo preg_replace(
+			array('/[ \t]+/'),
+			array(' '), $__buf);
+	</tpl:code>	
+
+</xo:tag>
+
+
+</xo:taglib>

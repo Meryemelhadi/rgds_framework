@@ -1,0 +1,68 @@
+<?php
+
+class Template_console {
+
+	function menu($widget)
+	{
+		$liens = $widget->menu;
+		foreach ($liens as $a)
+		{
+		$url=$a['url'];
+		$label=$a['label'];
+		?>
+		<p:button behaviour="navigate" url="{$url}" xmlns:p="http://www.presencemedia.ma/views/page">{$label}</p:button>
+		<?php
+		}
+	}
+
+	function actions($widget)
+	{
+		$liens = $widget->actions;
+		foreach ($liens as $a)
+		{
+		$url=$a['url'];
+		$label=$a['label'];
+		?>
+		<p:button behaviour="navigate" url="{$url}" xmlns:p="http://www.presencemedia.ma/views/page">{$label}</p:button>
+		<?php
+		}
+	}
+
+	function user($user)
+	{
+		echo "$user ID=".$user->empid->string ." HR Couters :".$user->displayCounters();
+		$url='?';
+		$oid=$user->oid->object;
+
+?>
+			<a href="{$url}&amp;task=display_user&amp;rh_user_oid={$oid}">Display</a> | 
+			<a href="{$url}&amp;task=select_user&amp;rh_user_oid={$oid}">Select</a> | 
+<?php
+	}
+}
+?>
+
+{content:page.content}
+<p:page 	
+	xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:p="http://www.presencemedia.ma/views/page"
+	xmlns:form="http://www.presencemedia.ma/views/form"
+	xmlns:record="http://www.presencemedia.ma/views/record"
+>
+	<p:header>
+		<p:title>Gestion des Congés</p:title>
+		<p:description>{string:"page_message_view"}</p:description>
+		<p:help>{string:"page_message_view_details"}</p:help>
+	</p:header>
+
+	<p:body>
+		<?php $t=new Template_console(); $t->menu($this->getProperty('page.menu')); ?>
+		<?php $t->user($this->getProperty('page.user')); ?>
+
+		{=page.content}
+	</p:body>
+
+</p:page>
+{/content}
+
+{include:page}

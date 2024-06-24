@@ -1,0 +1,17 @@
+<p:page 	
+	xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:p="http://www.presencemedia.ma/views/page"
+	xmlns:form="http://www.presencemedia.ma/views/form"
+	xmlns:record="http://www.presencemedia.ma/views/record"
+>
+	<p:header>
+		<p:title>{string:"page_title_edit"}</p:title>
+		<p:description>{string:"page_message_view"}</p:description>
+		<p:help>{string:"page_message_view_details"}</p:help>
+	</p:header>
+
+	<p:body>
+		{=page.content}
+	</p:body>
+
+</p:page>

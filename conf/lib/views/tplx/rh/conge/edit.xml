@@ -1,0 +1,45 @@
+<p:page 	
+	xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:p="http://www.presencemedia.ma/views/page"
+	xmlns:form="http://www.presencemedia.ma/views/form"
+	xmlns:record="http://www.presencemedia.ma/views/record"
+>
+	<p:resources>
+		<p:resource type="js" path="js/updateConge.js" />
+	</p:resources>
+
+	<p:header>
+		<p:title>{string:"page_title_edit"}</p:title>
+		<p:description>{string:"page_message_edit"}</p:description>
+		<p:help>
+			{if:#=validatorName#} 
+				{string:"validator_name"} <strong>{=validatorName}</strong>
+			{else}
+				{string:"page_message_edit_details"}
+			{/if}
+		</p:help>
+
+		<p:toolbar>
+			<form:cancel for="form1" behaviour="ajax" url="{=list.url}" iconCls="pm-button-cancel">{string:"back"}</form:cancel>
+			<form:submit for="form1" behaviour="ajax" url="{=list.url}" iconCls="pm-button-submit">{string:"submit"}</form:submit>
+		</p:toolbar>
+
+	</p:header>
+
+	<p:body>
+
+		<form:record id="form1" record="page.record">
+			<form:fields />
+		</form:record>
+
+		<script>
+			appendCreditListeners(form1);
+		</script>
+
+		<record:record record="user.record">
+			<record:fields />	
+		</record:record>
+
+	</p:body>
+
+</p:page>

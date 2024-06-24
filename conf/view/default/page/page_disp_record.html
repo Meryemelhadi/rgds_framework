@@ -1,0 +1,25 @@
+{!-- header --}
+{@include:enveloppe/header:skin and device}
+
+{button:back}
+{records}
+<table class="record_display">
+{record}
+{fields}
+<tr>
+	<th>{field.label}</th>
+	<td>{field}</td>
+</tr>
+{/fields}
+{/record}
+</table>
+{button:back}
+{/records}
+{no_record}
+	<table border="0" cellspacing="0" cellpadding="0" class="console">
+		<tr><td>{string:"no record"}</td></tr>
+	</table>
+{/no_record}
+
+{!-- footer --}
+{@include:enveloppe/footer:skin and device}

@@ -1,0 +1,370 @@
+<?PHP
+
+class DML_genRecDesc
+{
+	function DML_genRecDesc()
+	{
+	}
+	
+	function toPHP($name,$view) 
+	{
+		$s='$properties["fprops"]=array(';
+		$alias='$properties["falias"]=array(';
+		$frole="\$properties['frole']=array(";
+		$rprops="\$properties['rprops']=array('name'=>'$name'";
+		if (isset($view['rprops']['aspect']))
+		{
+			$rprops .= ",'aspect'=>'{$view['rprops']['aspect']}'";
+		}
+		
+		if (isset($view['rprops']['handler']))
+		{
+			$rprops .= ",'handler'=>'{$view['rprops']['handler']}'";
+		}
+		
+		if (isset($view['rprops']['config']))
+			$rprops .= ",'config'=>'{$view['rprops']['config']}'";
+
+		if (isset($view['rprops']['class']))
+		{
+			$rprops .= ",'class'=>'{$view['rprops']['class']}'";
+		}
+
+		if (isset($view['rprops']['extendsdWithDs']))
+		{
+			$rprops .= ",'extendsdWithDs'=>'{$view['rprops']['extendsdWithDs']}'";
+		}
+		
+		$rprops .= ",'table'=>'{$view['rprops']['table']}'";
+
+        $tname=ltrim($view['rprops']['table'],'_');
+		if (isset($view['rprops']['database']))
+		{
+	        $dbname=ltrim($view['rprops']['database'],'_');
+	        $dbalias=ltrim($this->getQAlias($view,$view['rprops']['database']),'_');
+			$databases[ltrim($dbname,'_')]=$dbname;
+			$rprops .= ",'database'=>'{$view['rprops']['database']}'";
+		}
+		else
+		{
+	        $dbname='';
+	        $dbalias='';
+			$databases=array();		
+		}
+				
+		// count tables
+        $tables[ltrim($tname,'_')]=$tname;
+
+		if (isset($view['key']))
+        {
+			foreach ($view['key'] as $f)
+			{
+                if (isset($f['server']['TABLE']))
+                {
+                    $tables[$f['server']['TABLE']]=$f['server']['TABLE'];
+                }
+                
+                if (isset($f['server']['DATABASE']))
+                {
+                    $databases[$f['server']['DATABASE']]=$f['server']['DATABASE'];
+                    $dbaliases[$f['server']['DATABASE']]=$this->getQAlias($view,$f['server']['DATABASE']);  
+                }
+			}
+		}
+        	
+		foreach ($view['fields'] as $f)
+		{
+            if (isset($f['server']['TABLE']))
+            {
+                $tables[$f['server']['TABLE']]=$f['server']['TABLE'];
+            }
+
+            if (isset($f['server']['DATABASE']))
+            {
+                $databases[$f['server']['DATABASE']]=$f['server']['DATABASE'];
+                $dbaliases[$f['server']['DATABASE']]=$this->getQAlias($view,$f['server']['DATABASE']);  
+            }
+		}
+        $isMultipleTables=count($tables)>1;
+        $isMultipleDatabases=count($databases)>1;
+        $isDatabase=(count($databases)>0) && $isMultipleTables; 
+				
+		foreach ($view['fields'] as $f)
+		{
+			$ufn=$f['server']['ufname'];
+			$name=$f['server']['NAME'];
+            if ($isMultipleTables)
+				if(isset($f['server']['TABLE']))
+					$name=preg_replace('/[-. ]/','_',strtolower($f['server']['TABLE']))."_{$name}";
+				else
+					$name=preg_replace('/[-. ]/','_',$tname)."_{$name}";
+
+            if ($isDatabase)
+                if(isset($f['server']['DATABASE']))
+                    $name=preg_replace('/[-. ]/','_',$this->getQAlias($view,$f['server']['DATABASE']))."_{$name}";
+                else
+                    $name=preg_replace('/[-. ]/','_',$dbalias)."_{$name}";
+					
+			$s .= "\narray(";
+			
+			foreach($f['server'] as $an=>$a)
+			{
+				// remap value;		
+				$v=$this->getQValue($view,$a);
+				$an=strtolower($an);
+
+				// name
+				switch($an=strtolower($an))
+				{
+					case 'name':$alias.="$v=>'$name',";	
+						if ($isMultipleTables) $v="'$name'"; 
+						break;
+					case 'ufname':$alias.="$v=>'$name',";
+						if ($isMultipleTables) $v="'$name'"; 
+						break;
+					case 'srcname':$an='srcName';if($ufn!=$a && $name!=$a) $alias.="'$a'=>'$name',";break;
+					case 'alias':if($ufn!=$a && $name!=$a)$alias.="'$a'=>'$name',"; break;
+					case 'role': $frole.="'$a'=>'$name',"; break;
+					case 'isprop':$an='isProp';	$alias.="'$a'=>'$name',";	break;
+					case 'isobject':$an='isObject';	$alias.="'$a'=>'$name',";	break;
+					case 'show':$v=$this->getBool($v);break;
+					case 'autocomplete':$v=$this->getBool($v);break;
+					case 'istransient':$an='is_transient';$v=$this->getBool($a);break;
+					case 'is_transient':$an='is_transient';$v=$this->getBool($a);break;
+					case 'masked':$v=$this->getBool($v);break;
+					case 'isedit':$an='isEdit';$v=$this->getBool($v);break;
+					case 'isrequired':$an='isRequired';$v=$this->getBool($v);break;
+					case 'iskey':$an='isKey';break;
+					case 'isinput':$an='isInput';$v=$this->getBool($v);break;
+					case 'onsubmitcheck':$an='onSubmitCheck';$v=trim($v,"'"); $v="\"$v\""; break;
+					case 'oninput':$an='onInput';$v=trim($v,"'"); $v="\"$v\"";break;
+					case 'ondelete':$an='onDelete';break;
+					case 'isfile':$an='isFile';break;
+					case 'imagesize':$an='imageSize';break;
+					case 'imagesizes':$an='imageSizes';break;
+					case 'maxsize':$an='maxSize';break;
+					case 'maxlength':$an='maxLength';break;
+					case 'multilines':$an='multiLines';$v=$this->getBool($a);break;
+					case 'multiple':$an='multiple';$v=$this->getBool($a);break;
+					case 'multirecords':$an='multiRecords';$v=$this->getBool($a);break;
+					case 'multiplerecords':$an='multiRecords';$v=$this->getBool($a);break;
+					case 'sizegen':$an='sizeGen';break;
+					case 'controllayout':$an='controlLayout';break;					
+					case 'type':$v=$this->formatType($v);break;
+					case 'controloptions':$an='controlOptions';break;
+					case 'help':$v=$this->formatHelp($v);
+				}
+				
+				if($v=='')
+					$v="''";
+					
+				$s .="'$an'=>$v,";
+			}
+			$s .= "),";
+		}
+		
+		$s .= ');';
+		$alias .= ');';
+		$frole .= ');';
+		$rprops .= ');';
+				
+		return "<?php $s\n$alias\n$frole\n$rprops\n ?>";
+	}
+	
+	function getBool($v) {
+		switch(trim($v,"'"))
+		{
+			case 'show':
+			case 'yes':
+			case 'true':
+				return 'true';
+
+			case 'hidden':
+				case 'no':
+				case 'false':
+					return 'false';
+			default:
+				if (preg_match('/[$]/',$v))
+					return $v;
+				else
+					return "'".str_replace("'","\\'",trim($v,"'"))."'";
+		}
+	}
+	
+	function formatType($t) {
+		return preg_replace('/[- .]/','_',$t);
+	}
+	function formatHelp($v) {
+		return "'".preg_replace(
+			array(
+				'%"%',"%'%",
+				'%\n%',
+				'%[ \t]+%',
+				'%(<br[ /]*>)+[ \t]*$%',),
+			array('\"','&rsquo;','',' ',''),
+			nl2br(trim($v,"'")))."'";
+	}
+		
+	
+	function getQValue($view,$qv)
+	{
+		if ($qv == null)
+			return "''";
+		
+		
+		if (!@preg_match('/^\%\{((?:\w|-)+):([^:|]+)([:|]([^}:]*)(:([^}:]+))?)?\}$/', $qv,$regs) &&
+			!@preg_match('/^#((?:\w|-)+):([^:|#]+)([:|]([^}#:]*)(:([^}#:]+))?)?\}$/', $qv,$regs))
+			return "'$qv'";
+			
+		$media = strtolower($regs[1]);
+		$name  = $regs[2];
+		$dft   = trim($regs[4],'\'"');
+		$storage = $regs[6];
+				
+		// translate name to field format
+		$fname = strtr($name, array('-' => '_',' '=>'_','.'=>'_', '/'=>'_')); 
+		$fprefix=$view['rprops']['fprefix'];
+		$v = $dft;
+			
+		$wrap1='';
+		$wrap2='';			
+//		$wrap1='"\'".';
+//		$wrap2='."\'"';			
+		switch($media)
+		{			
+			case "property":
+				$v = $wrap1.'$props->getProperty("'.$name.'","'.$dft.'",true)'.$wrap2;
+				break;
+			case 'field': return '"'.$fprefix.preg_replace('/\./','._',$fname).'"'; // sql: table.field 
+			case 'sql': return $name; // sql
+			case 'record': return '$record->getFieldValue("'.$fname.'","DB","'.$dft.'")';
+			case 'parent-record': 
+			case 'parentRecord': 
+				return '(($_rec_=$props->getProperty("parentRecord"))?$_rec_->getFieldValue("'.$fname.'","HTML","'.$dft.'"):"")';
+			
+			case "param": // get or session
+				$v = $wrap1.'$this->getProperty("'.$name.'","'.$dft.'",false)'.$wrap2;
+//				$v = $wrap1.'$this->getParam("'.$name.'","'.$dft.'")'.$wrap2;
+				break;
+			case "param-field": // get or session
+				$v = $wrap1.'$this->getParam("'.$fname.'","'.$dft.'")'.$wrap2;
+				break;
+			case "site":
+			case "user":
+				$v = $wrap1.'$GLOBALS["_NX_user"]->getProperty("'.$name.'","'.$dft.'",true)'.$wrap2;
+				break;
+			case "permission":
+			case "permissions":
+				$v = $wrap1.'$GLOBALS["_NX_user"]->checkPerm("'.$name.'")'.$wrap2;
+				break;
+			case "get":
+				$v = $wrap1.'(isset($_GET["'.$name.'"])?$_GET["'.$name.'"]:"'.$dft.'")'.$wrap2;
+				break;
+			case "request":
+				$v = $wrap1.'(isset($_REQUEST["'.$name.'"])?$_REQUEST["'.$name.'"]:"'.$dft.'")'.$wrap2;
+				break;
+			case "session":
+				$v = $wrap1.'(isset($_SESSION["'.$name.'"])?$_SESSION["'.$name.'"]:"'.$dft.'")'.$wrap2;
+				break;
+			case "post":
+				$v = $wrap1.'(isset($_POST["'.$name.'"])?$_POST["'.$name.'"]:"'.$dft.'")'.$wrap2;
+				break;
+			case "http":
+				$v = $wrap1.'(isset($_REQUEST["'.$name.'"])?$_REQUEST["'.$name.'"]:"'.$dft.'")'.$wrap2;
+				break;
+
+			case "get-field":
+				$v = $wrap1.'(isset($_GET["'.$fname.'"])?$_GET["'.$fname.'"]:"'.$dft.'")'.$wrap2;
+				break;
+			case "post-field":
+				$v = $wrap1.'(isset($_POST["'.$fname.'"])?$_POST["'.$fname.'"]:"'.$dft.'")'.$wrap2;
+				break;
+			case "http-field":
+				$v = $wrap1.'(isset($_REQUEST["'.$fname.'"])?$_REQUEST["'.$fname.'"]:"'.$dft.'")'.$wrap2;
+				break;
+			case "variable":
+				$v = $wrap1.'$GLOBALS["'.$name.'"]'.$wrap2;
+				break;
+			case "constant":
+				$v = $wrap1.''.$name.'"\'"';
+			case "literal":
+				return $name;
+/*			case "cookie":
+			case "user-or-get":
+			case "any":
+			case "all":
+			case "*" 
+*/
+			default:
+				$v = '$this->getQValue("'.$qv.'")';
+				break;
+		}
+
+		return $v;
+	}
+    
+    /*
+        returns a unique alias name to be used for tables and databases, for building field aliases
+    */
+    function & getQAlias($view,$qv)
+    {
+        if ($qv == null)
+            return "''";
+        
+        if (!@preg_match('/^\%\{((?:\w|-)+):([^:|]+)([:|]([^}:]*)(:([^}:]+))?)?\}$/', $qv,$regs) &&
+            !@preg_match('/^#((?:\w|-)+):([^:|#]+)([:|]([^}#:]*)(:([^}#:]+))?)?\}$/', $qv,$regs))
+            return "$qv";
+            
+        $media = strtolower($regs[1]);
+        $name  = $regs[2];
+        $dft   = trim($regs[4],'\'"');
+        $storage = $regs[6];
+                
+        // translate name to field format
+        $fname = strtr($name, array('-' => '_',' '=>'_','.'=>'_', '/'=>'_')); 
+        $fprefix=$view['rprops']['fprefix'];
+        $v = $dft;
+            
+        $wrap1='';
+        $wrap2='';            
+//        $wrap1='"\'".';
+//        $wrap2='."\'"';            
+        switch($media)
+        {            
+            case 'field': return '"'.$fprefix.preg_replace('/\./','._',$fname).'"'; // sql: table.field 
+            case 'sql': return $name; // sql
+            case 'record': return '$record->getFieldValue("'.$fname.'","DB","'.$dft.'")';
+            case "param-field": // get or session
+                $v = $wrap1.'param_'.$name.$wrap2;
+                break;
+            
+            case "property":
+                $v = $wrap1.$name.$wrap2;
+                break;
+            case "param": // get or session
+            case "site":
+            case "user":
+            case "get":
+            case "request":
+            case "session":
+            case "post":
+            case "http":
+            case "get-field":
+            case "post-field":
+            case "http-field":
+            case "variable":
+            case "constant":
+            case "literal":
+                $v = $wrap1.$media.'_'.$name.$wrap2;
+                break;
+            default:
+                return $v = '$this->getQValue("'.$qv.'")';
+                break;
+        }
+
+        $v = preg_replace('/[-. ]/','_',strtolower($v));
+        return $v;
+    }
+}
+
+?>

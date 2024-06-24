@@ -1,0 +1,13 @@
+
+- modification par utilisateur de sa demande de congé:
+
+- template rh.conge.list.html
+modif condition d'état de la demande
+
+- jours féries
+admin/directory_holiday
+ajout aspect sur les dml
+
+- reporter les fichiers de demande, validation.nxl et recompiler
+- recompiler tous les NXL de la distribution.
+- mise à jour du framework.

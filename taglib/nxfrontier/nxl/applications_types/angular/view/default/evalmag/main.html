@@ -1,0 +1,99 @@
+{include:angular.application.head@workflow}{content:page.content}
+
+<!-- <config_nx js="false" /> -->
+
+<script language="php">
+	// get user
+	$user = &$GLOBALS['_NX_user'];
+	$userOid=$user->getProperty('oid');
+	$userEntity = $user->getProperty('entity');
+	$isAdmin = $user->checkPerm('?-admin');
+	$package = $this->getProperty("nx.package");
+
+	// load app config
+	function getConfig($config,$pack) {
+		$conf=NxConfig::getConfig(Framework::getContext(),$config,'',$pack,'conf/objects');
+		return $conf->props;
+
+	}
+
+	$conf_ui=getConfig('graphic',$package);
+	$config=array(
+		'ui' => $conf_ui,
+	);
+
+	$homeUrl = '/home/modelcomp';
+
+</script>
+
+<script>
+
+	MyAppLoader.init('screenApp','{var:homeUrl}');
+
+</script>
+
+<style>
+
+</style>
+
+<div id="screenApp">
+
+	<section id="page-header">
+		<div ui-view="top"></div>
+	</section>
+
+	<div ui-view=""></div>
+
+
+	<!-- ======= GENERIC ======== -->
+	{include:angular.application.app_main@workflow}
+
+	<!-- ======= WIDGETS ======== -->
+	{include:angular.services.Widgets@workflow}
+	{include:angular.widgets.TableWidgets@workflow}
+
+
+	<!-- ======= SERVICES ======== -->
+	{include:angular.services.AppTools@workflow}
+	{include:angular.services.ServerDataFactory@workflow}
+	{include:angular.services.FileDrop@workflow}
+	{include:angular.services.Crud@workflow}
+
+	<!-- ======= FORM ======== -->
+	{include:angular.services.Forms@workflow}
+
+	
+	<!-- ======= SCREEN ======== -->
+	{include:angular.layouts.screen_layout@workflow}
+
+	<!-- ======= UI ======== -->
+	{include:angular.services.NxUI@workflow}
+	{include:angular.services.NxUI_left@workflow}
+	{include:angular.services.NxUI_hp@workflow}
+	{include:angular.services.NxUI_form@workflow}
+	{include:angular.services.NxUI_page@workflow}
+
+	<!-- ======= SPECIFIC ====================== -->
+
+	<!-- ======= SERVICES ======== -->
+	{include:evalmag.services.Config}
+	{include:evalmag.services.UserManager}
+
+	<!-- ======= WIDGETS ======== -->
+	
+	<!-- ======= SCREEN ======== -->	
+	{include:evalmag.nav.main_nav_ui}
+	
+	<!-- ======= MODULES ======== -->
+	{include:evalmag.modules.app_modelcomp}
+
+</div>
+
+<style>
+
+/* FREE CSS */
+{var:conf_ui["free_css"]}
+
+</style>
+{/content}
+{include:page_angular_bare}

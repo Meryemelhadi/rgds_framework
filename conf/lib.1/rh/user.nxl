@@ -1,0 +1,254 @@
+<?xml version="1.0"?>
+<nxl version="1.0"
+	xmlns="http://www.nxfrontier.com/nxl/nxl" 
+	xmlns:ruleset="http://www.generis.com/rh/conge/ruleset"
+	preload="/rh/conge/ruleset"
+	xmlns:xo="http://www.nxfrontier.com/xo/core"
+	>
+
+<data xmlns="http://www.nxfrontier.com/dml/dml" package="rh">
+	<data_lists xmlns="http://www.pyxicom.ma/employees/employees" />
+	<data_tables xmlns="http://www.pyxicom.ma/employees/employees" />
+		
+	<views>
+		<view name="rh.group" table="directory_group">
+			<key mode="by_oid">
+				<field name="oid" type="oid" value="%{param:oid}" />
+			</key>
+			<key mode="by_manager">
+				<field name="hr_manager" type="text" relation="like" value="%{param:managerOid}" />
+			</key>
+			<fields>
+				<field name="oid" label="object_id" type="oid" isKey="primary" show="hidden" isEdit="no" />
+
+				<field name="group_name" label="Group Name" multiLines="false" type="text"/>
+			
+				<ruleset:group_fields />
+				
+			</fields>
+		</view>
+		<view name="rh.group.conge" table="directory_group">
+			<key>
+				<field name="oid" type="oid" value="%{param:oid}" />
+			</key>
+			<fields>
+				<field name="oid" label="object_id" type="oid" isKey="primary" show="hidden" isEdit="no" />
+
+				<field name="group_name" label="Group Name" multiLines="false" type="text"/>
+
+				<ruleset:group_fields />
+				
+			</fields>
+		</view>
+
+		<view name="portal.user" table="user">
+			<key>
+				<field name="oid" type="oid" value="%{param:oid}" />
+			</key>
+			<key mode="all">
+			</key>
+			<fields>
+				<field name="oid" type="oid" />
+				<field name="empid" label="empid" type="text" size="20"/>
+				<field name="email" label="email" type="text" size="500"/>
+				<field name="first_name" label="first_name" type="text" size="50"/>
+				<field name="last_name" label="last_name" type="text" size="50"/>
+				<field name="gender" label="gender" type="text-choice" multiLines="no" list="directory.lists.gender"/>
+				<field name="civility" label="civility" type="text-choice" multiLines="no" list="directory.lists.civility"/>
+				<field name="group" label="group" type="ref-oid"/>			
+			</fields>
+		</view>
+
+
+		<view name="rh.user" table="user">
+			<key>
+				<field name="oid" type="oid" value="%{param:oid}" />
+			</key>
+			<key mode="by_oid">
+ 				<field name="oid" type="oid" value="%{param:oid}" />
+			</key>
+
+			<key mode="by_oids">
+				<field name="oid" type="text" relation="eq-match" value="%{param:user_oids}" />
+			</key>
+
+			<sort mode="all">
+				<field name="#get:sortBy|first_name#" direction="asc"/>				
+				<field name="first_name" direction="asc" />
+				<field name="last_name" direction="asc" />
+			</sort>
+			
+			<fields>
+				<field name="oid" type="oid" />
+				<field name="empid" label="empid" type="text" size="20"/>
+				<field name="first_name" label="first_name" type="text" size="50"/>
+				<field name="last_name" label="last_name" type="text" size="50"/>
+				<field name="email" label="email" type="text" size="500"/>
+				<field name="gender" label="gender" type="text-choice" multiLines="no" list="directory.lists.gender"/>
+				<field name="civility" label="civility" type="text-choice" multiLines="no" list="directory.lists.civility"/>
+				<field name="marital_status" label="marital_status" type="text-choice" multiLines="no" list="directory.lists.marital_status"/>
+				<field name="nb_children" label="nb_children" type="integer" />						
+				<field name="birth_date" label="birth_date" type="date"/>
+				<field name="birth_location" label="birth_location" type="line" size="30"/>
+				<field name="address" label="adresse" type="text" size="200"/>
+				<field name="town" label="town" type="ref-oid"/>
+				<field name="rib" label="rib" type="line" size="100"/>
+				<field name="diploma" label="diploma" type="ref-oid"/>
+				<field name="mobile_phone" label="mobile_phone" type="int-telephone" size="20"/>
+				<field name="direct_phone" label="direct_phone" type="int-telephone" size="20"/>
+				<field name="local_phone" label="local_phone" type="line" size="20"/>
+				<field name="personal_phone" label="personal_phone" type="int-telephone" size="20"/>
+				<field name="start_service" label="start_service" type="date"/>
+				<field name="group" label="group" type="ref-oid"/>
+				<field name="contract" label="contract" type="ref-oid"/>
+
+				<field name="csp" label="csp" multiLines="no" type="text-choice" multiple="false" control="select" ds="db:directory.employees.csp@admin" ds_format="{field:csp_name}" ds_field_value="oid" />
+				<field name="fonction" label="fonction" type="text-choice" list="directory.lists.fonction" control="select" prompt="select fonction..."/>
+				<field name="role" label="role" multiLines="no" type="text-choice" multiple="false" control="select" ds="db:directory.employees.role@admin" ds_format="{field:role_name}" ds_field_value="oid" />
+				<field name="localisation" label="localisation" multiLines="no" type="text-choice" multiple="false" control="select" ds="db:directory.employees.localisation@admin" ds_format="{field:localisation_name}" ds_field_value="oid" />
+				
+				
+<!-- 				<field name="csp" label="csp" type="ref-oid"/>
+				<field name="fonction" label="fonction" type="integer"/>
+				<field name="role" label="role" type="ref-oid"/>
+				<field name="localisation" label="localisation" type="ref-oid" />
+
+ -->				
+				<field name="centre_couts" label="centres_couts" type="line" size="50"/>						
+				<field name="cne" label="cne" type="text" size="10"/>
+				<field name="cnss" label="cnss" type="text" size="30"/>
+				<field name="cimr" label="cimr" type="text" size="30"/>
+				<field name="notes" label="notes" type="text" size="300"/>
+				<field name="photo" label="photo" type="image" maxSize="200000" imageSize="100x120" imageSizes="original,100x120,80x96" />
+
+				<ruleset:user_fields />
+				
+			</fields>
+		</view>
+
+		<view name="rh.user.all" table="user">
+			<sort>
+				<field name="first_name" direction="asc" />
+				<field name="last_name" direction="asc" />
+			</sort>
+			
+			<fields>
+				<field name="oid" type="oid" />
+				<field name="empid" label="empid" type="text" size="20"/>
+				<field name="first_name" label="first_name" type="text" size="50"/>
+				<field name="last_name" label="last_name" type="text" size="50"/>
+				<field name="email" label="email" type="text" size="500"/>
+				<field name="gender" label="gender" type="text-choice" multiLines="no" list="directory.lists.gender"/>
+				<field name="civility" label="civility" type="text-choice" multiLines="no" list="directory.lists.civility"/>
+				<field name="marital_status" label="marital_status" type="text-choice" multiLines="no" list="directory.lists.marital_status"/>
+				<field name="nb_children" label="nb_children" type="integer" />						
+				<field name="birth_date" label="birth_date" type="date"/>
+				<field name="birth_location" label="birth_location" type="line" size="30"/>
+				<field name="address" label="adresse" type="text" size="200"/>
+				<field name="town" label="town" type="ref-oid"/>
+				<field name="rib" label="rib" type="line" size="100"/>
+				<field name="diploma" label="diploma" type="ref-oid"/>
+				<field name="mobile_phone" label="mobile_phone" type="int-telephone" size="20"/>
+				<field name="direct_phone" label="direct_phone" type="int-telephone" size="20"/>
+				<field name="local_phone" label="local_phone" type="line" size="20"/>
+				<field name="personal_phone" label="personal_phone" type="int-telephone" size="20"/>
+				<field name="start_service" label="start_service" type="date"/>
+				<field name="group" label="group" type="ref-oid"/>
+				<field name="contract" label="contract" type="ref-oid"/>
+
+				<field name="csp" label="csp" multiLines="no" type="text-choice" multiple="false" control="select" ds="db:directory.employees.csp" ds_format="{field:csp_name}" ds_field_value="oid" />
+				<field name="fonction" label="fonction" type="text-choice" list="directory.lists.fonction" control="select" prompt="select fonction..."/>
+				<field name="role" label="role" multiLines="no" type="text-choice" multiple="false" control="select" ds="db:directory.employees.role" ds_format="{field:role_name}" ds_field_value="oid" />
+				<field name="localisation" label="localisation" multiLines="no" type="text-choice" multiple="false" control="select" ds="db:directory.employees.localisation" ds_format="{field:localisation_name}" ds_field_value="oid" />
+				
+				<field name="centre_couts" label="centres_couts" type="line" size="50"/>						
+				<field name="cne" label="cne" type="text" size="10"/>
+				<field name="cnss" label="cnss" type="text" size="30"/>
+				<field name="cimr" label="cimr" type="text" size="30"/>
+				<field name="notes" label="notes" type="text" size="300"/>
+				<field name="photo" label="photo" type="image" maxSize="200000" imageSize="100x120" imageSizes="original,100x120,80x96" />
+
+				<ruleset:user_fields />
+				
+			</fields>
+		</view>
+		<view name="rh.user.by_group" table="user">
+			<key>
+				<or>
+					<field name="mgc_parent_group_RH" type="text" relation="strict-match" value="%{param:groups_oids}" />
+					<field name="group" type="text" relation="eq-match" value="%{param:groups_oids}" />
+				</or>
+			</key>
+			<sort>
+				<field name="first_name" direction="asc" />
+				<field name="last_name" direction="asc" />
+			</sort>
+			
+			<fields>
+				<field name="oid" type="oid" />
+				<field name="empid" label="empid" type="text" size="20"/>
+				<field name="first_name" label="first_name" type="text" size="50"/>
+				<field name="last_name" label="last_name" type="text" size="50"/>
+				<field name="email" label="email" type="text" size="500"/>
+				<field name="gender" label="gender" type="text-choice" multiLines="no" list="directory.lists.gender"/>
+				<field name="civility" label="civility" type="text-choice" multiLines="no" list="directory.lists.civility"/>
+				<field name="marital_status" label="marital_status" type="text-choice" multiLines="no" list="directory.lists.marital_status"/>
+				<field name="nb_children" label="nb_children" type="integer" />						
+				<field name="birth_date" label="birth_date" type="date"/>
+				<field name="birth_location" label="birth_location" type="line" size="30"/>
+				<field name="address" label="adresse" type="text" size="200"/>
+				<field name="town" label="town" type="ref-oid"/>
+				<field name="rib" label="rib" type="line" size="100"/>
+				<field name="diploma" label="diploma" type="ref-oid"/>
+				<field name="mobile_phone" label="mobile_phone" type="int-telephone" size="20"/>
+				<field name="direct_phone" label="direct_phone" type="int-telephone" size="20"/>
+				<field name="local_phone" label="local_phone" type="line" size="20"/>
+				<field name="personal_phone" label="personal_phone" type="int-telephone" size="20"/>
+				<field name="start_service" label="start_service" type="date"/>
+				<field name="group" label="group" type="ref-oid"/>
+				<field name="contract" label="contract" type="ref-oid"/>
+				<field name="csp" label="csp" type="ref-oid"/>
+				<field name="fonction" label="fonction" type="integer"/>
+				<field name="role" label="role" type="ref-oid"/>
+				<field name="localisation" label="localisation" type="ref-oid"/>
+				<field name="centre_couts" label="centres_couts" type="line" size="50"/>						
+				<field name="cne" label="cne" type="text" size="10"/>
+				<field name="cnss" label="cnss" type="text" size="30"/>
+				<field name="cimr" label="cimr" type="text" size="30"/>
+				<field name="notes" label="notes" type="text" size="300"/>
+				<field name="photo" label="photo" type="image" maxSize="200000" imageSize="100x120" imageSizes="original,100x120,80x96" />
+
+				<ruleset:user_fields />
+				
+			</fields>
+		</view>
+
+		<view name="rh.user.myteam" table="user" handler="lib.rh.conge.records.myteam">
+		</view>
+
+		<view name="rh.user.mygroups" table="directory_group" handler="lib.rh.conge.records.mygroups">
+		</view>
+
+		<view name="rh.user.conge" table="user">
+			<key>
+				<field name="oid" type="oid" value="%{param:oid}" />
+			</key>
+			<fields>
+				<field name="oid" type="oid" />
+				<field name="empid" label="empid" type="text" size="20"/>
+				<field name="first_name" label="first_name" type="text" size="50"/>
+				<field name="last_name" label="last_name" type="text" size="50"/>
+				<field name="email" label="email" type="text" size="500"/>
+				<field name="group" label="group" type="ref-oid"/>
+
+				<ruleset:user_fields />
+				
+			</fields>
+		</view>
+
+	
+	</views>
+
+</data>
+
+</nxl>

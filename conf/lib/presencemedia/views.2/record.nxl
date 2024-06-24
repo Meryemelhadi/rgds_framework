@@ -1,0 +1,44 @@
+<?xml version="1.0"?> 
+<!-- 
+	
+	NXL Taglib 
+
+	description: tag lib for generating ExtJS tree
+
+-->
+<xo:taglib uri="http://www.presencemedia.ma/views/record#skin" 
+	xmlns:xo="http://www.nxfrontier.com/xo/core"
+	xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+	xmlns:this="http://www.nxfrontier.com/xo/this"
+	xmlns="http://www.w3.org/1999/xhtml"
+	>
+
+<xo:tag name="record">
+	<xo:param name="record" value="page.record"/>
+
+	{record:<xsl:value-of select="$record" />}
+		<xsl:value-of select="$_content_" />
+	{/record}
+</xo:tag>
+
+<xo:tag name="fields">
+	<div class="record_wrapper">
+		<div class="record">
+			{fields}
+			<div class="control-main-wrapper">
+				<div class="control-label-wrapper">
+					<div class="control-label">{field.label} :</div>
+				</div>
+				<div class="control-wrapper" id="{field.name}-control-wrapper">
+					<div class="control" id="{field.name}-control">{field}</div>
+						{if:field.is_help}
+							<div class="tooltip">{field.help}</div>
+						{/if}
+				</div>
+			</div>
+			{/fields}
+		</div>
+	</div>
+</xo:tag>
+
+</xo:taglib>

@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<nxl version="1.0"
+	xmlns="http://www.nxfrontier.com/nxl/nxl" 
+	xmlns:ruleset="http://www.generis.com/rh/conge/ruleset"
+	preload="/rh/conge/ruleset"
+	xmlns:xo="http://www.nxfrontier.com/xo/core"
+	>
+
+
+
+</nxl>

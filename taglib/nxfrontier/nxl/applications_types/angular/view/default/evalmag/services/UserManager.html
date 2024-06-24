@@ -1,0 +1,111 @@
+<!-- USER MANAGER -->
+<script type="text/javascript" id="/services/UserManager.js" append_to="js/livret/components.js">
+
+MyAppLoader.addComponent({
+	id:'UserManager',
+	injections: {
+		'ngStorage':'/nx/controls/angularjs/ngStorage.js',
+	},
+	init:function(loader) 
+	{
+		var app = loader.app;
+
+		// site service
+		app.service('UserManager',['$localStorage','Config','ServerDataFactory','$rootScope',function($localStorage,Config,ServerDataFactory,$rootScope)
+		{
+			this.loaded = false;
+		
+			// class
+			this.loadData = function(cb) 
+			{
+				var self = this;
+
+				var url = Config.moduleURL('user',false,'user') +'op=user_info';
+
+				// loader la liste des pages
+				var sce = ServerDataFactory.createService('user',false);
+				sce.loadDataFromServer(url,reload=true,function(data){
+					self.initData(data);
+					this.loaded = true;
+					if(cb)
+						cb(self);
+				});
+			}
+
+			this.initData = function(data) 
+			{
+				if(data.user)
+				{
+					this.user = data.user.infos;
+
+					for(p in data.user)
+					{
+						this.user[p] = data.user[p];
+					}
+				}
+			}
+
+			this.getUser = function(cb) 
+			{
+				var self = this;
+				if(self.loaded)
+				{
+					cb(this.user);
+				}
+				else
+				{
+					this.loadData(function() {
+						cb(user);
+					});
+				}
+			}
+
+			this.getSites = function(cb) 
+			{
+				var self = this;
+				if(self.loaded)
+				{
+					cb(self.user.sites);
+				}
+				else
+				{
+					this.loadData(function() {
+						cb(self.user.sites);
+					});
+				}
+			}
+
+			// get site by oid (or site model if oid = "0")
+			this.getSite = function(oid,cb) 
+			{
+				var self = this;
+				if(self.loaded)
+				{
+					this._getSite(oid,cb);
+				}
+				else
+				{
+					this.loadData(function() {
+						self._getSite(oid,cb);
+					});
+				}
+			}
+
+			this._getSite = function(oid,cb) 
+			{
+				var self = this;
+
+				if(self.user.sites)
+					self.user.sites.forEach(function(site) {
+						if(site.oid == oid)
+						{
+							cb(site);
+						}
+					});
+			}
+
+		}]);
+	}
+});
+
+</script>

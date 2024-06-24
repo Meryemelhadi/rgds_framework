@@ -1,0 +1,29 @@
+<!--! {require:css/records.css:skin} -->
+
+<!--! {records:page.records}{record} -->
+		<div class="on">
+		<div class="on_off">
+			<div class="record_wrapper">
+				<div class="record" style="width:100% !important">
+					<!--!{fields}-->
+					<div class="control-main-wrapper">
+						<div class="control-label-wrapper">
+							<div class="control-label">{field.label} :</div>
+						</div>
+						<div class="control-wrapper">
+							<div class="control">{field}</div>
+						</div>
+					</div>
+					<!--!{/fields}-->
+				</div>
+			</div>
+		</div>
+		<div class="sub-form-delete-control">
+			<input type="checkbox" class="delete-control-checkbox" onclick="this.parentNode.parentNode.className=(this.parentNode.parentNode.className=='on')?'off':'on'" name="{record.id}__delete__" value="delete" />
+			<span class="open-control-label">{string:"open"}</span>
+			<span class="close-control-label">{string:"close"}</span>
+			<div style="clear:both;font-size:1px;height:1px">&nbsp;</div>
+		</div>
+		
+	</div>
+<!--! {/record}{/records} -->

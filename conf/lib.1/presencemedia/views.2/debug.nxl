@@ -1,0 +1,60 @@
+<?xml version="1.0"?> 
+<!-- 
+	
+	NXL Taglib 
+
+	description: tag lib for generating ExtJS tree
+
+-->
+<xo:taglib uri="http://www.presencemedia.ma/views/debug#skin" 
+	xmlns:xo="http://www.nxfrontier.com/xo/core"
+	xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+	xmlns:this="http://www.nxfrontier.com/xo/this"
+	xmlns:nxl="http://www.nxfrontier.com/nxl/nxl"
+	xmlns:tpl="http://www.nxfrontier.com/tpl/tpml"
+	xmlns:format="http://www.nxfrontier.com/nxl/format"
+	xmlns="http://www.w3.org/1999/xhtml"
+	>
+
+<xo:tag name="nxltrace" >
+	<xo:param name="onclick" />
+	<xo:param name="iconCls" />
+
+	<div>
+		<div onclick="$('nxltrace').toggle();">XML trace</div>
+		<div onclick="$('properties').toggle();">properties</div>
+		<div id="nxltrace"
+			style="display:none;background:#eee;width:70%;border:#999;height:300px;overflow:scroll;position:absolute;">
+			<?php echo $GLOBALS['nxl_trace']; ?>
+		</div>
+
+		<div id="properties"
+			style="display:none;background:#eee;width:70%;border:#999;height:300px;overflow:scroll;position:absolute;">
+			
+			<!-- list all current properties in NX -->
+			<listAll xmlns="http://www.nxfrontier.com/nxl/properties" ns="http://www.presencemedia.ma/views/debug#skin"/>
+
+		</div>
+	</div>
+</xo:tag>
+
+<xo:tag name="properties">
+	<table>
+		<xsl:value-of select="$_content_" />
+	</table>
+
+</xo:tag>
+
+<xo:tag name="property">
+	<xo:param name="name"/>
+	<xo:param name="value" select="$_content_"/>
+
+	<tr class="property">
+		<td class="property-def"><xsl:value-of select="$name" /></td>
+		<td class="property-value"><xsl:value-of select="$value" /></td>
+	</tr>
+
+</xo:tag>
+
+
+</xo:taglib>

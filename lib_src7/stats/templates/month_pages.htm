@@ -1,0 +1,167 @@
+<br /><table cellspacing="1" cellpadding="3" align="center" bgcolor="#000000" border="0" width="760" class="stat">
+  <tr valign="middle" bgcolor="#79a0c7" class="th">
+    <th align="center" colspan="2">
+      Monthly Statistics for {month} {year} for Site '{client}'
+    </th>
+  </tr>
+  <tr valign="baseline" bgcolor="#bdd0e1">
+    <td align="left" bgcolor="#a9bbcf" width="75%" class="th2">
+      Total Page Impressions
+    </td>
+    <td align="right" width="25%">
+      {total_pi}
+    </td>
+  </tr>
+  <tr valign="baseline" bgcolor="#bdd0e1">
+    <td align="left" bgcolor="#a9bbcf">
+      Total Visits
+    </td>
+    <td align="right">
+      {total_visits}
+    </td>
+  </tr>
+</table>
+
+<br />
+
+<a id="daily_statistics" name="daily_statistics"></a>
+<table class="stat" cellspacing="1" cellpadding="3" align="center" bgcolor="#000000" border="0" width="760">
+  <tr valign="middle" bgcolor="#79a0c7" class="th">
+    <th align="center" bgcolor="#ffffff" colspan="5">
+      Daily Statistics for {month} {year}
+
+      <br />
+
+      <img alt="" src="graph.php?client_id={client_id}&amp;what=access_statistics&amp;start={start}&amp;end={end}&amp;interval=day&amp;width=700&amp;height=260" />
+    </th>
+  </tr>
+  <tr valign="baseline" bgcolor="#bdd0e1" class="th2">
+    <td bgcolor="#79a0c7" width="10%">
+      Day
+    </td>
+    <td align="center" bgcolor="#79a0c7" colspan="2" width="45%">
+      Page Impressions
+    </td>
+    <td align="center" bgcolor="#79a0c7" colspan="2" width="45%">
+      Visits
+    </td>
+  </tr>
+  {daily_statistics}
+</table>
+
+<br />
+
+<a id="pages" name="pages"></a>
+<table class="stat" cellspacing="1" cellpadding="3" align="center" bgcolor="#000000" border="0" width="760">
+  <tr valign="middle" bgcolor="#79a0c7" class="th">
+    <th align="center" colspan="4">
+      Visited Pages   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [ total = {total_pages} ]
+    </th>
+  </tr>
+  <tr valign="baseline" bgcolor="#bdd0e1" class="th2">
+    <td bgcolor="#a9bbcf" width="10%">
+      &nbsp;
+    </td>
+    <td align="left" bgcolor="#a9bbcf" colspan="2" width="20%">
+      Page Impressions
+    </td>
+    <td align="left" bgcolor="#a9bbcf" width="70%">
+      Page
+    </td>
+  </tr>
+  {pages}
+</table>
+
+<br />
+
+<a id="referers" name="referers"></a>
+<table class="stat" cellspacing="1" cellpadding="3" align="center" bgcolor="#000000" border="0" width="760">
+  <tr valign="middle" bgcolor="#79a0c7" class="th">
+    <th align="center" colspan="4">
+      Referers &nbsp;&nbsp;(coming from)   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [ total = {total_referers} ]
+    </th>
+  </tr>
+  <tr>
+    <td bgcolor="#a9bbcf" width="10%" class="th2">
+      &nbsp;
+    </td>
+    <td align="left" bgcolor="#a9bbcf" colspan="2" width="20%">
+      Visitors refered here
+    </td>
+    <td align="left" bgcolor="#a9bbcf" width="70%">
+      Referer
+    </td>
+  </tr>
+  {referers}
+</table>
+
+<br />
+
+<a id="entry_pages" name="entry_pages"></a>
+<table class="stat" cellspacing="1" cellpadding="3" align="center" bgcolor="#000000" border="0" width="760">
+  <tr valign="middle" bgcolor="#79a0c7" class="th">
+    <th align="center" colspan="4">
+      Entry Pages  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [ total = {total_entry_pages} ]
+    </th>
+  </tr>
+  <tr class="th2">
+    <td bgcolor="#a9bbcf" width="10%">
+      &nbsp;
+    </td>
+    <td align="left" bgcolor="#a9bbcf" colspan="2" width="20%">
+      Visitors entered here
+    </td>
+    <td align="left" bgcolor="#a9bbcf" width="70%">
+      Page
+    </td>
+  </tr>
+  {entry_pages}
+</table>
+
+<!--
+<br />
+
+<a id="exit_pages" name="exit_pages"></a>
+<table class="stat" cellspacing="1" cellpadding="3" align="center" bgcolor="#000000" border="0" width="760">
+  <tr valign="middle" bgcolor="#79a0c7" class="th">
+    <th align="center" colspan="4">
+      Top {limit} of {total_exit_pages} Total Exit Pages
+    </th>
+  </tr>
+  <tr class="th2">
+    <td bgcolor="#a9bbcf" width="10%">
+      &nbsp;
+    </td>
+    <td align="left" bgcolor="#a9bbcf" colspan="2" width="20%">
+      Visitors exited here
+    </td>
+    <td align="left" bgcolor="#a9bbcf" width="70%">
+      Page
+    </td>
+  </tr>
+  {exit_pages}
+</table>
+
+<br />
+
+<a id="exit_targets" name="exit_targets"></a>
+<table class="stat" cellspacing="1" cellpadding="3" align="center" bgcolor="#000000" border="0" width="760">
+  <tr valign="middle" bgcolor="#79a0c7" class="th">
+    <th align="center" colspan="4">
+      Top {limit} of {total_exit_targets} Total Exit Targets
+    </th>
+  </tr>
+  <tr class="th2">
+    <td bgcolor="#a9bbcf" width="10%">
+      &nbsp;
+    </td>
+    <td align="left" bgcolor="#a9bbcf" colspan="2" width="20%">
+      Clicks
+    </td>
+    <td align="left" bgcolor="#a9bbcf" width="70%">
+      Target URL
+    </td>
+  </tr>
+  {exit_targets}
+</table>
+-->

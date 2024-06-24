@@ -1,0 +1,61 @@
+<?xml version="1.0"?> 
+<nxl version="1.0"
+	xmlns="http://www.nxfrontier.com/nxl/nxl">
+
+<data xmlns="http://www.nxfrontier.com/dml/dml">
+	<models>
+		<model name="user">
+
+			<key mode="user_check">
+				<field name="userID" value="%{property:user.exist.userID}" />
+			</key>
+			<fields mode="user_check">
+				<field name="userID" label="login id" type="text" size="30" role="login.id"  isProp="user.userID"/>
+			</fields>
+
+			<fields mode="reg_update">
+				<field name="password" label="Password" type="login-password" size="30" default="%{variable:passwd}" masked="no"/>
+				<field name="checkedEmail" label="Is checked email"	 type="text-choice" value="1" show="no" /> 
+				<field name="reg-date"	  label="Registration date"	 type="date" default="now" isInput="false" />
+				<field name="reg-status"	   label="registration status" type="text-choice" default="1" isInput="false" />
+			</fields>
+
+			<fields mode="reg_email">
+				<field name="oid" alias="coid" label="object id" type="oid" />
+				<field name="userID" />
+				<field name="password" label="Password" type="login-password" size="30" masked="no"/>
+				<field name="email"		label="email"	type="login-email"/> 
+			</fields>
+
+			<key mode="profile">
+				<field name="oid" alias="coid" value="%{user:user.oid:0}"/>
+			</key>
+			<fields mode="profile">
+				<field name="oid" alias="coid" label="object id" type="oid" />
+				<field name="email"	label="user email"	type="email" /> 
+			</fields>
+
+			<fields mode="reg_input">
+				<field name="userID" label="login" type="login-id" size="45" />
+				<field name="email"		label="email"	type="login-email"/>
+			</fields>
+
+			<fields mode="reg_create">
+				<field name="userID" label="login" type="login-id" size="45" />
+				<field name="email"		label="email"	type="login-email"/>
+			</fields>
+
+			<fields>
+				<field name="oid" alias="coid" label="object id" type="oid"/>
+				<field name="userID" label="login" type="login-id" size="45" />
+				<field name="password" label="password" type="login-password" size="30"/>
+				<field name="email"	label="contact email"	type="login-email" isRequired="true"/> 
+				<field name="perms" label="permissions"	type="login-perms" /> 
+				<field name="reg-date" label="Registration date" type="date" default="now"/>
+				<field name="checkedEmail"	label="Is checked email"	type="text-choice"  default="0"/> 
+				<field name="reg-status" label="registration status" type="text-choice" default="0"/>
+			</fields>
+		</model>
+	</models>
+</data>
+</nxl>

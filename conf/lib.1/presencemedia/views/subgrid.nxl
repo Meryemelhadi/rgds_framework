@@ -1,0 +1,100 @@
+<?xml version="1.0"?> 
+<!-- 
+	
+	NXL Taglib 
+
+	description: tag lib for generating ExtJS tree
+
+-->
+<xo:taglib uri="http://www.presencemedia.ma/views/subgrid" 
+	xmlns:xo="http://www.nxfrontier.com/xo/core"
+	xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+	xmlns:this="http://www.nxfrontier.com/xo/this"
+	xmlns:nxl="http://www.nxfrontier.com/nxl/nxl"
+	xmlns:tpl="http://www.nxfrontier.com/tpl/tpml"
+	xmlns:format="http://www.nxfrontier.com/nxl/format"
+	xmlns:grid="http://www.presencemedia.ma/views/grid"
+	xmlns="http://www.w3.org/1999/xhtml"
+	>
+
+<xo:tag name="title">
+	<xo:param name="title" />
+	<h3 style="padding:10px 0 10px 4px;background:#FD6C01;color:#fff;"><xsl:value-of select="$title" /></h3>
+</xo:tag>
+
+<xo:tag name="grid">
+	<xo:param name="records" value="page.records"/>
+	<xo:param name="class" value="sub-grid"/>
+
+	<div style="clear:both"></div>
+
+	{records:<xsl:value-of select="$records" />}
+		<div style="width:69.9%;margin-top:10px">
+			<div class="#{$class}#">
+				
+				<xo:apply_templates select="title">
+
+				<table class="list x-grid-3" style="width:100%;border-collapse:collapse">
+					{record}		
+						<xo:apply_templates select="header" />
+
+						<tr class="x-grid-row row_{record.even_odd}" onmouseover="onHover(this);return false;" onmouseout="onOut(this);return false;" style="cursor: default !important">
+							<xo:apply_templates select="row/cols">
+								<this:cols>
+									<this:field />
+								</this:cols>
+							</xo:apply_templates>
+						</tr>
+					{/record}
+				</table>
+			</div>
+		</div>
+	{/records}
+
+	<xo:apply_templates select="when-empty">
+		<this:when-empty>{string:"empty_list"}</this:when-empty>
+	</xo:apply_templates>
+
+</xo:tag>
+
+<xo:tag name="header">
+	{if:record.is_first}
+		<tr class="x-grid-3-header">
+			{fields}
+				<th style="padding:4px 0 4px 2px;background:#FE9F5A;color:#fff;">{field.label}</th>
+			{/fields}
+		</tr>
+	{/if}
+</xo:tag>
+
+<xo:tag name="footer">
+</xo:tag>
+
+<xo:tag name="when-empty" 	xmlns="http://www.w3.org/1999/xhtml">
+	{no_record}
+		<div class="empty_list">
+			{string:"empty_list"}
+		</div>	
+	{/no_record}
+</xo:tag>
+
+<xo:tag name="cols">
+	{fields}
+		<td style="padding:4px 0 4px 2px;"><xsl:value-of select="$_content_" /></td>
+	{/fields}
+</xo:tag>
+
+<xo:tag name="fields">
+	{fields}<xsl:value-of select="$_content_" />{/fields}
+</xo:tag>
+
+<xo:tag name="field">
+	{field<xsl:if test="@format">.<xsl:value-of select="@format" /></xsl:if>}
+</xo:tag>
+
+<xo:tag name="pagination" />
+<xo:tag name="legend" />
+<xo:tag name="operations" />
+<xo:tag name="operation" />
+
+</xo:taglib>

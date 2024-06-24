@@ -1,0 +1,1 @@
+{=page.content|empty content}

@@ -1,0 +1,1 @@
+<div class="siteBanner">{=page.title}</div>

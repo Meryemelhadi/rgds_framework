@@ -1,0 +1,1 @@
+{@include:rich_edit.tpl:skin and device}

@@ -1,0 +1,1 @@
+<?php $properties["query"]="SELECT COUNT(*) as nbrecords FROM _ds_category"; ?>

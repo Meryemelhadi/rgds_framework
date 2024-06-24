@@ -1,0 +1,271 @@
+<html>
+<head>
+<title>DHTMLCentral.com - Free Dynamic HTML Scripts - slideMenu2 Demo</title>
+<meta name="Author" content="Thomas Brattli (webmaster@dhtmlcentral.com)">
+<META NAME="Generator" CONTENT="Designer:Thomas Brattli (www.bratta.com)">
+<meta name="KeyWords" content="DHTML, HTML, Dynamic HTML, Javascript, Cascading Style Sheets, Cross-browser, Cross browser, Javascripts, DOM, Scripts, Free Scripts">
+<meta name="Description" content="Dynamic HTML Central - The ultimate place to find DHTML scripts, demos, tutorials and help.">
+<style type="text/css">
+div.clSlideMenu{ /* All slideMenu2 DIV elements */
+	position:absolute;
+	font-family:verdana,arial,helvetica;
+	font-size:10px;
+	overflow:hidden;
+	width:150;
+	height:22;
+}
+a.clA0{ /* All top level links */
+	color:white;
+	font-size:12px;
+	text-decoration:none;
+	font-weight:bold;
+}
+a.clA1{ /* All sub level links */
+	color:black;
+	font-size:11px;
+	font-weight:bold;
+	text-decoration:none;
+}
+a.clA2{ /* All sub2 level links */
+	color:navy;
+	text-decoration:none;
+}
+a.clA3{ /* All sub3 level links */
+	color:black;
+	text-decoration:none;
+}
+a.clA4{ /* All sub4 level links */
+	color:green;
+	text-decoration:none;
+}
+
+/* NEEDED STYLES */
+div.slideMenuBG{position:absolute; left:0; top:0; z-index:1}
+div.slideMenuText{position:absolute; left:2; top:2; z-index:200;}
+/* NEEDED ----- This class should be named like this:
+	#NAME_OF_YOUR_MENUcont
+*/
+#slideMenucont{position:absolute;	height:600; width:200; visibility:hidden;}
+</style>
+
+
+<script language="JavaScript" src="slidemenu.js" type="text/javascript">
+/**********************************************************************************
+SlideMenu 2.0
+*   Copyright (C) 2002 Thomas Brattli
+*   This script was released at DHTMLCentral.com
+*   Visit for more great scripts!
+*   This may be used and changed freely as long as this msg is intact!
+*   We will also appreciate any links you could give us.
+*
+*   Made by Thomas Brattli
+*
+*Script date: 08/05/2002 (keep this date to check versions)
+*********************************************************************************/
+</script>
+</head><body marginleft="0"  bgcolor="white" marginheight="0">
+<script>
+/*********************************
+The actual script file is inside the
+slidemenu.js file - remember to link 
+that to your HTML file.
+**********************************/
+
+//Creating the menu object -- You can call it whatever you want - just remember to
+//have the same name as the argument.
+slideMenu = new createSlideMenu("slideMenu")
+
+//Variables to set:
+slideMenu.menuy=80 //The top placement of the menu.
+slideMenu.menux=0 //The left placement of the menu
+slideMenu.useImages = 1 //Are you using images or not?
+slideMenu.pxspeed=20 //The pixel speed of the animation
+slideMenu.timspeed=25 //The timer speed of the animation
+slideMenu.inset = 10 //How much the selected items should pop to the left
+slideMenu.arrow = 0 //Set this to className that has font-family:webdings
+										//if you want to use the arrow feature. Note:
+										//This ONLY works on DOM capable browsers, and with
+										//useImages set to 0 - It's basically just a test I did.
+										//I hope to improve it later on.
+
+//Needed dummy classes - leave in the stylesheet!
+slideMenu.bgClass =	"slideMenuBG"
+slideMenu.txtClass = "slideMenuText"
+
+/*******************************************************************************
+Level properties - ALL properties have to be specified in level 0
+This works the same way as the CM4 script (if you have used it)
+
+The level[0] values will be the default value. Any value not specified
+in higher levels will be inherited from level[0]. If anything
+is spesified in level[1], but not in level[2], level[2] (sub2 menus)
+will get the property value from level[1] and so on.
+
+The availble values to control the menu by level are:
+
+left           - The left placement of all items in the current level ( px value )
+width          - The width of all items in the current level  ( px value )
+height         - The height of all items in the current level  ( px value )
+between        - The number of pixels between each item in  the current level ( px value)
+className      - A name of a class specified in the stylesheet to control the
+	               look of all items in this level. 
+	               NOTE: The class MUST be in a stylesheet, and it most have position:absolute.
+classNameA     - A name of a class specified in the stylesheet that will control the 
+ 								 Look of the TEXT for all items in this level. (you can also specify 
+								 a hover class for this className to get a mouseover effect on the 
+								 text.
+regImage 			 - If you choose to use image feature of the script you have to
+                 spesify the default image here.
+roundImg       - This is the image that will used when a item is selected.
+roundImg2      - This is the image used for sub-levels on the last item in a list.
+								 (that's how the last items in this example are rounded on the sub-levels)
+subImg         - The image used when the item has sub-items. Only in use for sub-levels
+subRound       - Same as roundImg2 - only for items that have sub-items.
+
+To understand the image setup see the images supplied with this script.
+NOTE: Always specify the full (relative) path to the images!
+
+The slideMenu_makeLevel function provides a shortcut to making levels.
+If you are more comfortable with setting the properties by name you can
+also set them like this:
+
+slideMenu.level[0] = new Array()
+slideMenu.level[0].left = 0
+slideMenu.level[0].width = 138
+..... and so on.
+
+NOTE: In level 0 below I have included the names of the variables just for
+readability - feel free to remove left = , width = , height = et cetera...
+********************************************************************************/
+slideMenu.level[0] = new slideMenu_makeLevel(
+	left = 0,
+	width = 138,
+	height = 21,
+	between = 5,
+	className = "clSlideMenu",
+	classNameA = "clA0",
+	regImage = "level0_regular.gif",
+	roundImg = "level0_round.gif",
+	roundImg2 = "",
+	subImg = "",
+	subRound= "")
+	
+slideMenu.level[1] = new slideMenu_makeLevel(10,127,20,2,"clSlideMenu","clA1","level1_regular.gif","level1_round2.gif","level1_round.gif","level1_sub.gif", "level1_sub_round.gif")
+slideMenu.level[2] = new slideMenu_makeLevel(21,118,18,2,"clSlideMenu","clA2","level2_regular.gif","level2_round2.gif","level2_round.gif", "level2_sub.gif", "level2_sub_round.gif")
+slideMenu.level[3] = new slideMenu_makeLevel(33,108,20,2,"clSlideMenu","clA3","level3_regular.gif","level3_round2.gif","level3_round.gif","level3_sub.gif","level3_sub_round.gif")
+slideMenu.level[4] = new slideMenu_makeLevel(40,107,19,2,"clSlideMenu","clA4","level4_regular.gif", "level4_round2.gif","level4_round.gif","level4_sub.gif", "level4_sub_round.gif")
+
+//Image preload --- leave this
+for(var i=0;i<slideMenu.level;i++){
+	var l = slideMenu.level[i]
+	new preLoadBackgrounds(l.regImage,l.roundImg,l.roundImg2,l.subImg,l.subRound)
+}
+
+/**********************************************************************
+Making the menus is the same as in SlideMenu 1 only that now
+you can make as many levels as you want.
+
+NOTE: If you are converting from SlideMenu1 remember to add: theNameOfYourMenu.
+in front of all menu creation calls.
+
+The arguments to the makeMenu function are:
+
+TYPE - top for top item, sub for sub item, sub2 for sub2 item, sub3 
+       for sub3 item and so on (I've done it like that to keep it the same way as version 1)
+
+TEXT - The link text for the item
+
+TARGET - The target frame to open the links in. You do not have to spesify this if you
+are not in a frame enviroment. (see below for more info)
+------------------------------------------------------------
+NOTE: I get mail about this all the time so I will try and explain more:
+If you where to make a regular link that would open a link in another
+frame you would probably do like this:
+<a href="mylink.html" target="myOtherFrameName">Link</a>
+
+To do the same for a slideMenu link you do like this:
+
+slideMenu.makeMenu('top','My link','mylink.html','myOtherFrameName')
+------------------------------------------------------------
+
+mySlideMenu.makeMenu('TYPE','TEXT','LINK','TARGET')
+************************************************************************/
+
+//Menu 1 -----------------------
+slideMenu.makeMenu('top','Scripts')
+	slideMenu.makeMenu('sub','sub_0','')
+	  slideMenu.makeMenu('sub2','sub2_1','')
+	  	slideMenu.makeMenu('sub3','sub3_0')
+	  	slideMenu.makeMenu('sub3','sub3_1')
+	  		slideMenu.makeMenu('sub4','sub4_0')
+	  		slideMenu.makeMenu('sub4','sub4_1')
+	  		slideMenu.makeMenu('sub4','sub4_2')
+	  	slideMenu.makeMenu('sub3','sub3_3')
+	  		slideMenu.makeMenu('sub4','sub4_0')
+	  		slideMenu.makeMenu('sub4','sub4_1')
+	  		slideMenu.makeMenu('sub4','sub4_2')
+	  slideMenu.makeMenu('sub2','sub2_2')
+	  slideMenu.makeMenu('sub2','sub2_3')
+	  slideMenu.makeMenu('sub2','sub2_4')
+	  	slideMenu.makeMenu('sub3','sub3_0')
+	  	slideMenu.makeMenu('sub3','sub3_1')
+
+	slideMenu.makeMenu('sub','sub_1','')
+	slideMenu.makeMenu('sub','sub_2','')
+
+	slideMenu.makeMenu('sub','sub_3','')
+	slideMenu.makeMenu('sub','Categories')
+	  slideMenu.makeMenu('sub2','Menu scripts','/script/search.asp?category=menu')
+	  slideMenu.makeMenu('sub2','Text scripts','/script/search.asp?category=text')
+	  slideMenu.makeMenu('sub2','Animation scripts','/script/search.asp?category=animation')
+	  slideMenu.makeMenu('sub2','Other scripts','')   
+	  	slideMenu.makeMenu('sub3','Menu scripts','/script/search.asp?category=menu')
+	  	slideMenu.makeMenu('sub3','Text scripts','/script/search.asp?category=text')
+	  	slideMenu.makeMenu('sub3','Other scripts','/script/search.asp?category=other')   
+//Menu 2 -----------------------
+slideMenu.makeMenu('top','News')
+
+	slideMenu.makeMenu('sub','New scripts','/script/search.asp?new=1')
+	slideMenu.makeMenu('sub','All scripts','/script/index.asp')
+	slideMenu.makeMenu('sub','Categories')
+
+slideMenu.makeMenu('top','Scripts')
+	slideMenu.makeMenu('sub','New scripts','/script/search.asp?new=1')
+	slideMenu.makeMenu('sub','All scripts','/script/index.asp')
+	slideMenu.makeMenu('sub','Categories')
+slideMenu.makeMenu('top','Scripts')
+	slideMenu.makeMenu('sub','New scripts','')
+	  slideMenu.makeMenu('sub2','Menu scripts')
+	  slideMenu.makeMenu('sub2','Text scripts')
+	  slideMenu.makeMenu('sub2','Animation scripts')
+	  slideMenu.makeMenu('sub2','Other scripts','')   
+	slideMenu.makeMenu('sub','All scripts','')
+	  slideMenu.makeMenu('sub2','Menu scripts')
+	  slideMenu.makeMenu('sub2','Text scripts')
+	  slideMenu.makeMenu('sub2','Animation scripts')
+	  slideMenu.makeMenu('sub2','Other scripts','')   
+	slideMenu.makeMenu('sub','Categories')
+	  slideMenu.makeMenu('sub2','Menu scripts')
+	  slideMenu.makeMenu('sub2','Text scripts')
+	  slideMenu.makeMenu('sub2','Animation scripts')
+	  slideMenu.makeMenu('sub2','Other scripts','')   
+	  	slideMenu.makeMenu('sub3','Menu scripts')
+	  	slideMenu.makeMenu('sub3','Text scripts')
+			slideMenu.makeMenu('sub3','Animation scripts')
+	  	slideMenu.makeMenu('sub3','Other scripts')   
+slideMenu.makeMenu('top','News')
+	slideMenu.makeMenu('sub','New scripts')
+	slideMenu.makeMenu('sub','All scripts')
+	slideMenu.makeMenu('sub','Categories')
+slideMenu.makeMenu('top','Scripts')
+	slideMenu.makeMenu('sub','New scripts')
+	slideMenu.makeMenu('sub','All scripts')
+	slideMenu.makeMenu('sub','Categories')
+
+//Initiating the menu !! 
+slideMenu.init()		
+
+</script>
+
+</body>
+</html>
